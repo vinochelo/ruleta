@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Gamepad2, AlertTriangle, Loader2 } from 'lucide-react'; // Changed Zap to Gamepad2
+import { Gamepad2, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -27,8 +27,20 @@ const WHEEL_SIZE = 400;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2;
 const CENTER_Y = WHEEL_SIZE / 2;
-const TEXT_RADIUS_OFFSET = 25; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET
+const TEXT_RADIUS_OFFSET = 20; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET
 const TEXT_MAX_LENGTH = 18; 
+
+// Helper function to determine text color (black or white) based on background brightness
+function getTextColorForBackground(hexcolor: string): string {
+  hexcolor = hexcolor.replace("#", "");
+  const r = parseInt(hexcolor.substring(0, 2), 16);
+  const g = parseInt(hexcolor.substring(2, 4), 16);
+  const b = parseInt(hexcolor.substring(4, 6), 16);
+  // Calculate YIQ (perceived brightness)
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 128 ? '#000000' : '#FFFFFF'; // Threshold 128 for black/white text
+}
+
 
 const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -74,10 +86,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + textPathAngleSpread, textArcRadius);
       
       const textPathId = `textPath_${category.id.replace(/[^a-zA-Z0-9]/g, '')}_${i}`;
-      // Determine if the arc for textPath should be sweep-flag 0 or 1
-      // For text path, we always want the shorter arc between the points to ensure text is not upside down on small segments.
-      // The angle spread itself ensures this, so 0 0 1 or 0 0 0 might depend on text direction desired (inside/outside curve)
-      // For standard text on path, typically 0 0 1 is fine if points are ordered correctly.
       const textArcPathData = `M ${textPathStartX},${textPathStartY} A ${textArcRadius},${textArcRadius} 0 0 1 ${textPathEndX},${textPathEndY}`;
       
       let displayText = category.name;
@@ -85,12 +93,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         displayText = displayText.substring(0, TEXT_MAX_LENGTH - 3) + "...";
       }
       
+      const segmentColor = rouletteSegmentColors[i % rouletteSegmentColors.length];
+      const textColor = getTextColorForBackground(segmentColor);
+
       return {
         id: category.id,
         name: category.name,
         displayText,
         path: pathData,
-        fill: rouletteSegmentColors[i % rouletteSegmentColors.length],
+        fill: segmentColor,
+        textColor: textColor,
         textPathId,
         textArcPathData,
         textAnchor: "middle",
@@ -127,10 +139,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
 
   useEffect(() => {
+    // Prevent resetting rotation if categories themselves change but component is already mounted
+    // This might happen if categories are loaded async or changed from another page.
+    // Only reset if categories fundamentally change (e.g. from some to none, or vice-versa)
+    // or if it's the initial load.
+    // For simplicity now, we always reset if `categories` prop changes.
+    // A more sophisticated approach might compare old vs new categories.
     setCurrentRotation(0);
     setFinalSelectedCategory(null);
-    setIsSpinning(false);
-  }, [categories]);
+    setIsSpinning(false); // Ensure spinning stops if categories reload.
+  }, [categories]); // Re-evaluate if categories array instance changes.
 
   if (categories.length === 0) {
     return (
@@ -189,7 +207,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                 <g key={segment.id}>
                   <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
                   <text 
-                    fill="#FFFFFF" 
+                    fill={segment.textColor} 
                     dominantBaseline="middle"
                     className="pointer-events-none select-none font-semibold"
                     style={{fontSize: `${segment.fontSize}px`}}
@@ -214,7 +232,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               height: 0,
               borderLeft: '15px solid transparent',
               borderRight: '15px solid transparent',
-              borderTop: '28px solid hsl(var(--primary))', // Pointer color from primary theme
+              borderTop: '28px solid hsl(var(--primary))', 
               zIndex: 10,
             }}
           />
@@ -242,7 +260,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
              {isSpinning ? (
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
              ) : (
-                <Gamepad2 className="w-10 h-10 text-primary" /> // Changed icon
+                <Gamepad2 className="w-10 h-10 text-primary" />
              )}
           </div>
         </div>
@@ -260,4 +278,3 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 };
 
 export default Roulette;
-
