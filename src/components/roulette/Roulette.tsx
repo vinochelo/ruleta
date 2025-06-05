@@ -27,8 +27,8 @@ const WHEEL_SIZE = 400;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2;
 const CENTER_Y = WHEEL_SIZE / 2;
-const TEXT_RADIUS_OFFSET = 20; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET
-const TEXT_MAX_LENGTH = 18; 
+const TEXT_RADIUS_OFFSET = 15; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET. Smaller value -> closer to outer edge.
+const TEXT_MAX_LENGTH = 20; // Adjusted: max characters for display text
 
 // Helper function to determine text color (black or white) based on background brightness
 function getTextColorForBackground(hexcolor: string): string {
@@ -80,7 +80,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
 
       const midAngle = startAngle + anglePerSegment / 2;
-      const textPathAngleSpread = Math.min(anglePerSegment * 0.45, 45); 
+      // Adjusted: increase spread to use more of the segment's curve
+      const textPathAngleSpread = Math.min(anglePerSegment * 0.65, 65); 
       const textArcRadius = WHEEL_RADIUS - TEXT_RADIUS_OFFSET;
       const [textPathStartX, textPathStartY] = getCoordinatesForAngle(midAngle - textPathAngleSpread, textArcRadius);
       const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + textPathAngleSpread, textArcRadius);
@@ -126,7 +127,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const baseRotation = 360 * spins; 
     const targetSegmentMidpointAngle = targetDisplayIndex * anglePerSegment + anglePerSegment / 2;
     
-    const randomOffsetDegrees = (Math.random() - 0.5) * (anglePerSegment * 0.4); 
+    // Make it point exactly to the middle of the segment
+    const randomOffsetDegrees = 0; //(Math.random() - 0.5) * (anglePerSegment * 0.4); 
     const finalRotationValue = baseRotation - (targetSegmentMidpointAngle + randomOffsetDegrees);
 
     setCurrentRotation(finalRotationValue);
@@ -139,16 +141,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
 
   useEffect(() => {
-    // Prevent resetting rotation if categories themselves change but component is already mounted
-    // This might happen if categories are loaded async or changed from another page.
-    // Only reset if categories fundamentally change (e.g. from some to none, or vice-versa)
-    // or if it's the initial load.
-    // For simplicity now, we always reset if `categories` prop changes.
-    // A more sophisticated approach might compare old vs new categories.
     setCurrentRotation(0);
     setFinalSelectedCategory(null);
-    setIsSpinning(false); // Ensure spinning stops if categories reload.
-  }, [categories]); // Re-evaluate if categories array instance changes.
+    setIsSpinning(false); 
+  }, [categories]); 
 
   if (categories.length === 0) {
     return (
@@ -189,7 +185,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         <div className="relative" style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}>
           <svg 
             viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
-            className="overflow-visible"
+            className="overflow-visible" // Ensures pointer isn't clipped
           >
             <defs>
               {segments.map(segment => (
@@ -226,14 +222,14 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           </svg>
           {/* Pointer */}
           <div 
-            className="absolute top-0 left-1/2 -translate-x-1/2 -mt-2"
+            className="absolute top-0 left-1/2 -translate-x-1/2 -mt-2" // Adjusted for better visual pointing
             style={{
               width: 0,
               height: 0,
               borderLeft: '15px solid transparent',
               borderRight: '15px solid transparent',
               borderTop: '28px solid hsl(var(--primary))', 
-              zIndex: 10,
+              zIndex: 10, // Ensure pointer is above the wheel
             }}
           />
           {/* Center spin button */}
