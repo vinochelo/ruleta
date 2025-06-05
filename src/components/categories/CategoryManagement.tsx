@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus } from 'lucide-react';
+import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2 } from 'lucide-react';
 import EditCategoryDialog from './EditCategoryDialog';
+import SuggestWordsDialog from './SuggestWordsDialog'; // Import new dialog
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutput } from '@/ai/flows/suggest-words-flow'; // Import Genkit flow
 
 const STORAGE_KEY = 'ruletaRupestreCategories';
 
@@ -37,6 +39,14 @@ const CategoryManagement: React.FC = () => {
   const [newWordInputs, setNewWordInputs] = useState<{ [categoryId: string]: string }>({});
   const { toast } = useToast();
 
+  // AI Suggestion State
+  const [isSuggestWordsDialogOpen, setIsSuggestWordsDialogOpen] = useState(false);
+  const [aiSuggestedWords, setAiSuggestedWords] = useState<string[]>([]);
+  const [categoryForAISuggestion, setCategoryForAISuggestion] = useState<string>('');
+  const [isAISuggesting, setIsAISuggesting] = useState(false);
+  const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
+
+
   useEffect(() => {
     const storedCategoriesRaw = localStorage.getItem(STORAGE_KEY);
     if (storedCategoriesRaw) {
@@ -46,24 +56,21 @@ const CategoryManagement: React.FC = () => {
           if (parsedCategories.length > 0) {
             const firstItem = parsedCategories[0];
             if (typeof firstItem === 'string') {
-              // Migrate from string[] to Category[] with empty words
               const migratedCategories = parsedCategories.map((name: string) => ({ id: crypto.randomUUID(), name, words: [] }));
               persistCategories(migratedCategories);
             } else if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && !('words' in firstItem)) {
-              // Migrate from {id, name}[] to Category[] with empty words
               const migratedCategories = parsedCategories.map((cat: { id: string; name: string }) => ({ ...cat, words: [] }));
               persistCategories(migratedCategories);
             } else if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && 'words' in firstItem) {
-              // Already in the correct format Category[]
               setCategories(parsedCategories);
-            } else { // Potentially mixed or unknown array format
+            } else { 
               console.warn("Unknown category format in localStorage, resetting to default.");
               resetToDefaultCategories();
             }
-          } else { // Empty array stored
+          } else { 
             resetToDefaultCategories();
           }
-        } else { // Not an array
+        } else { 
           console.warn("Malformed categories in localStorage (not an array), resetting to default.");
           resetToDefaultCategories();
         }
@@ -72,14 +79,13 @@ const CategoryManagement: React.FC = () => {
         resetToDefaultCategories();
       }
     } else {
-      // No categories stored, use defaults
       resetToDefaultCategories();
     }
   }, []);
   
   const resetToDefaultCategories = () => {
-    persistCategories([...DEFAULT_CATEGORIES.map(cat => ({...cat, id: crypto.randomUUID()}))]); // Ensure new IDs for defaults
-    toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías por defecto." });
+    persistCategories([...DEFAULT_CATEGORIES.map(cat => ({...cat, id: crypto.randomUUID()}))]);
+    toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
   };
   
   const persistCategories = (updatedCategories: Category[]) => {
@@ -87,7 +93,7 @@ const CategoryManagement: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCategories));
   };
 
-  const handleAddCategory = (e: FormEvent) => {
+  const handleAddCategory = async (e: FormEvent, suggestWithAI: boolean = false) => {
     e.preventDefault();
     if (newCategoryName.trim() === '') {
       toast({ title: "Error", description: "El nombre de la categoría no puede estar vacío.", variant: "destructive" });
@@ -97,10 +103,29 @@ const CategoryManagement: React.FC = () => {
       toast({ title: "Error", description: "Esta categoría ya existe.", variant: "destructive" });
       return;
     }
-    const newCategory: Category = { id: crypto.randomUUID(), name: newCategoryName.trim(), words: [] };
-    persistCategories([...categories, newCategory]);
-    setNewCategoryName('');
-    toast({ title: "Categoría Añadida", description: `"${newCategory.name}" ha sido añadida.` });
+
+    if (suggestWithAI) {
+      setCategoryForAISuggestion(newCategoryName.trim());
+      setTargetCategoryIdForAIWords(null); // For a new category
+      setIsAISuggesting(true);
+      setIsSuggestWordsDialogOpen(true);
+      setAiSuggestedWords([]); // Clear previous suggestions
+      try {
+        const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: newCategoryName.trim() });
+        setAiSuggestedWords(result.suggestedWords || []);
+      } catch (error) {
+        console.error("AI suggestion error:", error);
+        toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
+        setAiSuggestedWords([]);
+      } finally {
+        setIsAISuggesting(false);
+      }
+    } else {
+      const newCategory: Category = { id: crypto.randomUUID(), name: newCategoryName.trim(), words: [] };
+      persistCategories([...categories, newCategory]);
+      setNewCategoryName('');
+      toast({ title: "Categoría Añadida", description: `"${newCategory.name}" ha sido añadida.` });
+    }
   };
 
   const handleDeleteCategory = (id: string) => {
@@ -111,7 +136,7 @@ const CategoryManagement: React.FC = () => {
     }
   };
 
-  const handleEditCategorySubmit = (updatedCategory: Category) => { // Renamed to avoid conflict
+  const handleEditCategorySubmit = (updatedCategory: Category) => {
     if (updatedCategory.name.trim() === '') {
       toast({ title: "Error", description: "El nombre de la categoría no puede estar vacío.", variant: "destructive" });
       return;
@@ -121,7 +146,7 @@ const CategoryManagement: React.FC = () => {
       return;
     }
     persistCategories(
-      categories.map((cat) => (cat.id === updatedCategory.id ? {...cat, name: updatedCategory.name.trim()} : cat)) // only update name here
+      categories.map((cat) => (cat.id === updatedCategory.id ? {...cat, name: updatedCategory.name.trim()} : cat))
     );
     setEditingCategory(null);
     toast({ title: "Categoría Actualizada", description: `Categoría renombrada a "${updatedCategory.name}".` });
@@ -131,31 +156,43 @@ const CategoryManagement: React.FC = () => {
     setNewWordInputs(prev => ({ ...prev, [categoryId]: value }));
   };
 
-  const handleAddWord = (e: FormEvent, categoryId: string) => {
-    e.preventDefault();
-    const newWord = newWordInputs[categoryId]?.trim();
-    if (!newWord) {
+  const handleAddWordToCategory = (categoryId: string, word: string) => {
+    const newWordClean = word.trim();
+    if (!newWordClean) {
       toast({ title: "Error", description: "La palabra no puede estar vacía.", variant: "destructive" });
-      return;
+      return false;
     }
-
+    let wordAdded = false;
     const updatedCategories = categories.map(cat => {
       if (cat.id === categoryId) {
-        if (cat.words.some(w => w.toLowerCase() === newWord.toLowerCase())) {
-          toast({ title: "Error", description: `La palabra "${newWord}" ya existe en esta categoría.`, variant: "destructive" });
-          return cat; // Return original category if word exists
+        if (cat.words.some(w => w.toLowerCase() === newWordClean.toLowerCase())) {
+          toast({ title: "Palabra Duplicada", description: `La palabra "${newWordClean}" ya existe en "${cat.name}".`, variant: "destructive" });
+          return cat;
         }
-        return { ...cat, words: [...cat.words, newWord] };
+        wordAdded = true;
+        return { ...cat, words: [...cat.words, newWordClean] };
       }
       return cat;
     });
     
-    // Only persist if a word was actually added (i.e., no duplicate warning)
-    if (!categories.find(cat => cat.id === categoryId)?.words.some(w => w.toLowerCase() === newWord.toLowerCase())) {
+    if (wordAdded) {
         persistCategories(updatedCategories);
-        toast({ title: "Palabra Añadida", description: `"${newWord}" añadida a la categoría.` });
+        toast({ title: "Palabra Añadida", description: `"${newWordClean}" añadida a la categoría.` });
     }
-    setNewWordInputs(prev => ({ ...prev, [categoryId]: '' }));
+    return wordAdded;
+  };
+
+
+  const handleAddWordFormSubmit = (e: FormEvent, categoryId: string) => {
+    e.preventDefault();
+    const wordToAdd = newWordInputs[categoryId]?.trim();
+    if (wordToAdd) {
+        if(handleAddWordToCategory(categoryId, wordToAdd)) {
+            setNewWordInputs(prev => ({ ...prev, [categoryId]: '' }));
+        }
+    } else {
+        toast({ title: "Error", description: "La palabra no puede estar vacía.", variant: "destructive" });
+    }
   };
 
   const handleDeleteWord = (categoryId: string, wordIndex: number) => {
@@ -172,6 +209,59 @@ const CategoryManagement: React.FC = () => {
     toast({ title: "Palabra Eliminada", description: `"${deletedWordName}" eliminada.`, variant: "destructive" });
   };
 
+  const handleAISuggestWordsForExistingCategory = async (category: Category) => {
+    setCategoryForAISuggestion(category.name);
+    setTargetCategoryIdForAIWords(category.id);
+    setIsAISuggesting(true);
+    setIsSuggestWordsDialogOpen(true);
+    setAiSuggestedWords([]);
+    try {
+      const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: category.name });
+      setAiSuggestedWords(result.suggestedWords.filter(word => 
+        !category.words.some(existingWord => existingWord.toLowerCase() === word.toLowerCase())
+      ) || []);
+      if (result.suggestedWords.length > 0 && aiSuggestedWords.length === 0) {
+        toast({ title: "Sugerencias IA", description: "Todas las palabras sugeridas por IA ya existen en la categoría."});
+      }
+    } catch (error) {
+      console.error("AI suggestion error:", error);
+      toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
+      setAiSuggestedWords([]);
+    } finally {
+      setIsAISuggesting(false);
+    }
+  };
+
+  const handleAddAISuggestedWords = (wordsToAdd: string[]) => {
+    if (targetCategoryIdForAIWords) { // Adding to existing category
+      const category = categories.find(cat => cat.id === targetCategoryIdForAIWords);
+      if (!category) return;
+
+      const uniqueNewWords = wordsToAdd.filter(word => 
+        !category.words.some(existingWord => existingWord.toLowerCase() === word.toLowerCase())
+      );
+
+      if (uniqueNewWords.length === 0 && wordsToAdd.length > 0) {
+        toast({ title: "Sin Palabras Nuevas", description: "Todas las palabras seleccionadas ya existen en la categoría.", variant: "default" });
+        return;
+      }
+      
+      persistCategories(categories.map(cat => 
+        cat.id === targetCategoryIdForAIWords 
+        ? { ...cat, words: [...cat.words, ...uniqueNewWords] } 
+        : cat
+      ));
+      toast({ title: "Palabras Añadidas", description: `${uniqueNewWords.length} palabras añadidas a "${category.name}" desde sugerencias IA.` });
+
+    } else { // Adding to a new category (which was just named)
+      const newCategory: Category = { id: crypto.randomUUID(), name: categoryForAISuggestion, words: wordsToAdd };
+      persistCategories([...categories, newCategory]);
+      toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategory.name}" creada con ${wordsToAdd.length} palabras sugeridas por IA.` });
+      setNewCategoryName(''); // Clear input after successful AI-assisted creation
+    }
+    setCategoryForAISuggestion('');
+    setTargetCategoryIdForAIWords(null);
+  };
 
   return (
     <div className="space-y-8">
@@ -181,10 +271,10 @@ const CategoryManagement: React.FC = () => {
             <PlusCircle className="h-6 w-6" />
             Añadir Nueva Categoría
           </CardTitle>
-          <CardDescription>Crea una nueva temática para la ruleta.</CardDescription>
+          <CardDescription>Crea una nueva temática para la ruleta. Puedes añadir palabras manualmente o usar IA.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAddCategory} className="flex flex-col sm:flex-row gap-2">
+          <form onSubmit={(e) => handleAddCategory(e, false)} className="flex flex-col sm:flex-row gap-2">
             <Input
               type="text"
               value={newCategoryName}
@@ -193,9 +283,21 @@ const CategoryManagement: React.FC = () => {
               className="flex-grow"
               aria-label="Nombre de la nueva categoría"
             />
-            <Button type="submit" className="transition-transform hover:scale-105">
-              <PlusCircle className="mr-2 h-4 w-4" /> Añadir Categoría
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Añadir
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={(e) => handleAddCategory(e, true)} 
+                className="transition-transform hover:scale-105 flex-1 sm:flex-none"
+                disabled={newCategoryName.trim() === '' || isAISuggesting}
+              >
+                {isAISuggesting && targetCategoryIdForAIWords === null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+                Sugerir Palabras con IA
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -216,9 +318,9 @@ const CategoryManagement: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Nombre Categoría</TableHead>
-                    <TableHead className="w-[50%]">Palabras</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead className="w-[30%]">Nombre Categoría</TableHead>
+                    <TableHead className="w-[55%]">Palabras ({categories.reduce((acc, cat) => acc + cat.words.length, 0)})</TableHead>
+                    <TableHead className="text-right w-[15%]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -226,8 +328,8 @@ const CategoryManagement: React.FC = () => {
                     <TableRow key={category.id}>
                       <TableCell className="font-medium align-top py-4">{category.name}</TableCell>
                       <TableCell className="align-top py-4">
-                        <div className="flex flex-wrap gap-1 mb-2 max-h-28 overflow-y-auto">
-                          {category.words.length === 0 && <span className="text-xs text-muted-foreground">Sin palabras</span>}
+                        <div className="flex flex-wrap gap-1 mb-2 max-h-28 overflow-y-auto pr-2">
+                          {category.words.length === 0 && <span className="text-xs text-muted-foreground italic">Sin palabras. Añade algunas o usa IA.</span>}
                           {category.words.map((word, wordIndex) => (
                             <Badge key={wordIndex} variant="secondary" className="flex items-center">
                               {word}
@@ -243,21 +345,33 @@ const CategoryManagement: React.FC = () => {
                             </Badge>
                           ))}
                         </div>
-                        <form onSubmit={(e) => handleAddWord(e, category.id)} className="flex items-center gap-1">
-                          <Input
-                            type="text"
-                            value={newWordInputs[category.id] || ''}
-                            onChange={(e) => handleWordInputChange(category.id, e.target.value)}
-                            placeholder="Añadir palabra"
-                            className="h-8 text-sm"
-                            aria-label={`Añadir palabra a ${category.name}`}
-                          />
-                          <Button type="submit" size="icon" variant="ghost" className="h-8 w-8">
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </form>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <form onSubmit={(e) => handleAddWordFormSubmit(e, category.id)} className="flex items-center gap-1 flex-grow">
+                            <Input
+                              type="text"
+                              value={newWordInputs[category.id] || ''}
+                              onChange={(e) => handleWordInputChange(category.id, e.target.value)}
+                              placeholder="Añadir palabra"
+                              className="h-8 text-sm"
+                              aria-label={`Añadir palabra a ${category.name}`}
+                            />
+                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </form>
+                           <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleAISuggestWordsForExistingCategory(category)}
+                            disabled={isAISuggesting && targetCategoryIdForAIWords === category.id}
+                            className="h-8 text-xs whitespace-nowrap"
+                            >
+                             {isAISuggesting && targetCategoryIdForAIWords === category.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Brain className="mr-1 h-3 w-3" />}
+                             Sugerir con IA
+                           </Button>
+                        </div>
                       </TableCell>
-                      <TableCell className="text-right align-top py-4 space-x-1">
+                      <TableCell className="text-right align-top py-4 space-x-0.5 sm:space-x-1">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -296,7 +410,29 @@ const CategoryManagement: React.FC = () => {
           category={editingCategory}
           isOpen={!!editingCategory}
           onClose={() => setEditingCategory(null)}
-          onSave={handleEditCategorySubmit} // Use renamed handler
+          onSave={handleEditCategorySubmit}
+        />
+      )}
+      
+      {isSuggestWordsDialogOpen && (
+        <SuggestWordsDialog
+          categoryName={categoryForAISuggestion}
+          suggestedWords={aiSuggestedWords}
+          isOpen={isSuggestWordsDialogOpen}
+          onClose={() => {
+            setIsSuggestWordsDialogOpen(false);
+            setCategoryForAISuggestion(''); // Reset after closing
+            setTargetCategoryIdForAIWords(null);
+            setAiSuggestedWords([]);
+            if (targetCategoryIdForAIWords === null && newCategoryName === categoryForAISuggestion) {
+              // If it was for a new category and dialog closed without adding, don't clear newCategoryName
+              // This allows user to still click "Add" manually if they cancel AI
+            } else {
+              setNewCategoryName(''); // Clear if it was for existing or successfully added
+            }
+          }}
+          onAddWords={handleAddAISuggestedWords}
+          isLoading={isAISuggesting}
         />
       )}
     </div>
@@ -304,5 +440,3 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
-
-    
