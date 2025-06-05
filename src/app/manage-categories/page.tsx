@@ -1,5 +1,5 @@
 import CategoryManagement from '@/components/categories/CategoryManagement';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PencilRuler } from 'lucide-react';
 
 export default function ManageCategoriesPage() {
