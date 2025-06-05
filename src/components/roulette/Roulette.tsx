@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap, AlertTriangle, Loader2 } from 'lucide-react';
+import { Gamepad2, AlertTriangle, Loader2 } from 'lucide-react'; // Changed Zap to Gamepad2
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -27,8 +27,8 @@ const WHEEL_SIZE = 400;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2;
 const CENTER_Y = WHEEL_SIZE / 2;
-const TEXT_RADIUS_OFFSET = 40; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET
-const TEXT_MAX_LENGTH = 18; // Adjusted: max characters before "..."
+const TEXT_RADIUS_OFFSET = 25; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET
+const TEXT_MAX_LENGTH = 18; 
 
 const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -68,13 +68,17 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
 
       const midAngle = startAngle + anglePerSegment / 2;
-      // Adjusted text arc path to be slightly wider for more text room if needed
-      const textPathAngleSpread = Math.min(anglePerSegment * 0.45, 45); // Max spread of 45deg for text path
-      const [textPathStartX, textPathStartY] = getCoordinatesForAngle(midAngle - textPathAngleSpread, WHEEL_RADIUS - TEXT_RADIUS_OFFSET);
-      const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + textPathAngleSpread, WHEEL_RADIUS - TEXT_RADIUS_OFFSET);
+      const textPathAngleSpread = Math.min(anglePerSegment * 0.45, 45); 
+      const textArcRadius = WHEEL_RADIUS - TEXT_RADIUS_OFFSET;
+      const [textPathStartX, textPathStartY] = getCoordinatesForAngle(midAngle - textPathAngleSpread, textArcRadius);
+      const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + textPathAngleSpread, textArcRadius);
       
       const textPathId = `textPath_${category.id.replace(/[^a-zA-Z0-9]/g, '')}_${i}`;
-      const textArcPathData = `M ${textPathStartX},${textPathStartY} A ${WHEEL_RADIUS - TEXT_RADIUS_OFFSET},${WHEEL_RADIUS - TEXT_RADIUS_OFFSET} 0 0 1 ${textPathEndX},${textPathEndY}`;
+      // Determine if the arc for textPath should be sweep-flag 0 or 1
+      // For text path, we always want the shorter arc between the points to ensure text is not upside down on small segments.
+      // The angle spread itself ensures this, so 0 0 1 or 0 0 0 might depend on text direction desired (inside/outside curve)
+      // For standard text on path, typically 0 0 1 is fine if points are ordered correctly.
+      const textArcPathData = `M ${textPathStartX},${textPathStartY} A ${textArcRadius},${textArcRadius} 0 0 1 ${textPathEndX},${textPathEndY}`;
       
       let displayText = category.name;
       if (displayText.length > TEXT_MAX_LENGTH) {
@@ -90,8 +94,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         textPathId,
         textArcPathData,
         textAnchor: "middle",
-        // Adjusted font size calculation for larger wheel and better text fit
-        fontSize: Math.max(9, Math.min(15, anglePerSegment * 0.32)), 
+        fontSize: Math.max(9, Math.min(14, anglePerSegment * 0.30)), 
       };
     });
   }, [displayCategories, numSegments, anglePerSegment, getCoordinatesForAngle]);
@@ -120,8 +123,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       setIsSpinning(false);
       setFinalSelectedCategory(selectedCategory);
       onSpinEnd(selectedCategory);
-      // Keep the final rotation without modulo to ensure pointer stays aligned
-      // setCurrentRotation(prev => prev % 360); // This can cause slight misalignment
     }, 4000); 
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
 
@@ -188,9 +189,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                 <g key={segment.id}>
                   <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
                   <text 
-                    fill="#000000" // Changed text color to black for better contrast on light segment colors
-                    dy="-3" // Slightly adjust vertical position of text on path
-                    className="pointer-events-none select-none font-semibold" // Made font bolder
+                    fill="#FFFFFF" 
+                    dominantBaseline="middle"
+                    className="pointer-events-none select-none font-semibold"
                     style={{fontSize: `${segment.fontSize}px`}}
                   >
                     <textPath 
@@ -213,11 +214,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               height: 0,
               borderLeft: '15px solid transparent',
               borderRight: '15px solid transparent',
-              borderTop: '28px solid hsl(var(--primary))',
+              borderTop: '28px solid hsl(var(--primary))', // Pointer color from primary theme
               zIndex: 10,
             }}
           />
-          {/* Center decorative circle - NOW THE SPIN BUTTON */}
+          {/* Center spin button */}
           <div 
             className={cn(
               "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center",
@@ -241,7 +242,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
              {isSpinning ? (
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
              ) : (
-                <Zap className="w-10 h-10 text-primary" />
+                <Gamepad2 className="w-10 h-10 text-primary" /> // Changed icon
              )}
           </div>
         </div>
@@ -259,3 +260,4 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 };
 
 export default Roulette;
+
