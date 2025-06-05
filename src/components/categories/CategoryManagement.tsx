@@ -22,13 +22,13 @@ interface Category {
 }
 
 const DEFAULT_CATEGORIES: Category[] = [
-  { id: crypto.randomUUID(), name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas"] },
-  { id: crypto.randomUUID(), name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro"] },
-  { id: crypto.randomUUID(), name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan"] },
-  { id: crypto.randomUUID(), name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar"] },
-  { id: crypto.randomUUID(), name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo"] },
-  { id: crypto.randomUUID(), name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare"] },
-  { id: crypto.randomUUID(), name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad"] }
+  { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas"] },
+  { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro"] },
+  { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan"] },
+  { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar"] },
+  { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo"] },
+  { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare"] },
+  { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad"] }
 ];
 
 
@@ -54,21 +54,15 @@ const CategoryManagement: React.FC = () => {
         const parsedCategories = JSON.parse(storedCategoriesRaw);
         if (Array.isArray(parsedCategories)) {
           if (parsedCategories.length > 0) {
-            const firstItem = parsedCategories[0];
-            if (typeof firstItem === 'string') {
-              const migratedCategories = parsedCategories.map((name: string) => ({ id: crypto.randomUUID(), name, words: [] }));
-              persistCategories(migratedCategories);
-            } else if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && !('words' in firstItem)) {
-              const migratedCategories = parsedCategories.map((cat: { id: string; name: string }) => ({ ...cat, words: [] }));
-              persistCategories(migratedCategories);
-            } else if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && 'words' in firstItem) {
-              setCategories(parsedCategories);
-            } else { 
-              console.warn("Unknown category format in localStorage, resetting to default.");
-              resetToDefaultCategories();
-            }
+             // Ensure items have id, name, and words properties. Add id if missing for migration.
+            const validatedCategories = (parsedCategories as any[]).map(cat => ({
+                id: cat.id || crypto.randomUUID(), // Add UUID if missing (for older data)
+                name: cat.name || "Categoría sin nombre",
+                words: Array.isArray(cat.words) ? cat.words : [],
+            }));
+            setCategories(validatedCategories as Category[]);
           } else { 
-            resetToDefaultCategories();
+            setCategories([...DEFAULT_CATEGORIES]); // Use a copy
           }
         } else { 
           console.warn("Malformed categories in localStorage (not an array), resetting to default.");
@@ -84,7 +78,7 @@ const CategoryManagement: React.FC = () => {
   }, []);
   
   const resetToDefaultCategories = () => {
-    persistCategories([...DEFAULT_CATEGORIES.map(cat => ({...cat, id: crypto.randomUUID()}))]);
+    persistCategories([...DEFAULT_CATEGORIES]); // Use a copy of defaults
     toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
   };
   

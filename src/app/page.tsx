@@ -7,9 +7,8 @@ import ResultsModal from '@/components/roulette/ResultsModal';
 import Timer from '@/components/timer/Timer';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Volume2 } from 'lucide-react';
-// Removed Settings2, Link, Button as they were for the removed card
 
 interface Category {
   id: string;
@@ -18,19 +17,19 @@ interface Category {
 }
 
 const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
-  { id: crypto.randomUUID(), name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas"] },
-  { id: crypto.randomUUID(), name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro"] },
-  { id: crypto.randomUUID(), name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan"] },
-  { id: crypto.randomUUID(), name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar"] },
-  { id: crypto.randomUUID(), name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo"] },
-  { id: crypto.randomUUID(), name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare"] },
-  { id: crypto.randomUUID(), name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad"] }
+  { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas"] },
+  { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro"] },
+  { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan"] },
+  { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar"] },
+  { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo"] },
+  { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare"] },
+  { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad"] }
 ];
 
 const PICTIONARY_DURATION = 60; // seconds
 
 export default function HomePage() {
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES_WITH_WORDS);
   const [selectedCategoryFull, setSelectedCategoryFull] = useState<Category | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,23 +47,26 @@ export default function HomePage() {
 
         if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length > 0) {
           const firstItem = parsedStoredCategories[0];
-          if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && 'words' in firstItem && Array.isArray(firstItem.words)) {
-            setCategories(parsedStoredCategories as Category[]);
-          } else {
-             if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && !('words' in firstItem)) {
-                setCategories((parsedStoredCategories as Array<{id: string, name: string}>).map(cat => ({...cat, words: [], id: cat.id || crypto.randomUUID() })));
-             } else {
-                console.warn("Categories from localStorage in HomePage are not in the expected Category[] format. Using defaults.");
-                setCategories(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
-             }
-          }
+          // Ensure items have id, name, and words properties. Add id if missing.
+          const validatedCategories = (parsedStoredCategories as any[]).map(cat => ({
+            id: cat.id || crypto.randomUUID(), // Add UUID if missing (for older data)
+            name: cat.name || "Categoría sin nombre",
+            words: Array.isArray(cat.words) ? cat.words : [],
+          }));
+          setCategories(validatedCategories as Category[]);
+
         } else if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length === 0) {
-            setCategories(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
+            setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
+        } else {
+            console.warn("Categories from localStorage in HomePage are not in the expected Category[] format or empty. Using defaults.");
+            setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         }
       } catch (error) {
         console.error("Failed to parse categories from localStorage in HomePage", error);
-        setCategories(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
+        setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
       }
+    } else {
+      // localStorage is empty, defaults are already set by useState initial value
     }
   }, []);
 
@@ -139,7 +141,6 @@ export default function HomePage() {
           </CardContent>
         </Card>
       )}
-      {/* Removed "Personaliza tu Juego" Card */}
     </div>
   );
 }
