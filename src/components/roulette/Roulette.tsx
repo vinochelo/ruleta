@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,27 +20,29 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     if (isSpinning || categories.length === 0) return;
 
     setIsSpinning(true);
-    setHighlightedIndex(null);
-    setSelectedCategory(null);
+    setHighlightedIndex(0); // Start highlight from 0 for visual consistency
+    setSelectedCategory(null); // Clear previous visual selection
 
     let spinCount = 0;
-    const totalSpins = categories.length * 2 + Math.floor(Math.random() * categories.length); // Vary spin duration
-    const spinInterval = 100; // ms
+    // Ensure at least 2 full cycles + random part of a cycle for variability
+    const minCycles = 2;
+    const totalSpinIterations = (categories.length * minCycles) + Math.floor(Math.random() * categories.length);
+    const spinIntervalTime = 100; // ms
 
     const intervalId = setInterval(() => {
-      setHighlightedIndex(spinCount % categories.length);
+      const currentDisplayIndex = spinCount % categories.length;
+      setHighlightedIndex(currentDisplayIndex);
       spinCount++;
 
-      if (spinCount > totalSpins) {
+      if (spinCount > totalSpinIterations) {
         clearInterval(intervalId);
         setIsSpinning(false);
-        const finalIndex = spinCount % categories.length;
-        setHighlightedIndex(finalIndex);
-        const category = categories[finalIndex];
-        setSelectedCategory(category);
-        onSpinEnd(category);
+        // The category that was last set by setHighlightedIndex was categories[currentDisplayIndex]
+        const finalCategory = categories[currentDisplayIndex];
+        setSelectedCategory(finalCategory);
+        onSpinEnd(finalCategory);
       }
-    }, spinInterval);
+    }, spinIntervalTime);
   }, [categories, isSpinning, onSpinEnd]);
 
   useEffect(() => {
@@ -84,23 +87,25 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 my-4 max-h-40 overflow-y-auto p-2 bg-muted/30 rounded-md">
-          {categories.map((category, index) => (
-            <div
-              key={index}
-              className={`p-2 border rounded-md text-sm truncate transition-all duration-100
-                ${(isSpinning && highlightedIndex === index) ? 'bg-primary text-primary-foreground scale-110 shadow-lg' : 'bg-card hover:bg-secondary'}
-                ${(!isSpinning && selectedCategory === category) ? 'bg-green-500 text-white font-semibold' : ''}
-              `}
-            >
-              {category}
-            </div>
-          ))}
-        </div>
+        {/* Conditionally render the list of categories: only show when not spinning */}
+        {!isSpinning && categories.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 my-4 max-h-40 overflow-y-auto p-2 bg-muted/30 rounded-md">
+            {categories.map((category, index) => (
+              <div
+                key={index}
+                className={`p-2 border rounded-md text-sm truncate transition-all duration-100
+                  ${(selectedCategory === category) ? 'bg-green-500 text-white font-semibold shadow-lg scale-105' : 'bg-card hover:bg-secondary/80'}
+                `}
+              >
+                {category}
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button
           onClick={spin}
-          disabled={isSpinning}
+          disabled={isSpinning} // spin function already checks for categories.length === 0
           className="w-full text-lg py-6 transform transition-transform duration-150 hover:scale-105 active:scale-95"
           size="lg"
         >
@@ -113,3 +118,5 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 };
 
 export default Roulette;
+
+    
