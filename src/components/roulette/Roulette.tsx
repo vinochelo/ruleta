@@ -23,12 +23,12 @@ const rouletteSegmentColors = [
   "#FB923C", "#A3E635", "#22D3EE", "#E879F9"
 ];
 
-const WHEEL_SIZE = 400; // Increased from 320
+const WHEEL_SIZE = 400;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2;
 const CENTER_Y = WHEEL_SIZE / 2;
-const TEXT_RADIUS_OFFSET = 45; // Increased from 35
-const TEXT_MAX_LENGTH = 15; // Increased from 12
+const TEXT_RADIUS_OFFSET = 40; // Adjusted: text path radius is WHEEL_RADIUS - TEXT_RADIUS_OFFSET
+const TEXT_MAX_LENGTH = 18; // Adjusted: max characters before "..."
 
 const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -68,8 +68,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
 
       const midAngle = startAngle + anglePerSegment / 2;
-      const [textPathStartX, textPathStartY] = getCoordinatesForAngle(midAngle - anglePerSegment / 2.5, WHEEL_RADIUS - TEXT_RADIUS_OFFSET);
-      const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + anglePerSegment / 2.5, WHEEL_RADIUS - TEXT_RADIUS_OFFSET);
+      // Adjusted text arc path to be slightly wider for more text room if needed
+      const textPathAngleSpread = Math.min(anglePerSegment * 0.45, 45); // Max spread of 45deg for text path
+      const [textPathStartX, textPathStartY] = getCoordinatesForAngle(midAngle - textPathAngleSpread, WHEEL_RADIUS - TEXT_RADIUS_OFFSET);
+      const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + textPathAngleSpread, WHEEL_RADIUS - TEXT_RADIUS_OFFSET);
       
       const textPathId = `textPath_${category.id.replace(/[^a-zA-Z0-9]/g, '')}_${i}`;
       const textArcPathData = `M ${textPathStartX},${textPathStartY} A ${WHEEL_RADIUS - TEXT_RADIUS_OFFSET},${WHEEL_RADIUS - TEXT_RADIUS_OFFSET} 0 0 1 ${textPathEndX},${textPathEndY}`;
@@ -88,8 +90,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         textPathId,
         textArcPathData,
         textAnchor: "middle",
-        // Adjusted font size calculation for larger wheel
-        fontSize: Math.max(10, Math.min(16, anglePerSegment * 0.28)), 
+        // Adjusted font size calculation for larger wheel and better text fit
+        fontSize: Math.max(9, Math.min(15, anglePerSegment * 0.32)), 
       };
     });
   }, [displayCategories, numSegments, anglePerSegment, getCoordinatesForAngle]);
@@ -118,7 +120,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       setIsSpinning(false);
       setFinalSelectedCategory(selectedCategory);
       onSpinEnd(selectedCategory);
-      setCurrentRotation(prev => prev % 360);
+      // Keep the final rotation without modulo to ensure pointer stays aligned
+      // setCurrentRotation(prev => prev % 360); // This can cause slight misalignment
     }, 4000); 
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
 
@@ -130,7 +133,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   if (categories.length === 0) {
     return (
-      <Card className="w-full max-w-lg mx-auto text-center shadow-xl"> {/* Adjusted max-width for larger wheel */}
+      <Card className="w-full max-w-lg mx-auto text-center shadow-xl">
         <CardHeader>
           <CardTitle className="title-text text-2xl">Ruleta de Categorías</CardTitle>
         </CardHeader>
@@ -145,7 +148,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   
   if (selectableCategories.length === 0 && categories.length > 0) {
      return (
-      <Card className="w-full max-w-lg mx-auto text-center shadow-xl"> {/* Adjusted max-width */}
+      <Card className="w-full max-w-lg mx-auto text-center shadow-xl">
         <CardHeader>
           <CardTitle className="title-text text-2xl">Ruleta de Categorías</CardTitle>
         </CardHeader>
@@ -159,11 +162,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   }
 
   return (
-    <Card className="w-full max-w-lg mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl"> {/* Adjusted max-width */}
+    <Card className="w-full max-w-lg mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-8 flex flex-col items-center"> {/* Increased space-y slightly */}
+      <CardContent className="space-y-8 flex flex-col items-center">
         <div className="relative" style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}>
           <svg 
             viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
@@ -183,11 +186,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             >
               {segments.map((segment) => (
                 <g key={segment.id}>
-                  <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/> {/* Increased strokeWidth */}
+                  <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
                   <text 
-                    fill="#000000" 
-                    dy="-2" 
-                    className="pointer-events-none select-none font-medium"
+                    fill="#000000" // Changed text color to black for better contrast on light segment colors
+                    dy="-3" // Slightly adjust vertical position of text on path
+                    className="pointer-events-none select-none font-semibold" // Made font bolder
                     style={{fontSize: `${segment.fontSize}px`}}
                   >
                     <textPath 
@@ -204,20 +207,20 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           </svg>
           {/* Pointer */}
           <div 
-            className="absolute top-0 left-1/2 -translate-x-1/2 -mt-2" // Adjusted -mt
+            className="absolute top-0 left-1/2 -translate-x-1/2 -mt-2"
             style={{
               width: 0,
               height: 0,
-              borderLeft: '15px solid transparent', // Increased size
-              borderRight: '15px solid transparent', // Increased size
-              borderTop: '28px solid hsl(var(--primary))', // Increased size
+              borderLeft: '15px solid transparent',
+              borderRight: '15px solid transparent',
+              borderTop: '28px solid hsl(var(--primary))',
               zIndex: 10,
             }}
           />
           {/* Center decorative circle - NOW THE SPIN BUTTON */}
           <div 
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center", // Increased size
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center",
               "transition-transform duration-150",
               (isSpinning || selectableCategories.length === 0)
                 ? "cursor-not-allowed opacity-70"
@@ -236,9 +239,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             }}
           >
              {isSpinning ? (
-                <Loader2 className="w-10 h-10 text-primary animate-spin" /> // Increased icon size
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
              ) : (
-                <Zap className="w-10 h-10 text-primary" /> // Increased icon size
+                <Zap className="w-10 h-10 text-primary" />
              )}
           </div>
         </div>
@@ -250,12 +253,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           </div>
         )}
         
-        {/* Spin button removed from here */}
       </CardContent>
     </Card>
   );
 };
 
 export default Roulette;
-
-    

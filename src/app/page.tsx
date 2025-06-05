@@ -8,9 +8,8 @@ import Timer from '@/components/timer/Timer';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Volume2, Settings2 } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Volume2 } from 'lucide-react';
+// Removed Settings2, Link, Button as they were for the removed card
 
 interface Category {
   id: string;
@@ -50,35 +49,28 @@ export default function HomePage() {
         if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length > 0) {
           const firstItem = parsedStoredCategories[0];
           if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && 'words' in firstItem && Array.isArray(firstItem.words)) {
-            // Valid Category[] format
             setCategories(parsedStoredCategories as Category[]);
           } else {
-             // If format is old (string[] or {id, name}[]) or malformed, CategoryManagement will handle migration on its page.
-             // Here, we prefer defaults if the format isn't perfect to avoid runtime errors.
-             // Or, try a light migration here too if it's just missing 'words'
              if (typeof firstItem === 'object' && firstItem !== null && 'name' in firstItem && !('words' in firstItem)) {
-                setCategories((parsedStoredCategories as Array<{id: string, name: string}>).map(cat => ({...cat, words: []})));
+                setCategories((parsedStoredCategories as Array<{id: string, name: string}>).map(cat => ({...cat, words: [], id: cat.id || crypto.randomUUID() })));
              } else {
                 console.warn("Categories from localStorage in HomePage are not in the expected Category[] format. Using defaults.");
                 setCategories(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
              }
           }
         } else if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length === 0) {
-            // Empty array, use defaults
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
         }
       } catch (error) {
         console.error("Failed to parse categories from localStorage in HomePage", error);
-        // Default categories are already set by useState or will be set above.
         setCategories(DEFAULT_CATEGORIES_WITH_WORDS.map(c => ({...c, id: crypto.randomUUID()})));
       }
     }
-    // If storedCategoriesRaw is null, default categories are used from useState.
   }, []);
 
   const handleSpinEnd = useCallback((category: Category) => {
     setSelectedCategoryFull(category);
-    let wordToDraw = category.name; // Default to category name if no words
+    let wordToDraw = category.name; 
     if (category.words && category.words.length > 0) {
       wordToDraw = category.words[Math.floor(Math.random() * category.words.length)];
     }
@@ -98,7 +90,7 @@ export default function HomePage() {
     setShowTimer(true);
     setIsTimerActive(true);
     if (selectedCategoryFull && selectedWord) {
-       const pictionaryTask = selectedWord; // Use the specific word
+       const pictionaryTask = selectedWord; 
        toast({ title: "¡A dibujar!", description: `Tienes ${PICTIONARY_DURATION} segundos para "${pictionaryTask}".` });
        if(speechSupported) speak(`¡Tiempo para ${pictionaryTask}! ${PICTIONARY_DURATION} segundos.`);
     }
@@ -121,7 +113,7 @@ export default function HomePage() {
            <h2 className="text-2xl font-bold text-center mb-1 title-text">Ronda de Pictionary</h2>
            <p className="text-lg text-center mb-4 text-foreground/80">Categoría: {selectedCategoryFull.name} - Palabra: <span className="font-semibold text-primary">{selectedWord}</span></p>
           <Timer
-            key={`${selectedCategoryFull.id}-${selectedWord}`} // Re-mount timer if category or word changes
+            key={`${selectedCategoryFull.id}-${selectedWord}`}
             initialDuration={PICTIONARY_DURATION}
             onTimerEnd={handleTimerEnd}
             autoStart={isTimerActive}
@@ -147,24 +139,7 @@ export default function HomePage() {
           </CardContent>
         </Card>
       )}
-       <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="title-text flex items-center gap-2"><Settings2 /> Personaliza tu Juego</CardTitle>
-          <CardDescription>
-            ¿Quieres añadir tus propias categorías y palabras? ¡Es fácil!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4">
-            Visita la página de gestión de categorías para crear, editar o eliminar las temáticas y palabras de tu ruleta.
-          </p>
-          <Button asChild variant="secondary" className="transition-transform hover:scale-105">
-            <Link href="/manage-categories">Administrar Categorías y Palabras</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Removed "Personaliza tu Juego" Card */}
     </div>
   );
 }
-
-    
