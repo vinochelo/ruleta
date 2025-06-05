@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,6 +15,11 @@ import { Button } from '@/components/ui/button';
 const DEFAULT_CATEGORIES = ["Objetos", "Animales", "Comida", "Acciones", "Lugares", "Personajes Famosos", "Películas y Series"];
 const PICTIONARY_DURATION = 60; // seconds
 
+interface StoredCategory {
+  id: string;
+  name: string;
+}
+
 export default function HomePage() {
   const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -25,18 +31,37 @@ export default function HomePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedCategories = localStorage.getItem('ruletaRupestreCategories');
-    if (storedCategories) {
+    const storedCategoriesRaw = localStorage.getItem('ruletaRupestreCategories');
+    if (storedCategoriesRaw) {
       try {
-        const parsedCategories = JSON.parse(storedCategories);
-        if (Array.isArray(parsedCategories) && parsedCategories.length > 0) {
-          setCategories(parsedCategories);
+        const parsedStoredCategories: unknown = JSON.parse(storedCategoriesRaw);
+
+        if (
+          Array.isArray(parsedStoredCategories) &&
+          parsedStoredCategories.length > 0
+        ) {
+          // Check if the items are objects with a 'name' property (new format)
+          if (
+            parsedStoredCategories.every(
+              (cat: any) => typeof cat === 'object' && cat !== null && typeof cat.name === 'string'
+            )
+          ) {
+            setCategories((parsedStoredCategories as StoredCategory[]).map(cat => cat.name));
+          }
+          // Check if the items are strings (potentially old format, though CategoryManagement should migrate)
+          else if (parsedStoredCategories.every((cat: any) => typeof cat === 'string')) {
+            setCategories(parsedStoredCategories as string[]);
+          }
+          // If neither, the format is unexpected; defaults are already set.
         }
+        // If parsedStoredCategories is an empty array or not an array, defaults are used.
       } catch (error) {
-        console.error("Failed to parse categories from localStorage", error);
+        console.error("Failed to parse categories from localStorage in HomePage", error);
         localStorage.removeItem('ruletaRupestreCategories'); // Clear corrupted data
+        // Default categories are already set by useState.
       }
     }
+    // If storedCategoriesRaw is null, default categories (string[]) are used from useState.
   }, []);
 
   const handleSpinEnd = useCallback((category: string) => {
