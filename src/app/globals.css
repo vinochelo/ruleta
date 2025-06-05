@@ -2,37 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 0 0% 100%; /* White for main content areas/cards */
+    --foreground: 222.2 84% 4.9%; /* Default dark text on white */
+
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 232 80% 58%; /* Indigo-700 (hsl(232, 80%, 58%)) */
+    --primary-foreground: 0 0% 98%; /* White text on primary */
+
+    --secondary: 220 70% 92%; /* Lighter indigo/sky-blue tint for secondary elements */
+    --secondary-foreground: 232 80% 58%; /* Indigo-700 text on secondary */
+
+    --muted: 220 70% 97%; /* Very light indigo/sky-blue tint for muted backgrounds */
+    --muted-foreground: 220 40% 50%; /* Muted Indigo text */
+    
+    --accent: 232 80% 58%; /* Indigo-700, for titles and important text (can be applied directly or via text-accent) */
+    --accent-foreground: 0 0% 98%; /* White text on accent backgrounds, if accent is used as bg */
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+
+    --border: 220 50% 85%; /* Light indigo/sky-blue border */
+    --input: 220 50% 95%; /* Light indigo/sky-blue input background */
+    --ring: 232 80% 65%; /* Slightly lighter Indigo for focus rings */
+
+    --radius: 0.5rem;
+
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -42,31 +49,42 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 222.2 84% 4.9%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+
+    --card: 222.2 84% 4.9%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+
+    --popover: 222.2 84% 4.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+
+    --primary: 232 80% 68%; /* Lighter Indigo for dark mode */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 220 50% 20%; 
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+
+    --muted: 220 50% 15%;
+    --muted-foreground: 220 30% 60%;
+    
+    --accent: 232 80% 68%;
     --accent-foreground: 0 0% 98%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+
+    --border: 220 50% 25%;
+    --input: 220 50% 22%;
+    --ring: 232 80% 75%;
+    
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -83,6 +101,15 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-[hsl(197,71%,73%)] to-[hsl(230,80%,50%)] text-foreground font-body antialiased;
+    min-height: 100vh;
   }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
+  }
+}
+
+/* Custom utility for titles if needed, or use text-primary directly */
+.title-text {
+  @apply text-primary font-bold;
 }
