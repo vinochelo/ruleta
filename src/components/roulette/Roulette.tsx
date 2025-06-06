@@ -27,8 +27,7 @@ const WHEEL_SIZE = 400;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; // 190
 const CENTER_X = WHEEL_SIZE / 2; // 200
 const CENTER_Y = WHEEL_SIZE / 2; // 200
-const TEXT_RADIUS_OFFSET = 15; 
-const TEXT_MAX_LENGTH = 20;
+const TEXT_MAX_LENGTH = 20; // Max characters for category name display
 
 // Helper function to round numbers to a fixed number of decimal places
 const round = (num: number, decimalPlaces: number = 3): number => {
@@ -60,7 +59,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
 
   const getCoordinatesForAngle = useCallback((angleDegrees: number, radius: number) => {
-    const angleRadians = ((angleDegrees - 90) * Math.PI) / 180;
+    const angleRadians = ((angleDegrees - 90) * Math.PI) / 180; // 0 degrees is top
     return [
       round(CENTER_X + radius * Math.cos(angleRadians)),
       round(CENTER_Y + radius * Math.sin(angleRadians)),
@@ -86,18 +85,15 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
 
       const midAngle = startAngle + anglePerSegment / 2;
-      const textPathAngleSpread = Math.min(anglePerSegment * 0.65, 65); 
-      const textArcRadius = WHEEL_RADIUS - TEXT_RADIUS_OFFSET; // e.g. 190 - 15 = 175
       
-      const [textPathStartX, textPathStartY] = getCoordinatesForAngle(midAngle - textPathAngleSpread / 2, textArcRadius);
-      const [textPathEndX, textPathEndY] = getCoordinatesForAngle(midAngle + textPathAngleSpread / 2, textArcRadius);
+      // Radial line path for text
+      const textPathStartRadius = WHEEL_RADIUS * 0.15; // Start text further from center
+      const textPathEndRadius = WHEEL_RADIUS * 0.85;   // End text further towards edge
+      const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, textPathStartRadius);
+      const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, textPathEndRadius);
       
-      const textPathId = `textPath_${category.id.replace(/[^a-zA-Z0-9]/g, '')}_${i}`;
-      // Determine sweep-flag for text path: 0 for shorter arc, 1 for longer.
-      // Since textPathAngleSpread is max 65, it will always be the shorter arc (0)
-      const textArcSweepFlag = textPathAngleSpread <= 180 ? 0 : 1; // Should generally be 0
-      // For text path, ensure arc direction is consistent (e.g., always clockwise, '1')
-      const textArcPathData = `M ${textPathStartX},${textPathStartY} A ${textArcRadius},${textArcRadius} 0 ${textArcSweepFlag} 1 ${textPathEndX},${textPathEndY}`;
+      const radialLinePathId = `radialTextPath_${category.id.replace(/[^a-zA-Z0-9]/g, '')}_${i}`;
+      const radialLinePathData = `M ${lineStartX},${lineStartY} L ${lineEndX},${lineEndY}`;
       
       let displayText = category.name;
       if (displayText.length > TEXT_MAX_LENGTH) {
@@ -114,10 +110,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         path: pathData,
         fill: segmentColor,
         textColor: textColor,
-        textPathId,
-        textArcPathData,
+        radialLinePathId,
+        radialLinePathData,
         textAnchor: "middle",
-        fontSize: Math.max(9, Math.min(14, anglePerSegment * 0.30)), 
+        fontSize: 11, // Fixed font size for radial text
       };
     });
   }, [displayCategories, numSegments, anglePerSegment, getCoordinatesForAngle]);
@@ -131,57 +127,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
     const selectedCategory = selectableCategories[randomIndex];
     
-    // Find the index in displayCategories for rotation calculation
     const displayIndex = displayCategories.findIndex(cat => cat.id === selectedCategory.id);
-    const targetDisplayIndex = displayIndex !== -1 ? displayIndex : 0; // Fallback, should always be found
+    const targetDisplayIndex = displayIndex !== -1 ? displayIndex : 0; 
 
     const spins = 5 + Math.floor(Math.random() * 3); 
     const baseRotation = 360 * spins; 
     
-    // Calculate the target angle to align the pointer with the middle of the selected segment
     const targetSegmentMidpointAngle = (targetDisplayIndex * anglePerSegment) + (anglePerSegment / 2);
     
-    // The pointer is at the top (0 degrees in standard SVG coordinate systems, but our angles might be different)
-    // We want the targetSegmentMidpointAngle to end up at the pointer position (e.g. 0 or 360)
-    // The rotation is applied to the wheel, so if a segment's midpoint is at `targetAngle`,
-    // we need to rotate the wheel by `-targetAngle` for it to align with a 0-degree pointer.
-    // However, our pointer is effectively at 270 degrees (top) in the context of angle calculation starting from right horizontal.
-    // Let's adjust so the selected segment's *start* angle aligns with the top, then shift by half segment.
-    // The pointer is at the 12 o'clock position. Angles are calculated clockwise starting from 3 o'clock.
-    // The 12 o'clock position is -90 degrees or 270 degrees.
-    // The final rotation value needs to make the *middle* of the selected segment land under the pointer.
-    // The pointer is at the top.
-    // `currentRotation` increases clockwise.
-    // If a segment's middle is at angle A (0 deg = right, 90 = bottom, 180 = left, 270 = top),
-    // we want to rotate the wheel so that A becomes 270 (or -90).
-    // So, targetRotation = currentRotation_offset - A.
-    // The pointer is fixed at what corresponds to 270 degrees in a typical Cartesian to SVG angle.
-    // The initial state is 0 rotation. The segments are drawn. Segment 0 is from 0 to anglePerSegment.
-    // If segment 0 is selected, its middle is anglePerSegment/2. We want anglePerSegment/2 to be at the top.
-    // The top is equivalent to an angle of 270 degrees in a system where 0 is to the right.
-    // `finalRotationValue` is the total accumulated rotation.
-    // Rotation `R` means segment originally at angle `theta` moves to `theta + R`.
-    // We want `targetSegmentMidpointAngle + finalRotationValue` to effectively be at the pointer (270 deg or -90 deg).
-    // Let `P` be the pointer angle (270). `targetSegmentMidpointAngle + R = P (mod 360) + k*360`
-    // `R = P - targetSegmentMidpointAngle + k*360`. We want R to be large and positive.
-    // So `finalRotationValue = baseRotation + (270 - targetSegmentMidpointAngle)`
-    // Or, more simply, the pointer is at the "top", so the target angle is 0 if we imagine the coordinate system is rotated.
-    // The formula `baseRotation - targetSegmentMidpointAngle` effectively tries to bring the target segment's midpoint to angle 0 (right).
-    // We need to align it to the top (which is -90 or 270 in a system where 0 is right).
-    // Let's adjust `finalRotationValue` to align the center of the segment to the top pointer.
-    // The pointer is at 12 o'clock. An angle of 0 for a segment usually starts at 3 o'clock and goes CCW for math, CW for SVG paths.
-    // Our `getCoordinatesForAngle` uses `angleDegrees - 90` for radians, meaning 0 degrees is top.
-    // So we want `targetSegmentMidpointAngle` (where 0 means start of first segment at the top) to be 0.
-    // Thus, `finalRotationValue = baseRotation - targetSegmentMidpointAngle` is correct if 0 is the top.
-    
-    // Let's re-verify the coordinate system and rotation:
-    // `getCoordinatesForAngle` uses `(angleDegrees - 90) * Math.PI / 180`.
-    // This means angleDegrees = 0 is mapped to -90 rad (-PI/2), which is (0, -radius) -> top.
-    // angleDegrees = 90 is mapped to 0 rad, which is (radius, 0) -> right.
-    // So, 0 degrees in our system IS the top.
-    // Therefore, `targetSegmentMidpointAngle` should align with 0 after rotation.
-    // `finalRotationValue` should be `baseRotation - targetSegmentMidpointAngle`.
-
+    // Our coordinate system has 0 degrees at the top.
+    // We want the targetSegmentMidpointAngle to align with 0 (the pointer position).
     const finalRotationValue = baseRotation - targetSegmentMidpointAngle;
 
     setCurrentRotation(finalRotationValue);
@@ -190,21 +145,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       setIsSpinning(false);
       setFinalSelectedCategory(selectedCategory);
       onSpinEnd(selectedCategory);
-      // Reset rotation for next spin to be clean, but keep visual state until modal interaction.
-      // The actual rotation displayed is `currentRotation`.
-      // To make the selected segment stay at the top after spinning:
-      // Set currentRotation to a value that makes targetSegmentMidpointAngle be at 0.
-      // const restingRotation = -(targetSegmentMidpointAngle % 360);
-      // setCurrentRotation(restingRotation); // This would make it snap after spin. Not desired.
-      // The CSS transition handles the spin. The `finalRotationValue` is the end state.
     }, 4000); 
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
 
   useEffect(() => {
-    // Reset visual rotation when categories change (e.g. navigating away and back)
-    // But not to 0 if a category was just selected.
-    // This useEffect might be too broad.
-    // Let's only reset if it's not a spin finalization.
     if (!isSpinning && !finalSelectedCategory) {
        setCurrentRotation(0);
     }
@@ -253,7 +197,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           >
             <defs>
               {segments.map(segment => (
-                <path id={segment.textPathId} d={segment.textArcPathData} key={segment.textPathId} />
+                <path id={segment.radialLinePathId} d={segment.radialLinePathData} key={segment.radialLinePathId} />
               ))}
             </defs>
             <g 
@@ -268,12 +212,12 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                   <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
                   <text 
                     fill={segment.textColor} 
-                    dominantBaseline="middle"
+                    dominantBaseline="middle" // Changed from central for better cross-browser consistency with textPath
                     className="pointer-events-none select-none font-semibold"
                     style={{fontSize: `${segment.fontSize}px`}}
                   >
                     <textPath 
-                      href={`#${segment.textPathId}`} 
+                      href={`#${segment.radialLinePathId}`} 
                       startOffset="50%" 
                       textAnchor={segment.textAnchor}
                     >
@@ -331,6 +275,4 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 };
 
 export default Roulette;
-
-
     
