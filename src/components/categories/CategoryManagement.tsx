@@ -56,6 +56,15 @@ const CategoryManagement: React.FC = () => {
   });
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
+  const persistCategories = useCallback((updatedCategories: Category[]) => {
+    setCategories(updatedCategories);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCategories));
+  }, []);
+  
+  const resetToDefaultCategories = useCallback(() => {
+    persistCategories([...DEFAULT_CATEGORIES]);
+    toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
+  }, [persistCategories, toast]);
 
   useEffect(() => {
     const storedCategoriesRaw = localStorage.getItem(STORAGE_KEY);
@@ -84,18 +93,8 @@ const CategoryManagement: React.FC = () => {
     } else {
       resetToDefaultCategories();
     }
-  }, []);
+  }, [resetToDefaultCategories]);
   
-  const persistCategories = useCallback((updatedCategories: Category[]) => {
-    setCategories(updatedCategories);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCategories));
-  }, []);
-  
-  const resetToDefaultCategories = useCallback(() => {
-    persistCategories([...DEFAULT_CATEGORIES]);
-    toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
-  }, [persistCategories, toast]);
-
 
   const handleAddCategory = async (e: FormEvent, suggestWithAI: boolean = false) => {
     e.preventDefault();
@@ -128,7 +127,7 @@ const CategoryManagement: React.FC = () => {
       
       setNewCategoryName(''); 
       setMultiAiContext({ isActive: true, names: categoryNamesArray, currentIndex: 0, originalInput: originalInput });
-      setIsBatchProcessing(true);
+      // setIsBatchProcessing will be set by the useEffect watching multiAiContext
 
     } else { 
       if (categories.some(cat => cat.name.toLowerCase() === originalInput.toLowerCase())) {
@@ -143,28 +142,33 @@ const CategoryManagement: React.FC = () => {
   };
 
   const proceedToNextMultiAiCategory = useCallback(() => {
-    setIsSuggestWordsDialogOpen(false); 
-    if (multiAiContext.isActive) {
-      setMultiAiContext(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
-    }
-  }, [multiAiContext.isActive]);
+    setIsSuggestWordsDialogOpen(false);
+    setMultiAiContext(prev => {
+      if (!prev.isActive) return prev;
+      return { ...prev, currentIndex: prev.currentIndex + 1 };
+    });
+  }, [setMultiAiContext]);
 
   useEffect(() => {
     if (!multiAiContext.isActive) {
       setIsBatchProcessing(false);
       return;
     }
+    
+    if (multiAiContext.currentIndex >= multiAiContext.names.length) {
+      if (multiAiContext.names.length > 0) { // Only show toast if there were names to process.
+         toast({title: "Proceso en Lote Completado", description: `${multiAiContext.names.length} categoría(s) solicitada(s) con IA han sido procesadas.`});
+      }
+      setMultiAiContext({ isActive: false, names: [], currentIndex: 0, originalInput: '' });
+      return; // Stop further processing in this effect run
+    }
+
     setIsBatchProcessing(true);
 
     const processCurrentAiCategory = async () => {
-      if (multiAiContext.currentIndex >= multiAiContext.names.length) {
-        setMultiAiContext({ isActive: false, names: [], currentIndex: 0, originalInput: '' });
-        toast({title: "Proceso en Lote Completado", description: `${multiAiContext.names.length} categoría(s) solicitada(s) con IA han sido procesadas.`});
-        return;
-      }
-
       const currentName = multiAiContext.names[multiAiContext.currentIndex];
       
+      // `categories` in this scope is now up-to-date due to being in dependency array
       if (categories.some(cat => cat.name.toLowerCase() === currentName.toLowerCase())) {
         toast({ title: "Categoría Omitida", description: `"${currentName}" ya existe o fue añadida mientras se procesaba. Omitiendo sugerencias IA.`, variant: "default" });
         proceedToNextMultiAiCategory();
@@ -190,12 +194,13 @@ const CategoryManagement: React.FC = () => {
         setAiSuggestedWords([]); 
       } finally {
         setIsAISuggesting(false); 
+        // Dialog is now open, user interaction will call proceedToNextMultiAiCategory via onProcessingComplete from SuggestWordsDialog
       }
     };
 
     processCurrentAiCategory();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [multiAiContext.isActive, multiAiContext.currentIndex]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, [multiAiContext, categories, toast, proceedToNextMultiAiCategory /* suggestWordsForCategory is stable */]);
 
 
   const handleDeleteCategory = (id: string) => {
@@ -335,15 +340,20 @@ const CategoryManagement: React.FC = () => {
       ));
       toast({ title: "Palabras Añadidas", description: `${uniqueNewWords.length} palabras añadidas a "${categoryNameForToast}" desde sugerencias IA.` });
 
-    } else { 
-      const newCategory: Category = { id: crypto.randomUUID(), name: categoryNameForToast, words: [...wordsToAdd].sort() };
+    } else { // This is for a new category being added via AI batch processing
+      const newCategoryToAdd: Category = { id: crypto.randomUUID(), name: categoryNameForToast, words: [...wordsToAdd].sort() };
       
-      setCategories(prev => {
-        const updatedCategories = [...prev, newCategory];
-        persistCategories(updatedCategories); 
-        return updatedCategories;
+      setCategories(prevCategories => {
+        // Defensive check, though the useEffect should primarily handle this
+        if (prevCategories.some(cat => cat.name.toLowerCase() === newCategoryToAdd.name.toLowerCase())) {
+          toast({ title: "Categoría Duplicada", description: `"${newCategoryToAdd.name}" ya fue añadida. No se añadió de nuevo.`, variant: "default" });
+          return prevCategories;
+        }
+        const updatedFinalCategories = [...prevCategories, newCategoryToAdd];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFinalCategories));
+        return updatedFinalCategories;
       });
-      toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategory.name}" creada con ${wordsToAdd.length} palabras sugeridas por IA.` });
+      toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategoryToAdd.name}" creada con ${wordsToAdd.length} palabras sugeridas por IA.` });
     }
     
     setCategoryForAISuggestion('');
@@ -522,6 +532,3 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
-
-
-    
