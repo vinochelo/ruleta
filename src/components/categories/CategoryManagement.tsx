@@ -126,11 +126,11 @@ const CategoryManagement: React.FC = () => {
         }
       }
       
-      setNewCategoryName(''); // Clear input as batch processing will start
+      setNewCategoryName(''); 
       setMultiAiContext({ isActive: true, names: categoryNamesArray, currentIndex: 0, originalInput: originalInput });
       setIsBatchProcessing(true);
 
-    } else { // Manual add (single category, name can include commas if user types it)
+    } else { 
       if (categories.some(cat => cat.name.toLowerCase() === originalInput.toLowerCase())) {
         toast({ title: "Error", description: "Esta categoría ya existe.", variant: "destructive" });
         return;
@@ -143,7 +143,7 @@ const CategoryManagement: React.FC = () => {
   };
 
   const proceedToNextMultiAiCategory = useCallback(() => {
-    setIsSuggestWordsDialogOpen(false); // Ensure dialog is closed
+    setIsSuggestWordsDialogOpen(false); 
     if (multiAiContext.isActive) {
       setMultiAiContext(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
     }
@@ -158,16 +158,13 @@ const CategoryManagement: React.FC = () => {
 
     const processCurrentAiCategory = async () => {
       if (multiAiContext.currentIndex >= multiAiContext.names.length) {
-        // All categories processed
         setMultiAiContext({ isActive: false, names: [], currentIndex: 0, originalInput: '' });
-        toast({title: "Proceso Completado", description: "Todas las categorías solicitadas con IA han sido procesadas."});
-        // setNewCategoryName(''); // Already cleared when starting batch
+        toast({title: "Proceso en Lote Completado", description: `${multiAiContext.names.length} categoría(s) solicitada(s) con IA han sido procesadas.`});
         return;
       }
 
       const currentName = multiAiContext.names[multiAiContext.currentIndex];
       
-      // Double check for existence in case it was added another way during a long pause
       if (categories.some(cat => cat.name.toLowerCase() === currentName.toLowerCase())) {
         toast({ title: "Categoría Omitida", description: `"${currentName}" ya existe o fue añadida mientras se procesaba. Omitiendo sugerencias IA.`, variant: "default" });
         proceedToNextMultiAiCategory();
@@ -175,10 +172,10 @@ const CategoryManagement: React.FC = () => {
       }
 
       setCategoryForAISuggestion(currentName);
-      setTargetCategoryIdForAIWords(null); // Crucial for new category flow in handleAddAISuggestedWords
+      setTargetCategoryIdForAIWords(null); 
       setIsAISuggesting(true);
       setAiSuggestedWords([]);
-      setIsSuggestWordsDialogOpen(true); // Open the dialog
+      setIsSuggestWordsDialogOpen(true); 
 
       try {
         const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: currentName });
@@ -190,15 +187,15 @@ const CategoryManagement: React.FC = () => {
       } catch (error) {
         console.error(`AI suggestion error for ${currentName}:`, error);
         toast({ title: "Error de IA", description: `No se pudieron sugerir palabras para "${currentName}".`, variant: "destructive" });
-        setAiSuggestedWords([]); // Ensure it's empty on error
+        setAiSuggestedWords([]); 
       } finally {
-        setIsAISuggesting(false); // Loading finished for AI call, dialog remains open
+        setIsAISuggesting(false); 
       }
     };
 
     processCurrentAiCategory();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [multiAiContext.isActive, multiAiContext.currentIndex, multiAiContext.names, categories, persistCategories, toast, proceedToNextMultiAiCategory]);
+  }, [multiAiContext.isActive, multiAiContext.currentIndex]);
 
 
   const handleDeleteCategory = (id: string) => {
@@ -315,12 +312,12 @@ const CategoryManagement: React.FC = () => {
   };
 
   const handleAddAISuggestedWords = (wordsToAdd: string[]) => {
-    let categoryNameForToast = categoryForAISuggestion; // This is set by the multi-AI loop or single existing category click
+    let categoryNameForToast = categoryForAISuggestion; 
 
-    if (targetCategoryIdForAIWords) { // Adding to existing category
+    if (targetCategoryIdForAIWords) { 
       const category = categories.find(cat => cat.id === targetCategoryIdForAIWords);
       if (!category) return;
-      categoryNameForToast = category.name; // Use existing category's name for toast
+      categoryNameForToast = category.name; 
 
       const uniqueNewWords = wordsToAdd.filter(word => 
         !category.words.some(existingWord => existingWord.toLowerCase() === word.toLowerCase())
@@ -328,7 +325,6 @@ const CategoryManagement: React.FC = () => {
 
       if (uniqueNewWords.length === 0 && wordsToAdd.length > 0) {
         toast({ title: "Sin Palabras Nuevas", description: `Todas las palabras seleccionadas ya existen en "${categoryNameForToast}".`, variant: "default" });
-        // proceedToNextMultiAiCategory will be called by dialog's onProcessingComplete
         return;
       }
       
@@ -339,18 +335,19 @@ const CategoryManagement: React.FC = () => {
       ));
       toast({ title: "Palabras Añadidas", description: `${uniqueNewWords.length} palabras añadidas a "${categoryNameForToast}" desde sugerencias IA.` });
 
-    } else { // Adding to a new category (which was just named via categoryForAISuggestion from multi-AI loop)
+    } else { 
       const newCategory: Category = { id: crypto.randomUUID(), name: categoryNameForToast, words: [...wordsToAdd].sort() };
-      // Add to current categories in state before persisting
-      setCategories(prev => [...prev, newCategory]);
-      persistCategories([...categories, newCategory]); // Use categories from current state which is more up-to-date for persist
+      
+      setCategories(prev => {
+        const updatedCategories = [...prev, newCategory];
+        persistCategories(updatedCategories); 
+        return updatedCategories;
+      });
       toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategory.name}" creada con ${wordsToAdd.length} palabras sugeridas por IA.` });
     }
     
-    // Reset these for next potential individual AI suggestion, multi-AI loop will override if active
     setCategoryForAISuggestion('');
     setTargetCategoryIdForAIWords(null);
-    // setIsSuggestWordsDialogOpen(false); // Dialog closing is handled by itself and onProcessingComplete
   };
 
   return (
@@ -514,10 +511,10 @@ const CategoryManagement: React.FC = () => {
           categoryName={categoryForAISuggestion}
           suggestedWords={aiSuggestedWords}
           isOpen={isSuggestWordsDialogOpen}
-          onClose={() => setIsSuggestWordsDialogOpen(false)} // Basic close, actual advance logic is in onProcessingComplete
+          onClose={() => setIsSuggestWordsDialogOpen(false)} 
           onAddWords={handleAddAISuggestedWords}
           isLoading={isAISuggesting}
-          onProcessingComplete={proceedToNextMultiAiCategory} // Key for sequential processing
+          onProcessingComplete={proceedToNextMultiAiCategory} 
         />
       )}
     </div>
@@ -525,3 +522,6 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
+
+
+    
