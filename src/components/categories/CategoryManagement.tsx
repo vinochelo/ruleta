@@ -57,11 +57,14 @@ const CategoryManagement: React.FC = () => {
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   const persistCategories = useCallback((updatedCategories: Category[]) => {
-    setCategories(updatedCategories);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCategories));
+    // Ensure categories being persisted also don't have duplicate IDs, just in case.
+    const uniqueCategoriesToPersist = Array.from(new Map(updatedCategories.map(cat => [cat.id, cat])).values());
+    setCategories(uniqueCategoriesToPersist);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueCategoriesToPersist));
   }, []);
   
   const resetToDefaultCategories = useCallback(() => {
+    // DEFAULT_CATEGORIES are assumed to have unique IDs.
     persistCategories([...DEFAULT_CATEGORIES]);
     toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
   }, [persistCategories, toast]);
@@ -73,12 +76,14 @@ const CategoryManagement: React.FC = () => {
         const parsedCategories = JSON.parse(storedCategoriesRaw);
         if (Array.isArray(parsedCategories)) {
           if (parsedCategories.length > 0) {
-            const validatedCategories = (parsedCategories as any[]).map(cat => ({
-                id: cat.id || crypto.randomUUID(),
-                name: cat.name || "Categoría sin nombre",
-                words: Array.isArray(cat.words) ? cat.words : [],
+            const validatedCategoriesFromStorage = (parsedCategories as any[]).map(cat => ({
+                id: cat.id || crypto.randomUUID(), // Ensure ID exists
+                name: String(cat.name || "Categoría sin nombre"),
+                words: Array.isArray(cat.words) ? cat.words.map(String) : [],
             }));
-            setCategories(validatedCategories as Category[]);
+            // Deduplicate by ID, keeping the first occurrence
+            const uniqueCategories = Array.from(new Map(validatedCategoriesFromStorage.map(cat => [cat.id, cat])).values());
+            setCategories(uniqueCategories as Category[]);
           } else { 
             setCategories([...DEFAULT_CATEGORIES]);
           }
@@ -118,9 +123,10 @@ const CategoryManagement: React.FC = () => {
         return;
       }
 
+      // Check against current categories in state
       for (const catName of categoryNamesArray) {
         if (categories.some(cat => cat.name.toLowerCase() === catName.toLowerCase())) {
-          toast({ title: "Error", description: `La categoría "${catName}" ya existe. No se procesarán las categorías con IA.`, variant: "destructive" });
+          toast({ title: "Error", description: `La categoría "${catName}" ya existe. No se procesarán las categorías con IA. Considera editarla o eliminarla primero.`, variant: "destructive" });
           return;
         }
       }
@@ -156,11 +162,11 @@ const CategoryManagement: React.FC = () => {
     }
     
     if (multiAiContext.currentIndex >= multiAiContext.names.length) {
-      if (multiAiContext.names.length > 0) { // Only show toast if there were names to process.
+      if (multiAiContext.names.length > 0) { 
          toast({title: "Proceso en Lote Completado", description: `${multiAiContext.names.length} categoría(s) solicitada(s) con IA han sido procesadas.`});
       }
       setMultiAiContext({ isActive: false, names: [], currentIndex: 0, originalInput: '' });
-      return; // Stop further processing in this effect run
+      return; 
     }
 
     setIsBatchProcessing(true);
@@ -168,7 +174,6 @@ const CategoryManagement: React.FC = () => {
     const processCurrentAiCategory = async () => {
       const currentName = multiAiContext.names[multiAiContext.currentIndex];
       
-      // `categories` in this scope is now up-to-date due to being in dependency array
       if (categories.some(cat => cat.name.toLowerCase() === currentName.toLowerCase())) {
         toast({ title: "Categoría Omitida", description: `"${currentName}" ya existe o fue añadida mientras se procesaba. Omitiendo sugerencias IA.`, variant: "default" });
         proceedToNextMultiAiCategory();
@@ -194,13 +199,12 @@ const CategoryManagement: React.FC = () => {
         setAiSuggestedWords([]); 
       } finally {
         setIsAISuggesting(false); 
-        // Dialog is now open, user interaction will call proceedToNextMultiAiCategory via onProcessingComplete from SuggestWordsDialog
       }
     };
 
     processCurrentAiCategory();
   // eslint-disable-next-line react-hooks/exhaustive-deps 
-  }, [multiAiContext, categories, toast, proceedToNextMultiAiCategory /* suggestWordsForCategory is stable */]);
+  }, [multiAiContext, categories, toast, proceedToNextMultiAiCategory]);
 
 
   const handleDeleteCategory = (id: string) => {
@@ -340,20 +344,24 @@ const CategoryManagement: React.FC = () => {
       ));
       toast({ title: "Palabras Añadidas", description: `${uniqueNewWords.length} palabras añadidas a "${categoryNameForToast}" desde sugerencias IA.` });
 
-    } else { // This is for a new category being added via AI batch processing
+    } else { 
       const newCategoryToAdd: Category = { id: crypto.randomUUID(), name: categoryNameForToast, words: [...wordsToAdd].sort() };
       
       setCategories(prevCategories => {
-        // Defensive check, though the useEffect should primarily handle this
+        if (prevCategories.some(cat => cat.id === newCategoryToAdd.id)) {
+             console.error("Critical: Attempted to add category with duplicate ID via AI Batch:", newCategoryToAdd.id, newCategoryToAdd.name);
+             toast({ title: "Error Crítico", description: `Intento de añadir categoría con ID duplicado: ${newCategoryToAdd.name}.`, variant: "destructive" });
+             return prevCategories;
+        }
         if (prevCategories.some(cat => cat.name.toLowerCase() === newCategoryToAdd.name.toLowerCase())) {
-          toast({ title: "Categoría Duplicada", description: `"${newCategoryToAdd.name}" ya fue añadida. No se añadió de nuevo.`, variant: "default" });
+          toast({ title: "Categoría Duplicada por Nombre", description: `"${newCategoryToAdd.name}" ya fue añadida (o existía). No se añadió de nuevo.`, variant: "default" });
           return prevCategories;
         }
         const updatedFinalCategories = [...prevCategories, newCategoryToAdd];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedFinalCategories));
+        toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategoryToAdd.name}" creada con ${wordsToAdd.length} palabras sugeridas por IA.` });
         return updatedFinalCategories;
       });
-      toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategoryToAdd.name}" creada con ${wordsToAdd.length} palabras sugeridas por IA.` });
     }
     
     setCategoryForAISuggestion('');
@@ -429,7 +437,7 @@ const CategoryManagement: React.FC = () => {
                         <div className="flex flex-wrap gap-1 mb-2 max-h-28 overflow-y-auto pr-2">
                           {category.words.length === 0 && <span className="text-xs text-muted-foreground italic">Sin palabras.</span>}
                           {category.words.map((word, wordIndex) => (
-                            <Badge key={wordIndex} variant="secondary" className="flex items-center">
+                            <Badge key={`${category.id}-word-${wordIndex}`} variant="secondary" className="flex items-center">
                               {word}
                               <Button
                                 variant="ghost"
@@ -532,3 +540,5 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
+
+    
