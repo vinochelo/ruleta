@@ -107,6 +107,9 @@ const CategoryManagement: React.FC = () => {
       try {
         const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: newCategoryName.trim() });
         setAiSuggestedWords(result.suggestedWords || []);
+        if ((result.suggestedWords || []).length === 0) {
+            toast({ title: "Sugerencias IA", description: "La IA no generó ninguna palabra para esta nueva categoría."});
+        }
       } catch (error) {
         console.error("AI suggestion error:", error);
         toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
@@ -211,11 +214,16 @@ const CategoryManagement: React.FC = () => {
     setAiSuggestedWords([]);
     try {
       const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: category.name });
-      setAiSuggestedWords(result.suggestedWords.filter(word => 
-        !category.words.some(existingWord => existingWord.toLowerCase() === word.toLowerCase())
-      ) || []);
-      if (result.suggestedWords.length > 0 && aiSuggestedWords.length === 0) {
-        toast({ title: "Sugerencias IA", description: "Todas las palabras sugeridas por IA ya existen en la categoría."});
+      const allSuggestions = result.suggestedWords || [];
+      const newUniqueSuggestions = allSuggestions.filter(suggestedWord =>
+        !category.words.some(existingWord => existingWord.toLowerCase() === suggestedWord.toLowerCase())
+      );
+      setAiSuggestedWords(newUniqueSuggestions);
+
+      if (allSuggestions.length === 0) {
+        toast({ title: "Sugerencias IA", description: "La IA no generó ninguna palabra para esta categoría."});
+      } else if (newUniqueSuggestions.length === 0) { 
+        toast({ title: "Sugerencias IA", description: "Todas las palabras sugeridas por la IA ya existen en esta categoría."});
       }
     } catch (error) {
       console.error("AI suggestion error:", error);
@@ -278,7 +286,7 @@ const CategoryManagement: React.FC = () => {
               aria-label="Nombre de la nueva categoría"
             />
             <div className="flex gap-2">
-              <Button type="submit" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting}>
+              <Button type="submit" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting && targetCategoryIdForAIWords === null}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Añadir
               </Button>
               <Button 
@@ -286,7 +294,7 @@ const CategoryManagement: React.FC = () => {
                 variant="outline" 
                 onClick={(e) => handleAddCategory(e, true)} 
                 className="transition-transform hover:scale-105 flex-1 sm:flex-none"
-                disabled={newCategoryName.trim() === '' || isAISuggesting}
+                disabled={newCategoryName.trim() === '' || (isAISuggesting && targetCategoryIdForAIWords === null)}
               >
                 {isAISuggesting && targetCategoryIdForAIWords === null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
                 Sugerir Palabras con IA
@@ -415,14 +423,13 @@ const CategoryManagement: React.FC = () => {
           isOpen={isSuggestWordsDialogOpen}
           onClose={() => {
             setIsSuggestWordsDialogOpen(false);
-            setCategoryForAISuggestion(''); // Reset after closing
+            setCategoryForAISuggestion(''); 
             setTargetCategoryIdForAIWords(null);
             setAiSuggestedWords([]);
-            if (targetCategoryIdForAIWords === null && newCategoryName === categoryForAISuggestion) {
-              // If it was for a new category and dialog closed without adding, don't clear newCategoryName
-              // This allows user to still click "Add" manually if they cancel AI
-            } else {
-              setNewCategoryName(''); // Clear if it was for existing or successfully added
+            // Do not clear newCategoryName here if AI suggestion for new category was cancelled,
+            // so user can still manually add it.
+            if (targetCategoryIdForAIWords !== null || (newCategoryName !== categoryForAISuggestion && !targetCategoryIdForAIWords)) {
+                 // Logic to clear newCategoryName if needed, or if the AI suggestion led to successful category creation elsewhere.
             }
           }}
           onAddWords={handleAddAISuggestedWords}
@@ -434,3 +441,4 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
+

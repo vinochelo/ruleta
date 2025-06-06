@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, AlertTriangle, Loader2 } from 'lucide-react'; // Changed Zap to Play
+import { Play, AlertTriangle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -23,11 +23,11 @@ const rouletteSegmentColors = [
   "#FB923C", "#A3E635", "#22D3EE", "#E879F9"
 ];
 
-const WHEEL_SIZE = 460; // Increased size
+const WHEEL_SIZE = 500; // Increased size
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2; 
 const CENTER_Y = WHEEL_SIZE / 2; 
-const TEXT_MAX_LENGTH = 20; 
+const TEXT_MAX_LENGTH = 20;
 
 // Helper function to round numbers to a fixed number of decimal places
 const round = (num: number, decimalPlaces: number = 3): number => {
@@ -86,13 +86,15 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
       const midAngle = startAngle + anglePerSegment / 2;
       
+      // For radial text: define start and end points of the line
       const textPathStartRadius = WHEEL_RADIUS * 0.15; 
-      const textPathEndRadius = WHEEL_RADIUS * 0.85;   
+      const textPathEndRadius = WHEEL_RADIUS * 0.85;
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, textPathStartRadius);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, textPathEndRadius);
       
       const radialLinePathId = `radialTextPath_${category.id.replace(/[^a-zA-Z0-9]/g, '')}_${i}`;
-      const radialLinePathData = `M ${lineStartX},${lineStartY} L ${lineEndX},${lineEndY}`;
+      // Path data for the radial line
+      const radialLinePathData = `M ${round(lineStartX)},${round(lineStartY)} L ${round(lineEndX)},${round(lineEndY)}`;
       
       let displayText = category.name;
       if (displayText.length > TEXT_MAX_LENGTH) {
@@ -109,10 +111,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         path: pathData,
         fill: segmentColor,
         textColor: textColor,
-        radialLinePathId,
-        radialLinePathData,
-        textAnchor: "middle",
-        fontSize: 11, 
+        textPathId: radialLinePathId, // Use this for the defs key and href
+        textArcPathData: radialLinePathData, // This is the M ... L ... path
+        textAnchor: "middle", // Center text along the path
+        fontSize: 12, // Slightly larger font size
       };
     });
   }, [displayCategories, numSegments, anglePerSegment, getCoordinatesForAngle]);
@@ -194,7 +196,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           >
             <defs>
               {segments.map(segment => (
-                <path id={segment.radialLinePathId} d={segment.radialLinePathData} key={segment.radialLinePathId} />
+                <path id={segment.textPathId} d={segment.textArcPathData} key={segment.textPathId} />
               ))}
             </defs>
             <g 
@@ -210,11 +212,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                   <text 
                     fill={segment.textColor} 
                     dominantBaseline="middle" 
-                    className="pointer-events-none select-none" // Removed font-semibold
+                    className="pointer-events-none select-none"
                     style={{fontSize: `${segment.fontSize}px`}}
                   >
                     <textPath 
-                      href={`#${segment.radialLinePathId}`} 
+                      href={`#${segment.textPathId}`} 
                       startOffset="50%" 
                       textAnchor={segment.textAnchor}
                     >
@@ -231,16 +233,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             style={{
               width: 0,
               height: 0,
-              borderLeft: '15px solid transparent',
-              borderRight: '15px solid transparent',
-              borderTop: '28px solid hsl(var(--primary))', 
+              borderLeft: '18px solid transparent', // Adjusted size
+              borderRight: '18px solid transparent', // Adjusted size
+              borderTop: '32px solid hsl(var(--primary))', // Adjusted size
               zIndex: 10,
             }}
           />
           {/* Center spin button */}
           <div 
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center",
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center", // Increased size
               "transition-transform duration-150",
               (isSpinning || selectableCategories.length === 0)
                 ? "cursor-not-allowed opacity-70"
@@ -259,9 +261,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             }}
           >
              {isSpinning ? (
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <Loader2 className="w-12 h-12 text-primary animate-spin" /> // Increased icon size
              ) : (
-                <Play className="w-10 h-10 text-primary" /> // Changed icon to Play
+                <Play className="w-12 h-12 text-primary" /> // Increased icon size
              )}
           </div>
         </div>
