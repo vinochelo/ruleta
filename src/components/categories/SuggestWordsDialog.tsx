@@ -22,9 +22,10 @@ interface SuggestWordsDialogProps {
   categoryName: string;
   suggestedWords: string[];
   isOpen: boolean;
-  onClose: () => void;
+  onClose: () => void; // Standard close action
   onAddWords: (wordsToAdd: string[]) => void;
   isLoading?: boolean;
+  onProcessingComplete?: () => void; // Called when dialog is fully done (added or cancelled)
 }
 
 const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
@@ -34,14 +35,18 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
   onClose,
   onAddWords,
   isLoading = false,
+  onProcessingComplete,
 }) => {
   const [editableWords, setEditableWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    setEditableWords([...suggestedWords]);
-  }, [suggestedWords]);
+    if (isOpen) { // Reset editable words when dialog opens with new suggestions
+      setEditableWords([...suggestedWords]);
+      setNewWord(''); // Clear manual input as well
+    }
+  }, [suggestedWords, isOpen]);
 
   const handleWordChange = (index: number, value: string) => {
     const updatedWords = [...editableWords];
@@ -67,23 +72,46 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
     setNewWord('');
   };
 
-  const handleSubmit = () => {
+  const handleSubmitAndClose = () => {
     const finalWords = editableWords.filter(word => word.trim() !== '');
-    if (finalWords.length === 0) {
+    if (finalWords.length === 0 && !isLoading) { //isLoading check to prevent premature toast if AI is still running
       toast({ title: "Sin Palabras", description: "No hay palabras para añadir.", variant: "destructive"});
+      // Don't close or call processing complete if no words and not loading, let user add manually or cancel
       return;
     }
-    onAddWords(finalWords);
-    onClose();
+    if (finalWords.length > 0) {
+      onAddWords(finalWords);
+    }
+    // onClose(); // This will be called by the DialogPrimitive.Close or onOpenChange
+    onProcessingComplete?.();
   };
 
+  const handleCancelAndClose = () => {
+    // onClose(); // This will be called by the DialogPrimitive.Close or onOpenChange
+    onProcessingComplete?.();
+  };
+  
+  const handleDialogValidClose = (openStatus: boolean) => {
+    if (!openStatus) { // Means dialog is attempting to close
+        // If not explicitly handled by submit or cancel, treat as cancel for processing
+        // This check ensures onProcessingComplete is called even if user clicks X or outside
+        if (isOpen) { // Check if it was open before this change
+             onProcessingComplete?.();
+        }
+        onClose(); // Call the original onClose to update parent's isOpen state
+    } else {
+        onClose(); // For opening, if managed by parent
+    }
+  };
+
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleDialogValidClose}>
       <DialogContent className="sm:max-w-lg bg-card shadow-xl rounded-lg">
         <DialogHeader className="p-6">
           <DialogTitle className="title-text text-xl flex items-center gap-2">
             <Brain className="h-5 w-5" />
-            Sugerencias de Palabras para "{categoryName}"
+            Sugerencias para "{categoryName}"
           </DialogTitle>
           <DialogDescription className="text-muted-foreground pt-1">
             La IA ha sugerido estas palabras. Puedes editarlas, eliminarlas o añadir más antes de agregarlas a la categoría.
@@ -91,7 +119,7 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
         </DialogHeader>
         
         {isLoading ? (
-          <div className="p-6 text-center">
+          <div className="p-6 text-center min-h-[200px] flex flex-col justify-center items-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Generando palabras...</p>
           </div>
@@ -118,7 +146,7 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
                     </Button>
                   </div>
                 ))}
-                {editableWords.length === 0 && !isLoading && (
+                {editableWords.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">No se sugirieron palabras o se eliminaron todas. Puedes añadir manualmente.</p>
                 )}
               </div>
@@ -142,12 +170,17 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
         )}
 
         <DialogFooter className="p-6">
-          <DialogClose asChild>
+          {/* DialogClose will trigger onOpenChange, which calls handleDialogValidClose -> onProcessingComplete */}
+          <DialogClose asChild> 
             <Button type="button" variant="outline" className="transition-transform hover:scale-105">
               Cancelar
             </Button>
           </DialogClose>
-          <Button onClick={handleSubmit} className="transition-transform hover:scale-105" disabled={isLoading || editableWords.filter(w => w.trim() !== '').length === 0}>
+          <Button 
+            onClick={handleSubmitAndClose} 
+            className="transition-transform hover:scale-105" 
+            disabled={isLoading || (editableWords.filter(w => w.trim() !== '').length === 0 && !isLoading)}
+          >
             Añadir Palabras ({editableWords.filter(w => w.trim() !== '').length})
           </Button>
         </DialogFooter>
@@ -157,3 +190,4 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
 };
 
 export default SuggestWordsDialog;
+
