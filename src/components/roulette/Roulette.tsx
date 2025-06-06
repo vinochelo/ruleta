@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Gamepad2, AlertTriangle, Loader2 } from 'lucide-react';
+import { Play, AlertTriangle, Loader2 } from 'lucide-react'; // Changed Zap to Play
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -23,11 +23,11 @@ const rouletteSegmentColors = [
   "#FB923C", "#A3E635", "#22D3EE", "#E879F9"
 ];
 
-const WHEEL_SIZE = 400;
-const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; // 190
-const CENTER_X = WHEEL_SIZE / 2; // 200
-const CENTER_Y = WHEEL_SIZE / 2; // 200
-const TEXT_MAX_LENGTH = 20; // Max characters for category name display
+const WHEEL_SIZE = 460; // Increased size
+const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
+const CENTER_X = WHEEL_SIZE / 2; 
+const CENTER_Y = WHEEL_SIZE / 2; 
+const TEXT_MAX_LENGTH = 20; 
 
 // Helper function to round numbers to a fixed number of decimal places
 const round = (num: number, decimalPlaces: number = 3): number => {
@@ -86,9 +86,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
       const midAngle = startAngle + anglePerSegment / 2;
       
-      // Radial line path for text
-      const textPathStartRadius = WHEEL_RADIUS * 0.15; // Start text further from center
-      const textPathEndRadius = WHEEL_RADIUS * 0.85;   // End text further towards edge
+      const textPathStartRadius = WHEEL_RADIUS * 0.15; 
+      const textPathEndRadius = WHEEL_RADIUS * 0.85;   
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, textPathStartRadius);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, textPathEndRadius);
       
@@ -113,7 +112,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         radialLinePathId,
         radialLinePathData,
         textAnchor: "middle",
-        fontSize: 11, // Fixed font size for radial text
+        fontSize: 11, 
       };
     });
   }, [displayCategories, numSegments, anglePerSegment, getCoordinatesForAngle]);
@@ -135,8 +134,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     
     const targetSegmentMidpointAngle = (targetDisplayIndex * anglePerSegment) + (anglePerSegment / 2);
     
-    // Our coordinate system has 0 degrees at the top.
-    // We want the targetSegmentMidpointAngle to align with 0 (the pointer position).
     const finalRotationValue = baseRotation - targetSegmentMidpointAngle;
 
     setCurrentRotation(finalRotationValue);
@@ -212,8 +209,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                   <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
                   <text 
                     fill={segment.textColor} 
-                    dominantBaseline="middle" // Changed from central for better cross-browser consistency with textPath
-                    className="pointer-events-none select-none font-semibold"
+                    dominantBaseline="middle" 
+                    className="pointer-events-none select-none" // Removed font-semibold
                     style={{fontSize: `${segment.fontSize}px`}}
                   >
                     <textPath 
@@ -264,7 +261,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
              {isSpinning ? (
                 <Loader2 className="w-10 h-10 text-primary animate-spin" />
              ) : (
-                <Gamepad2 className="w-10 h-10 text-primary" />
+                <Play className="w-10 h-10 text-primary" /> // Changed icon to Play
              )}
           </div>
         </div>
