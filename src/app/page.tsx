@@ -17,13 +17,13 @@ interface Category {
 }
 
 const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
-  { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas"] },
-  { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro"] },
-  { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan"] },
-  { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar"] },
-  { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo"] },
-  { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare"] },
-  { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad"] }
+  { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine"] },
+  { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa"] },
+  { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso"] },
+  { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar"] },
+  { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante"] },
+  { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo"] },
+  { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] }
 ];
 
 const PICTIONARY_DURATION = 60; // seconds
@@ -46,18 +46,20 @@ export default function HomePage() {
         const parsedStoredCategories: unknown = JSON.parse(storedCategoriesRaw);
 
         if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length > 0) {
-          const firstItem = parsedStoredCategories[0];
-          // Ensure items have id, name, and words properties. Add id if missing.
           const validatedCategories = (parsedStoredCategories as any[]).map(cat => ({
-            id: cat.id || crypto.randomUUID(), // Add UUID if missing (for older data)
-            name: cat.name || "Categoría sin nombre",
-            words: Array.isArray(cat.words) ? cat.words : [],
+            id: String(cat.id || crypto.randomUUID()), // Ensure ID is a string and exists
+            name: String(cat.name || "Categoría sin nombre"),
+            words: Array.isArray(cat.words) ? cat.words.map(String) : [],
           }));
-          setCategories(validatedCategories as Category[]);
+          // Deduplicate by ID, keeping the first occurrence
+          const uniqueCategories = Array.from(new Map(validatedCategories.map(cat => [cat.id, cat])).values());
+          setCategories(uniqueCategories as Category[]);
 
         } else if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length === 0) {
+            // If localStorage has an empty array, use defaults
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         } else {
+            // If format is unexpected, use defaults
             console.warn("Categories from localStorage in HomePage are not in the expected Category[] format or empty. Using defaults.");
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         }
@@ -67,6 +69,7 @@ export default function HomePage() {
       }
     } else {
       // localStorage is empty, defaults are already set by useState initial value
+      // No explicit setCategories needed here as initial state handles it.
     }
   }, []);
 
