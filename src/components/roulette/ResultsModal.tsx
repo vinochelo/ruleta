@@ -45,25 +45,22 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    // Reset internal state when modal is closed or re-opened for a new word
     if (!isOpen) {
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
     } else {
-      // Ensure a fresh start if modal is re-opened for a new round
-      // (e.g. if it was closed while timer was running or finished)
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
-      setTimerKey(prev => prev + 1); // Force re-mount of Timer for fresh state
+      setTimerKey(prev => prev + 1); 
     }
-  }, [isOpen, selectedWord]); // Depend on selectedWord too for reset if word changes while open (though unlikely with current flow)
+  }, [isOpen, selectedWord]);
 
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
     setActiveTimerDuration(duration);
     setIsPictionaryRoundActive(true);
-    setTimerKey(prevKey => prevKey + 1); // Re-key to reset and start Timer
+    setTimerKey(prevKey => prevKey + 1); 
     toast({ title: "¡A dibujar!", description: `Tienes ${duration} segundos para "${selectedWord}".` });
   };
 
@@ -74,7 +71,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     if (selectedWord) {
         setTimeout(() => {
             speakFn(`La palabra era ${selectedWord}.`);
-        }, 2000); // Wait 2 seconds before announcing
+        }, 2000); 
     }
   };
   
@@ -87,7 +84,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const handleResetTimerSelection = () => {
     setActiveTimerDuration(null);
     setIsPictionaryRoundActive(false);
-    setTimerKey(prevKey => prevKey + 1); // Re-key to ensure Timer is reset (even if not visible)
+    setTimerKey(prevKey => prevKey + 1); 
   }
 
   if (!selectedCategoryName ) return null;
@@ -100,15 +97,15 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             <Gift className="h-8 w-8 text-primary" />
             Ronda de Pictionary
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground pt-2 text-lg">
+          <DialogDescription className="text-muted-foreground pt-2 text-xl">
             Categoría: <span className="font-semibold text-foreground">{selectedCategoryName}</span>
           </DialogDescription>
         </DialogHeader>
 
-        {/* Display word prominently whether timer is active or not, if a word is selected */}
+        
         {selectedWord && !activeTimerDuration && (
-            <div className="p-6 pt-2 pb-4 text-center">
-                <p className="text-lg text-muted-foreground mb-1">
+            <div className="p-6 pt-0 pb-4 text-center">
+                <p className="text-xl text-muted-foreground mb-1">
                     Palabra a dibujar:
                 </p>
                 <p className="text-7xl font-bold text-primary break-words leading-tight">
@@ -121,7 +118,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           {activeTimerDuration && selectedWord ? ( 
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <p className="text-lg text-muted-foreground">Dibujando:</p>
+                <p className="text-xl text-muted-foreground">Dibujando:</p>
                 <p className="text-7xl font-bold text-primary break-words leading-tight">{selectedWord}</p>
               </div>
               <Timer
