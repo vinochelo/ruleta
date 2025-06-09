@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
@@ -11,39 +12,104 @@ interface TimerProps {
   autoStart?: boolean;
 }
 
+const playBeep = () => {
+  if (typeof window !== 'undefined' && window.AudioContext) {
+    const audioContext = new window.AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Higher pitch beep
+    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime); // Softer beep
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1); // Beep duration 0.1s
+
+    oscillator.onended = () => {
+      audioContext.close().catch(console.error); // Clean up context
+    };
+  }
+};
+
 const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = false }) => {
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(autoStart);
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setTimeLeft(initialDuration);
     setIsRunning(autoStart);
-  }, [initialDuration, autoStart]);
+     // Clear any existing interval when props change (e.g., new timer duration)
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+      intervalIdRef.current = null;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDuration, autoStart]); // key prop on parent ensures full re-mount for radical changes
 
   useEffect(() => {
-    if (!isRunning || timeLeft <= 0) {
-      if (timeLeft <= 0 && isRunning) { // ensure onTimerEnd is called only once when timer reaches 0
-        onTimerEnd();
-        setIsRunning(false); 
+    if (!isRunning) {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
       }
       return;
     }
 
-    const intervalId = setInterval(() => {
-      setTimeLeft((prevTime) => prevTime - 1);
+    if (timeLeft <= 0) {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
+      }
+      onTimerEnd();
+      // setIsRunning(false); // Parent (ResultsModal) now controls if timer can restart via key or new duration
+      return;
+    }
+
+    if (timeLeft <= 10 && isRunning) { // Beep in the last 10 seconds
+      playBeep();
+    }
+
+    intervalIdRef.current = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        const newTime = prevTime - 1;
+        if (newTime <= 0) {
+          if (intervalIdRef.current) clearInterval(intervalIdRef.current);
+          // onTimerEnd(); // Moved to outer check for timeLeft <= 0 to avoid double call
+          // setIsRunning(false);
+        }
+        return newTime;
+      });
     }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [isRunning, timeLeft, onTimerEnd]);
+    return () => {
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+        intervalIdRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRunning, timeLeft]); // Removed onTimerEnd from here to prevent re-triggering interval logic excessively
+
 
   const handleStartPause = useCallback(() => {
-    if (timeLeft <= 0) { // If timer ended, reset and start
+    if (timeLeft <= 0) { // If timer ended, effectively resets and starts if initialDuration hasn't changed
         setTimeLeft(initialDuration);
+        setIsRunning(true); // Make sure it starts if it was 0
+    } else {
+        setIsRunning((prev) => !prev);
     }
-    setIsRunning((prev) => !prev);
   }, [timeLeft, initialDuration]);
 
   const handleReset = useCallback(() => {
+    if (intervalIdRef.current) {
+      clearInterval(intervalIdRef.current);
+      intervalIdRef.current = null;
+    }
     setIsRunning(false);
     setTimeLeft(initialDuration);
   }, [initialDuration]);
@@ -70,11 +136,11 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
           {formatTime(timeLeft)}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={handleStartPause} className="w-full text-md py-3 transition-transform hover:scale-105" size="lg">
+          <Button onClick={handleStartPause} className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={timeLeft <=0 && !isRunning}>
             {isRunning ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5" />}
-            {isRunning ? 'Pausar' : (timeLeft <= 0 ? 'Reiniciar Juego' : 'Iniciar')}
+            {isRunning ? 'Pausar' : (timeLeft <= 0 ? 'Finalizado' : 'Iniciar')}
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
+          <Button onClick={handleReset} variant="outline" className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={(timeLeft === initialDuration && !isRunning) || (timeLeft <= 0 && !isRunning)}>
             <RotateCcw className="mr-2 h-5 w-5" />
             Resetear
           </Button>

@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Roulette from '@/components/roulette/Roulette';
 import ResultsModal from '@/components/roulette/ResultsModal';
-// Timer component is no longer used directly on this page
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,7 +31,7 @@ export default function HomePage() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { speak, isSupported: speechSupported } = useSpeechSynthesis();
+  const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,25 +80,23 @@ export default function HomePage() {
     setIsModalOpen(true);
 
     const announcement = `Categoría: ${category.name}.`;
-    if (speechSupported) {
+    if (speechSupported && !isSpeaking) {
       speak(announcement);
-    } else {
+    } else if (!speechSupported) {
       toast({ title: "Categoría Seleccionada", description: announcement });
     }
-  }, [speak, speechSupported, toast]);
+  }, [speak, speechSupported, toast, isSpeaking]);
 
   const speakTimeSelectionCallback = useCallback((duration: number) => {
-    if (speechSupported) {
+    if (speechSupported && !isSpeaking) {
       speak(`${duration} segundos.`);
     }
-  }, [speechSupported, speak]);
+  }, [speechSupported, speak, isSpeaking]);
 
 
   return (
     <div className="space-y-12">
       <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
-
-      {/* Timer display is now managed within ResultsModal */}
 
       <ResultsModal
         isOpen={isModalOpen}
@@ -107,6 +104,7 @@ export default function HomePage() {
         selectedCategoryName={selectedCategoryFull?.name || null}
         selectedWord={selectedWord}
         speakTimeSelection={speakTimeSelectionCallback}
+        speakFn={speak} 
       />
 
       {!speechSupported && (
