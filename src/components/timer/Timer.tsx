@@ -43,13 +43,12 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   useEffect(() => {
     setTimeLeft(initialDuration);
     setIsRunning(autoStart);
-     // Clear any existing interval when props change (e.g., new timer duration)
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
       intervalIdRef.current = null;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDuration, autoStart]); // key prop on parent ensures full re-mount for radical changes
+  }, [initialDuration, autoStart]); 
 
   useEffect(() => {
     if (!isRunning) {
@@ -66,12 +65,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         intervalIdRef.current = null;
       }
       onTimerEnd();
-      // setIsRunning(false); // Parent (ResultsModal) now controls if timer can restart via key or new duration
       return;
-    }
-
-    if (timeLeft <= 10 && isRunning) { // Beep in the last 10 seconds
-      playBeep();
     }
 
     intervalIdRef.current = setInterval(() => {
@@ -79,8 +73,8 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         const newTime = prevTime - 1;
         if (newTime <= 0) {
           if (intervalIdRef.current) clearInterval(intervalIdRef.current);
-          // onTimerEnd(); // Moved to outer check for timeLeft <= 0 to avoid double call
-          // setIsRunning(false);
+        } else if (newTime <= 10) { // Beep in the last 10 seconds
+          playBeep();
         }
         return newTime;
       });
@@ -93,13 +87,13 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRunning, timeLeft]); // Removed onTimerEnd from here to prevent re-triggering interval logic excessively
+  }, [isRunning, timeLeft]); 
 
 
   const handleStartPause = useCallback(() => {
-    if (timeLeft <= 0) { // If timer ended, effectively resets and starts if initialDuration hasn't changed
+    if (timeLeft <= 0) { 
         setTimeLeft(initialDuration);
-        setIsRunning(true); // Make sure it starts if it was 0
+        setIsRunning(true); 
     } else {
         setIsRunning((prev) => !prev);
     }
@@ -129,7 +123,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className={`text-6xl font-mono font-bold tabular-nums py-4 rounded-md
+        <div className={`text-8xl font-mono font-bold tabular-nums py-4 rounded-md
           ${timeLeft <= 10 && timeLeft > 0 && isRunning ? 'text-destructive animate-pulse' : 'text-primary'}
           ${timeLeft === 0 ? 'text-muted-foreground' : ''}
         `}>
@@ -151,3 +145,4 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 };
 
 export default Timer;
+

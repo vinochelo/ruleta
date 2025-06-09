@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Gift, Clock, RotateCcw, TimerIcon } from 'lucide-react'; // Added TimerIcon
+import { Gift, Clock, RotateCcw, TimerIcon } from 'lucide-react'; 
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 
@@ -21,7 +21,7 @@ interface ResultsModalProps {
   selectedCategoryName: string | null;
   selectedWord: string | null;
   speakTimeSelection: (duration: number) => void;
-  speakFn: (text: string) => void; // New prop for general speech
+  speakFn: (text: string) => void;
 }
 
 const TIMER_OPTIONS = [
@@ -49,9 +49,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
     } else {
-      setActiveTimerDuration(null); // Reset timer selection when modal opens
+      setActiveTimerDuration(null); 
       setIsPictionaryRoundActive(false);
-      setTimerKey(prev => prev + 1); // Reset timer component for new word/category
+      setTimerKey(prev => prev + 1); 
     }
   }, [isOpen]);
 
@@ -65,13 +65,13 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
 
   const handleTimerEndInternal = () => {
-    setIsPictionaryRoundActive(false); // Mark round as inactive
+    setIsPictionaryRoundActive(false); 
     toast({ title: "¡Tiempo!", description: "La ronda ha terminado.", variant: "destructive" });
     
     if (selectedWord) {
         setTimeout(() => {
             speakFn(selectedWord);
-        }, 2000); // Wait 2 seconds then announce the word
+        }, 2000); 
     }
   };
   
@@ -84,7 +84,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const handleResetTimerSelection = () => {
     setActiveTimerDuration(null);
     setIsPictionaryRoundActive(false);
-    setTimerKey(prevKey => prevKey + 1); // Increment key to re-mount timer if needed
+    setTimerKey(prevKey => prevKey + 1); 
   }
 
   if (!selectedCategoryName ) return null;
@@ -102,9 +102,12 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        {selectedWord && !activeTimerDuration && (
-            <div className="p-6 pt-2 pb-8 text-center bg-primary/5 rounded-md m-6 mt-0">
-                <p className="text-lg text-muted-foreground mb-1">Palabra a dibujar:</p>
+        {/* Display word prominently whether timer is active or not, if a word is selected */}
+        {selectedWord && (
+            <div className="p-6 pt-2 pb-4 text-center">
+                <p className="text-lg text-muted-foreground mb-1">
+                    {activeTimerDuration ? "Dibujando:" : "Palabra a dibujar:"}
+                </p>
                 <p className="text-7xl font-bold text-primary break-words leading-tight">
                 {selectedWord}
                 </p>
@@ -112,16 +115,15 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         )}
         
         <div className="px-6 pb-4">
-          {activeTimerDuration && selectedWord ? ( // Timer is active (selected or running)
+          {activeTimerDuration && selectedWord ? ( 
             <div className="space-y-4">
-               <p className="text-center text-lg">Dibujando: <span className="font-bold text-primary text-2xl">{selectedWord}</span></p>
               <Timer
                 key={timerKey}
                 initialDuration={activeTimerDuration}
                 onTimerEnd={handleTimerEndInternal}
-                autoStart={isPictionaryRoundActive} // Auto-start only if round is truly active
+                autoStart={isPictionaryRoundActive} 
               />
-              {!isPictionaryRoundActive && activeTimerDuration && ( // Timer finished, show message
+              {!isPictionaryRoundActive && activeTimerDuration && ( 
                 <div className="text-center space-y-4 p-4 bg-destructive/10 rounded-md">
                   <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo para "{selectedWord}"!</p>
                   <Button onClick={handleResetTimerSelection} variant="outline" className="w-full transition-transform hover:scale-105">
@@ -129,13 +131,13 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                   </Button>
                 </div>
               )}
-               {isPictionaryRoundActive && ( // Timer is running, show button to change time
+               {isPictionaryRoundActive && ( 
                  <Button onClick={handleResetTimerSelection} variant="outline" className="w-full transition-transform hover:scale-105">
                     <RotateCcw className="mr-2 h-4 w-4" /> Cambiar Tiempo / Reiniciar Palabra
                  </Button>
                )}
             </div>
-          ) : ( // No timer selected yet, show time options
+          ) : ( 
             <>
               <h3 className="text-xl font-medium text-center mb-6 text-foreground/90">Selecciona el Tiempo:</h3>
               <div className="grid grid-cols-2 gap-4">
@@ -165,3 +167,4 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
+
