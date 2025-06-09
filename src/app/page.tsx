@@ -29,7 +29,7 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
 const PICTIONARY_DURATION = 60; // seconds
 
 export default function HomePage() {
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES_WITH_WORDS);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryFull, setSelectedCategoryFull] = useState<Category | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,19 +47,22 @@ export default function HomePage() {
 
         if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length > 0) {
           const validatedCategories = (parsedStoredCategories as any[]).map(cat => ({
-            id: String(cat.id || crypto.randomUUID()), // Ensure ID is a string and exists
+            id: String(cat.id || crypto.randomUUID()), 
             name: String(cat.name || "Categoría sin nombre"),
             words: Array.isArray(cat.words) ? cat.words.map(String) : [],
           }));
-          // Deduplicate by ID, keeping the first occurrence
-          const uniqueCategories = Array.from(new Map(validatedCategories.map(cat => [cat.id, cat])).values());
-          setCategories(uniqueCategories as Category[]);
+          const uniqueCategoriesMap = new Map<string, Category>();
+          validatedCategories.forEach(cat => {
+            if (!uniqueCategoriesMap.has(cat.id)) {
+              uniqueCategoriesMap.set(cat.id, cat as Category);
+            }
+          });
+          const uniqueCategories = Array.from(uniqueCategoriesMap.values());
+          setCategories(uniqueCategories);
 
         } else if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length === 0) {
-            // If localStorage has an empty array, use defaults
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         } else {
-            // If format is unexpected, use defaults
             console.warn("Categories from localStorage in HomePage are not in the expected Category[] format or empty. Using defaults.");
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         }
@@ -68,8 +71,7 @@ export default function HomePage() {
         setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
       }
     } else {
-      // localStorage is empty, defaults are already set by useState initial value
-      // No explicit setCategories needed here as initial state handles it.
+      setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
     }
   }, []);
 
@@ -82,11 +84,11 @@ export default function HomePage() {
     setSelectedWord(wordToDraw);
     setIsModalOpen(true);
 
-    const announcement = `Categoría: ${category.name}. Palabra: ${wordToDraw}.`;
+    const announcement = `Categoría: ${category.name}.`;
     if (speechSupported) {
       speak(announcement);
     } else {
-      toast({ title: "Seleccionado", description: announcement });
+      toast({ title: "Categoría Seleccionada", description: announcement });
     }
   }, [speak, speechSupported, toast]);
 
