@@ -26,7 +26,7 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
   { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] }
 ];
 
-const PICTIONARY_DURATION = 60; // seconds
+const DEFAULT_PICTIONARY_DURATION = 60; // Default if needed
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -35,6 +35,7 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
+  const [selectedPictionaryDuration, setSelectedPictionaryDuration] = useState<number>(DEFAULT_PICTIONARY_DURATION);
 
   const { speak, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -92,16 +93,24 @@ export default function HomePage() {
     }
   }, [speak, speechSupported, toast]);
 
-  const handleStartPictionary = useCallback(() => {
+  const speakTimeSelectionCallback = useCallback((duration: number) => {
+    if (speechSupported) {
+      speak(`${duration} segundos.`);
+    }
+  }, [speechSupported, speak]);
+
+  const handleStartPictionary = useCallback((duration: number) => {
+    if (!selectedCategoryFull || !selectedWord) return;
+
+    setSelectedPictionaryDuration(duration);
     setIsModalOpen(false);
     setShowTimer(true);
     setIsTimerActive(true);
-    if (selectedCategoryFull && selectedWord) {
-       const pictionaryTask = selectedWord; 
-       toast({ title: "¡A dibujar!", description: `Tienes ${PICTIONARY_DURATION} segundos para "${pictionaryTask}".` });
-       if(speechSupported) speak(`¡Tiempo para ${pictionaryTask}! ${PICTIONARY_DURATION} segundos.`);
-    }
-  }, [selectedCategoryFull, selectedWord, toast, speechSupported]);
+    
+    toast({ title: "¡A dibujar!", description: `Tienes ${duration} segundos para "${selectedWord}".` });
+    if(speechSupported) speak(`¡A dibujar ${selectedWord}!`);
+    
+  }, [selectedCategoryFull, selectedWord, toast, speechSupported, speak, setIsModalOpen, setShowTimer, setIsTimerActive, setSelectedPictionaryDuration]);
 
   const handleTimerEnd = useCallback(() => {
     setIsTimerActive(false);
@@ -118,10 +127,12 @@ export default function HomePage() {
       {showTimer && selectedCategoryFull && selectedWord && (
         <div className="mt-12 flex flex-col items-center">
            <h2 className="text-2xl font-bold text-center mb-1 title-text">Ronda de Pictionary</h2>
-           <p className="text-lg text-center mb-4 text-foreground/80">Categoría: {selectedCategoryFull.name} - Palabra: <span className="font-semibold text-primary">{selectedWord}</span></p>
+           <p className="text-lg text-center mb-4 text-foreground/80">
+             Categoría: {selectedCategoryFull.name} - Palabra: <span className="font-semibold text-primary">{selectedWord}</span> - Tiempo: <span className="font-semibold text-primary">{selectedPictionaryDuration}s</span>
+           </p>
           <Timer
-            key={`${selectedCategoryFull.id}-${selectedWord}`}
-            initialDuration={PICTIONARY_DURATION}
+            key={`${selectedCategoryFull.id}-${selectedWord}-${selectedPictionaryDuration}`}
+            initialDuration={selectedPictionaryDuration}
             onTimerEnd={handleTimerEnd}
             autoStart={isTimerActive}
           />
@@ -134,6 +145,7 @@ export default function HomePage() {
         selectedCategoryName={selectedCategoryFull?.name || null}
         selectedWord={selectedWord}
         onStartPictionary={handleStartPictionary}
+        speakTimeSelection={speakTimeSelectionCallback}
       />
 
       {!speechSupported && (
