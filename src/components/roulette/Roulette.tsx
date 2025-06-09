@@ -12,6 +12,11 @@ interface Category {
   words: string[];
 }
 
+interface RouletteProps {
+  categories: Category[];
+  onSpinEnd: (category: Category) => void;
+}
+
 const rouletteSegmentColors = [
   "#F87171", "#60A5FA", "#34D399", "#FBBF24", 
   "#A78BFA", "#F472B6", "#6366F1", "#2DD4BF",
@@ -23,8 +28,7 @@ const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10;
 const CENTER_X = WHEEL_SIZE / 2; 
 const CENTER_Y = WHEEL_SIZE / 2; 
 const TEXT_MAX_LENGTH = 20;
-const TEXT_RADIUS_OFFSET = 15; 
-const FONT_SIZE_CATEGORY = 14; 
+const FONT_SIZE_CATEGORY = 16; // Increased from 14 to 16
 
 const round = (num: number, decimalPlaces: number = 3): number => {
   const factor = Math.pow(10, decimalPlaces);
@@ -80,8 +84,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
       const midAngle = startAngle + anglePerSegment / 2;
       
-      const textPathStartRadiusFactor = 0.15; 
-      const textPathEndRadiusFactor = 0.85;   
+      // Define the start and end points for the radial text path
+      const textPathStartRadiusFactor = 0.15; // Start closer to the center
+      const textPathEndRadiusFactor = 0.85;   // End closer to the outer edge
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathEndRadiusFactor);
@@ -124,7 +129,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const displayIndex = displayCategories.findIndex(cat => cat.id === selectedCategory.id);
     const targetDisplayIndex = displayIndex !== -1 ? displayIndex : 0; 
 
-    const spins = 8 + Math.floor(Math.random() * 4); // Increased spins
+    const spins = 8 + Math.floor(Math.random() * 4);
     const baseRotation = 360 * spins; 
     
     const targetSegmentMidpointAngle = (targetDisplayIndex * anglePerSegment) + (anglePerSegment / 2);
@@ -137,7 +142,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       setIsSpinning(false);
       setFinalSelectedCategory(selectedCategory);
       onSpinEnd(selectedCategory);
-    }, 6000); // Increased timeout to match animation
+    }, 6000);
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
 
   useEffect(() => {
@@ -196,7 +201,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               style={{ 
                 transform: `rotate(${currentRotation}deg)`, 
                 transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
-                transition: isSpinning ? 'transform 6000ms cubic-bezier(0.25, 0.1, 0.25, 1)' : 'none', // Increased animation duration
+                transition: isSpinning ? 'transform 6000ms cubic-bezier(0.25, 0.1, 0.25, 1)' : 'none',
               }}
             >
               {segments.map((segment) => (
