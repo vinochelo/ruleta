@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Gift, Clock, RotateCcw, TimerIcon } from 'lucide-react'; 
+import { Gift, Clock, RotateCcw, TimerIcon, XCircle } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,33 +45,36 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
+    // Reset internal state when modal is closed or re-opened for a new word
     if (!isOpen) {
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
     } else {
-      setActiveTimerDuration(null); 
+      // Ensure a fresh start if modal is re-opened for a new round
+      // (e.g. if it was closed while timer was running or finished)
+      setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
-      setTimerKey(prev => prev + 1); 
+      setTimerKey(prev => prev + 1); // Force re-mount of Timer for fresh state
     }
-  }, [isOpen]);
+  }, [isOpen, selectedWord]); // Depend on selectedWord too for reset if word changes while open (though unlikely with current flow)
 
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
     setActiveTimerDuration(duration);
     setIsPictionaryRoundActive(true);
-    setTimerKey(prevKey => prevKey + 1);
+    setTimerKey(prevKey => prevKey + 1); // Re-key to reset and start Timer
     toast({ title: "¡A dibujar!", description: `Tienes ${duration} segundos para "${selectedWord}".` });
   };
 
   const handleTimerEndInternal = () => {
-    setIsPictionaryRoundActive(false); 
+    setIsPictionaryRoundActive(false);
     toast({ title: "¡Tiempo!", description: "La ronda ha terminado.", variant: "destructive" });
     
     if (selectedWord) {
         setTimeout(() => {
-            speakFn(selectedWord);
-        }, 2000); 
+            speakFn(`La palabra era ${selectedWord}.`);
+        }, 2000); // Wait 2 seconds before announcing
     }
   };
   
@@ -84,7 +87,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const handleResetTimerSelection = () => {
     setActiveTimerDuration(null);
     setIsPictionaryRoundActive(false);
-    setTimerKey(prevKey => prevKey + 1); 
+    setTimerKey(prevKey => prevKey + 1); // Re-key to ensure Timer is reset (even if not visible)
   }
 
   if (!selectedCategoryName ) return null;
@@ -103,10 +106,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         </DialogHeader>
 
         {/* Display word prominently whether timer is active or not, if a word is selected */}
-        {selectedWord && (
+        {selectedWord && !activeTimerDuration && (
             <div className="p-6 pt-2 pb-4 text-center">
                 <p className="text-lg text-muted-foreground mb-1">
-                    {activeTimerDuration ? "Dibujando:" : "Palabra a dibujar:"}
+                    Palabra a dibujar:
                 </p>
                 <p className="text-7xl font-bold text-primary break-words leading-tight">
                 {selectedWord}
@@ -117,6 +120,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         <div className="px-6 pb-4">
           {activeTimerDuration && selectedWord ? ( 
             <div className="space-y-4">
+              <div className="text-center mb-4">
+                <p className="text-lg text-muted-foreground">Dibujando:</p>
+                <p className="text-7xl font-bold text-primary break-words leading-tight">{selectedWord}</p>
+              </div>
               <Timer
                 key={timerKey}
                 initialDuration={activeTimerDuration}
@@ -158,7 +165,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
         <DialogFooter className="p-6 pt-4">
           <Button variant="outline" onClick={handleCloseDialog} className="transition-transform hover:scale-105 w-full sm:w-auto text-lg py-3">
-            Cerrar
+            <XCircle className="mr-2 h-5 w-5" />
+            Cerrar y Nueva Palabra
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -167,4 +175,3 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
-

@@ -1,18 +1,26 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, FormEvent } from 'react';
 import Roulette from '@/components/roulette/Roulette';
 import ResultsModal from '@/components/roulette/ResultsModal';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Volume2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Award } from 'lucide-react';
 
 interface Category {
   id: string;
   name: string;
   words: string[];
+}
+
+interface Team {
+  id: string;
+  name: string;
+  score: number;
 }
 
 const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
@@ -25,24 +33,30 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
   { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] }
 ];
 
+const CATEGORIES_STORAGE_KEY = 'ruletaRupestreCategories';
+const TEAMS_STORAGE_KEY = 'ruletaRupestreTeams';
+
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryFull, setSelectedCategoryFull] = useState<Category | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [newTeamName, setNewTeamName] = useState('');
+
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
 
+  // Load Categories
   useEffect(() => {
-    const storedCategoriesRaw = localStorage.getItem('ruletaRupestreCategories');
+    const storedCategoriesRaw = localStorage.getItem(CATEGORIES_STORAGE_KEY);
     if (storedCategoriesRaw) {
       try {
         const parsedStoredCategories: unknown = JSON.parse(storedCategoriesRaw);
-
         if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length > 0) {
           const validatedCategories = (parsedStoredCategories as any[]).map(cat => ({
-            id: String(cat.id || crypto.randomUUID()), 
+            id: String(cat.id || crypto.randomUUID()),
             name: String(cat.name || "Categoría sin nombre"),
             words: Array.isArray(cat.words) ? cat.words.map(String) : [],
           }));
@@ -54,21 +68,96 @@ export default function HomePage() {
           });
           const uniqueCategories = Array.from(uniqueCategoriesMap.values());
           setCategories(uniqueCategories);
-
         } else if (Array.isArray(parsedStoredCategories) && parsedStoredCategories.length === 0) {
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         } else {
-            console.warn("Categories from localStorage in HomePage are not in the expected Category[] format or empty. Using defaults.");
             setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
         }
       } catch (error) {
-        console.error("Failed to parse categories from localStorage in HomePage", error);
         setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
       }
     } else {
       setCategories(DEFAULT_CATEGORIES_WITH_WORDS);
     }
   }, []);
+
+  // Load Teams
+  useEffect(() => {
+    const storedTeamsRaw = localStorage.getItem(TEAMS_STORAGE_KEY);
+    if (storedTeamsRaw) {
+      try {
+        const parsedStoredTeams: unknown = JSON.parse(storedTeamsRaw);
+        if (Array.isArray(parsedStoredTeams)) {
+          const validatedTeams = (parsedStoredTeams as any[]).map(team => ({
+            id: String(team.id || crypto.randomUUID()),
+            name: String(team.name || "Equipo sin nombre"),
+            score: Number(team.score) || 0,
+          }));
+          const uniqueTeamsMap = new Map<string, Team>();
+          validatedTeams.forEach(team => {
+            if (!uniqueTeamsMap.has(team.id)) {
+              uniqueTeamsMap.set(team.id, team as Team);
+            }
+          });
+          setTeams(Array.from(uniqueTeamsMap.values()));
+        }
+      } catch (error) {
+        console.error("Failed to parse teams from localStorage", error);
+        setTeams([]);
+      }
+    }
+  }, []);
+
+  const persistTeams = useCallback((updatedTeams: Team[]) => {
+    setTeams(updatedTeams);
+    localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(updatedTeams));
+  }, []);
+
+  const handleAddTeam = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmedName = newTeamName.trim();
+    if (!trimmedName) {
+      toast({ title: "Error", description: "El nombre del equipo no puede estar vacío.", variant: "destructive" });
+      return;
+    }
+    if (teams.some(team => team.name.toLowerCase() === trimmedName.toLowerCase())) {
+      toast({ title: "Error", description: "Ya existe un equipo con este nombre.", variant: "destructive" });
+      return;
+    }
+    const newTeam: Team = { id: crypto.randomUUID(), name: trimmedName, score: 0 };
+    persistTeams([...teams, newTeam]);
+    setNewTeamName('');
+    toast({ title: "Equipo Añadido", description: `¡El equipo "${trimmedName}" se ha unido!` });
+  };
+
+  const handleIncrementScore = (teamId: string) => {
+    const teamToUpdate = teams.find(t => t.id === teamId);
+    if (teamToUpdate && !isSpeaking) {
+        speakFn(`${teamToUpdate.name} un punto.`);
+    }
+    persistTeams(teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team));
+  };
+
+  const handleRemoveTeam = (teamId: string) => {
+    const teamToRemove = teams.find(t => t.id === teamId);
+    persistTeams(teams.filter(team => team.id !== teamId));
+    if (teamToRemove) {
+      toast({ title: "Equipo Eliminado", description: `El equipo "${teamToRemove.name}" ha sido eliminado.`, variant: "destructive" });
+    }
+  };
+
+  const handleResetAllScores = () => {
+    persistTeams(teams.map(team => ({ ...team, score: 0 })));
+    toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones de los equipos se han reiniciado a 0." });
+    if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
+  };
+  
+  const speakFn = useCallback((text: string) => {
+      if (speechSupported && !isSpeaking) {
+          speak(text);
+      }
+  }, [speechSupported, isSpeaking, speak]);
+
 
   const handleSpinEnd = useCallback((category: Category) => {
     setSelectedCategoryFull(category);
@@ -80,23 +169,74 @@ export default function HomePage() {
     setIsModalOpen(true);
 
     const announcement = `Categoría: ${category.name}.`;
-    if (speechSupported && !isSpeaking) {
-      speak(announcement);
-    } else if (!speechSupported) {
-      toast({ title: "Categoría Seleccionada", description: announcement });
-    }
-  }, [speak, speechSupported, toast, isSpeaking]);
+     if (!isSpeaking) speakFn(announcement);
+  }, [speakFn, isSpeaking]);
 
   const speakTimeSelectionCallback = useCallback((duration: number) => {
-    if (speechSupported && !isSpeaking) {
-      speak(`${duration} segundos.`);
-    }
-  }, [speechSupported, speak, isSpeaking]);
+    if (!isSpeaking) speakFn(`${duration} segundos.`);
+  }, [speakFn, isSpeaking]);
 
 
   return (
     <div className="space-y-12">
       <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
+
+      <Card className="shadow-lg transform transition-all duration-300 hover:shadow-xl">
+        <CardHeader>
+          <CardTitle className="title-text text-2xl flex items-center gap-2">
+            <Users className="h-6 w-6" />
+            Equipos y Puntuaciones
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <form onSubmit={handleAddTeam} className="flex flex-col sm:flex-row gap-2 items-center">
+            <Input
+              type="text"
+              value={newTeamName}
+              onChange={(e) => setNewTeamName(e.target.value)}
+              placeholder="Nombre del nuevo equipo"
+              className="flex-grow"
+              aria-label="Nombre del nuevo equipo"
+            />
+            <Button type="submit" className="w-full sm:w-auto transition-transform hover:scale-105">
+              <PlusCircle className="mr-2 h-4 w-4" /> Añadir Equipo
+            </Button>
+          </form>
+
+          {teams.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No hay equipos todavía. ¡Añade algunos para empezar!</p>
+          ) : (
+            <div className="space-y-4">
+              {teams.map(team => (
+                <Card key={team.id} className="p-4 bg-card/50">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                    <div className="flex-grow">
+                      <p className="text-xl font-semibold text-primary">{team.name}</p>
+                      <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
+                        <Award className="mr-2 h-4 w-4" /> Sumar Punto
+                      </Button>
+                      <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="sm" className="transition-transform hover:scale-105">
+                        <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+        {teams.length > 0 && (
+          <CardFooter>
+            <Button onClick={handleResetAllScores} variant="outline" className="w-full transition-transform hover:scale-105">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Todas las Puntuaciones
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
+
 
       <ResultsModal
         isOpen={isModalOpen}
@@ -104,7 +244,7 @@ export default function HomePage() {
         selectedCategoryName={selectedCategoryFull?.name || null}
         selectedWord={selectedWord}
         speakTimeSelection={speakTimeSelectionCallback}
-        speakFn={speak} 
+        speakFn={speakFn}
       />
 
       {!speechSupported && (
