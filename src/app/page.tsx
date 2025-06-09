@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Roulette from '@/components/roulette/Roulette';
 import ResultsModal from '@/components/roulette/ResultsModal';
-import Timer from '@/components/timer/Timer';
+// Timer component is no longer used directly on this page
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,16 +26,11 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
   { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] }
 ];
 
-const DEFAULT_PICTIONARY_DURATION = 60; // Default if needed
-
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryFull, setSelectedCategoryFull] = useState<Category | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTimerActive, setIsTimerActive] = useState(false);
-  const [showTimer, setShowTimer] = useState(false);
-  const [selectedPictionaryDuration, setSelectedPictionaryDuration] = useState<number>(DEFAULT_PICTIONARY_DURATION);
 
   const { speak, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -99,52 +94,18 @@ export default function HomePage() {
     }
   }, [speechSupported, speak]);
 
-  const handleStartPictionary = useCallback((duration: number) => {
-    if (!selectedCategoryFull || !selectedWord) return;
-
-    setSelectedPictionaryDuration(duration);
-    setIsModalOpen(false);
-    setShowTimer(true);
-    setIsTimerActive(true);
-    
-    toast({ title: "¡A dibujar!", description: `Tienes ${duration} segundos para "${selectedWord}".` });
-    if(speechSupported) speak(`¡A dibujar ${selectedWord}!`);
-    
-  }, [selectedCategoryFull, selectedWord, toast, speechSupported, speak, setIsModalOpen, setShowTimer, setIsTimerActive, setSelectedPictionaryDuration]);
-
-  const handleTimerEnd = useCallback(() => {
-    setIsTimerActive(false);
-    toast({ title: "¡Tiempo!", description: "La ronda ha terminado.", variant: "destructive" });
-    if (speechSupported) {
-      speak("¡Se acabó el tiempo!");
-    }
-  }, [toast, speechSupported]);
 
   return (
     <div className="space-y-12">
       <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
 
-      {showTimer && selectedCategoryFull && selectedWord && (
-        <div className="mt-12 flex flex-col items-center">
-           <h2 className="text-2xl font-bold text-center mb-1 title-text">Ronda de Pictionary</h2>
-           <p className="text-lg text-center mb-4 text-foreground/80">
-             Categoría: {selectedCategoryFull.name} - Palabra: <span className="font-semibold text-primary">{selectedWord}</span> - Tiempo: <span className="font-semibold text-primary">{selectedPictionaryDuration}s</span>
-           </p>
-          <Timer
-            key={`${selectedCategoryFull.id}-${selectedWord}-${selectedPictionaryDuration}`}
-            initialDuration={selectedPictionaryDuration}
-            onTimerEnd={handleTimerEnd}
-            autoStart={isTimerActive}
-          />
-        </div>
-      )}
+      {/* Timer display is now managed within ResultsModal */}
 
       <ResultsModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         selectedCategoryName={selectedCategoryFull?.name || null}
         selectedWord={selectedWord}
-        onStartPictionary={handleStartPictionary}
         speakTimeSelection={speakTimeSelectionCallback}
       />
 
