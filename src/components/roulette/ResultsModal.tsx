@@ -20,6 +20,7 @@ interface ResultsModalProps {
   onClose: () => void;
   selectedCategoryName: string | null;
   selectedWord: string | null;
+  selectedCategoryColor: string | null;
   speakTimeSelection: (duration: number) => void;
   speakFn: (text: string) => void;
 }
@@ -36,6 +37,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   onClose,
   selectedCategoryName,
   selectedWord,
+  selectedCategoryColor,
   speakTimeSelection,
   speakFn,
 }) => {
@@ -53,7 +55,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setIsPictionaryRoundActive(false);
       setTimerKey(prev => prev + 1); 
     }
-  }, [isOpen, selectedWord]);
+  }, [isOpen]); // Removed selectedWord to avoid premature reset if only word changes
 
 
   const handleTimeButtonClick = (duration: number) => {
@@ -88,6 +90,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   }
 
   if (!selectedCategoryName ) return null;
+  const wordStyle = { color: selectedCategoryColor || 'hsl(var(--primary))' };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog();}}>
@@ -108,7 +111,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 <p className="text-xl text-muted-foreground mb-1">
                     Palabra a dibujar:
                 </p>
-                <p className="text-7xl font-bold text-primary break-words leading-tight">
+                <p className="text-7xl font-bold break-words leading-tight" style={wordStyle}>
                 {selectedWord}
                 </p>
             </div>
@@ -119,7 +122,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <p className="text-xl text-muted-foreground">Dibujando:</p>
-                <p className="text-7xl font-bold text-primary break-words leading-tight">{selectedWord}</p>
+                <p className="text-7xl font-bold break-words leading-tight" style={wordStyle}>{selectedWord}</p>
               </div>
               <Timer
                 key={timerKey}

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, AlertTriangle, Loader2, Gamepad2 } from 'lucide-react';
+import { Play, AlertTriangle, Loader2 } from 'lucide-react'; // Removed Gamepad2 as it was unused
 import { cn } from '@/lib/utils';
 
 interface Category {
@@ -14,7 +14,7 @@ interface Category {
 
 interface RouletteProps {
   categories: Category[];
-  onSpinEnd: (category: Category) => void;
+  onSpinEnd: (category: Category, color: string) => void;
 }
 
 const rouletteSegmentColors = [
@@ -28,7 +28,7 @@ const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10;
 const CENTER_X = WHEEL_SIZE / 2; 
 const CENTER_Y = WHEEL_SIZE / 2; 
 const TEXT_MAX_LENGTH = 20;
-const FONT_SIZE_CATEGORY = 16; // Increased from 14 to 16
+const FONT_SIZE_CATEGORY = 18; // Increased from 16 to 18
 
 const round = (num: number, decimalPlaces: number = 3): number => {
   const factor = Math.pow(10, decimalPlaces);
@@ -48,7 +48,7 @@ function getTextColorForBackground(hexcolor: string): string {
 const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(0);
-  const [finalSelectedCategory, setFinalSelectedCategory] = useState<Category | null>(null);
+  const [finalSelectedCategoryInfo, setFinalSelectedCategoryInfo] = useState<{category: Category, color: string} | null>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -84,9 +84,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
       const midAngle = startAngle + anglePerSegment / 2;
       
-      // Define the start and end points for the radial text path
-      const textPathStartRadiusFactor = 0.15; // Start closer to the center
-      const textPathEndRadiusFactor = 0.85;   // End closer to the outer edge
+      const textPathStartRadiusFactor = 0.15; 
+      const textPathEndRadiusFactor = 0.85;   
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathEndRadiusFactor);
@@ -121,7 +120,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     if (isSpinning || selectableCategories.length === 0) return;
 
     setIsSpinning(true);
-    setFinalSelectedCategory(null);
+    setFinalSelectedCategoryInfo(null);
 
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
     const selectedCategory = selectableCategories[randomIndex];
@@ -138,18 +137,22 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
     setCurrentRotation(finalRotationValue);
 
+    const selectedSegment = segments.find(seg => seg.id === selectedCategory.id);
+    const selectedColor = selectedSegment ? selectedSegment.fill : rouletteSegmentColors[0];
+
+
     setTimeout(() => {
       setIsSpinning(false);
-      setFinalSelectedCategory(selectedCategory);
-      onSpinEnd(selectedCategory);
+      setFinalSelectedCategoryInfo({ category: selectedCategory, color: selectedColor});
+      onSpinEnd(selectedCategory, selectedColor);
     }, 6000);
-  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd]);
+  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments]);
 
   useEffect(() => {
-    if (!isSpinning && !finalSelectedCategory) {
+    if (!isSpinning && !finalSelectedCategoryInfo) {
        setCurrentRotation(0); 
     }
-  }, [categories, isSpinning, finalSelectedCategory]); 
+  }, [categories, isSpinning, finalSelectedCategoryInfo]); 
 
   if (categories.length === 0) {
     return (

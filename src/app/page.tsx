@@ -40,6 +40,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryFull, setSelectedCategoryFull] = useState<Category | null>(null);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedCategoryColor, setSelectedCategoryColor] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -159,8 +160,9 @@ export default function HomePage() {
   }, [speechSupported, isSpeaking, speak]);
 
 
-  const handleSpinEnd = useCallback((category: Category) => {
+  const handleSpinEnd = useCallback((category: Category, color: string) => {
     setSelectedCategoryFull(category);
+    setSelectedCategoryColor(color);
     let wordToDraw = category.name; 
     if (category.words && category.words.length > 0) {
       wordToDraw = category.words[Math.floor(Math.random() * category.words.length)];
@@ -243,6 +245,7 @@ export default function HomePage() {
         onClose={() => setIsModalOpen(false)}
         selectedCategoryName={selectedCategoryFull?.name || null}
         selectedWord={selectedWord}
+        selectedCategoryColor={selectedCategoryColor}
         speakTimeSelection={speakTimeSelectionCallback}
         speakFn={speakFn}
       />
