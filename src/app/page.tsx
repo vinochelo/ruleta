@@ -180,65 +180,70 @@ export default function HomePage() {
 
 
   return (
-    <div className="space-y-12">
-      <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+        <div className="lg:col-span-2">
+          <Card className="shadow-lg transform transition-all duration-300 hover:shadow-xl">
+            <CardHeader>
+              <CardTitle className="title-text text-2xl flex items-center gap-2">
+                <Users className="h-6 w-6" />
+                Equipos y Puntuaciones
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <form onSubmit={handleAddTeam} className="flex flex-col sm:flex-row gap-2 items-center">
+                <Input
+                  type="text"
+                  value={newTeamName}
+                  onChange={(e) => setNewTeamName(e.target.value)}
+                  placeholder="Nombre del nuevo equipo"
+                  className="flex-grow"
+                  aria-label="Nombre del nuevo equipo"
+                />
+                <Button type="submit" className="w-full sm:w-auto transition-transform hover:scale-105">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Añadir Equipo
+                </Button>
+              </form>
 
-      <Card className="shadow-lg transform transition-all duration-300 hover:shadow-xl">
-        <CardHeader>
-          <CardTitle className="title-text text-2xl flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            Equipos y Puntuaciones
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleAddTeam} className="flex flex-col sm:flex-row gap-2 items-center">
-            <Input
-              type="text"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-              placeholder="Nombre del nuevo equipo"
-              className="flex-grow"
-              aria-label="Nombre del nuevo equipo"
-            />
-            <Button type="submit" className="w-full sm:w-auto transition-transform hover:scale-105">
-              <PlusCircle className="mr-2 h-4 w-4" /> Añadir Equipo
-            </Button>
-          </form>
+              {teams.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">No hay equipos todavía. ¡Añade algunos para empezar!</p>
+              ) : (
+                <div className="space-y-4">
+                  {teams.map(team => (
+                    <Card key={team.id} className="p-4 bg-card/50">
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                        <div className="flex-grow">
+                          <p className="text-xl font-semibold text-primary">{team.name}</p>
+                          <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
+                            <Award className="mr-2 h-4 w-4" /> Sumar Punto
+                          </Button>
+                          <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="sm" className="transition-transform hover:scale-105">
+                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+            {teams.length > 0 && (
+              <CardFooter>
+                <Button onClick={handleResetAllScores} variant="outline" className="w-full transition-transform hover:scale-105">
+                  <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Todas las Puntuaciones
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        </div>
 
-          {teams.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No hay equipos todavía. ¡Añade algunos para empezar!</p>
-          ) : (
-            <div className="space-y-4">
-              {teams.map(team => (
-                <Card key={team.id} className="p-4 bg-card/50">
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-                    <div className="flex-grow">
-                      <p className="text-xl font-semibold text-primary">{team.name}</p>
-                      <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
-                        <Award className="mr-2 h-4 w-4" /> Sumar Punto
-                      </Button>
-                      <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="sm" className="transition-transform hover:scale-105">
-                        <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-        {teams.length > 0 && (
-          <CardFooter>
-            <Button onClick={handleResetAllScores} variant="outline" className="w-full transition-transform hover:scale-105">
-              <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Todas las Puntuaciones
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
-
+        <div className="lg:col-span-3">
+          <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
+        </div>
+      </div>
 
       <ResultsModal
         isOpen={isModalOpen}
