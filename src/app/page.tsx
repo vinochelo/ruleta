@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Award } from 'lucide-react';
 
 interface Category {
@@ -140,7 +141,7 @@ export default function HomePage() {
   const handleIncrementScore = useCallback((teamId: string) => {
     const teamToUpdate = teams.find(t => t.id === teamId);
     if (teamToUpdate && !isSpeaking) {
-        speakFn(`${teamToUpdate.name} un punto.`);
+        speakFn(`${teamToUpdate.name} suma un punto.`);
     }
     persistTeams(teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team));
   }, [teams, isSpeaking, speakFn, persistTeams]);
@@ -209,24 +210,34 @@ export default function HomePage() {
                 <p className="text-muted-foreground text-center py-4">No hay equipos todavía. ¡Añade algunos para empezar!</p>
               ) : (
                 <div className="space-y-4">
-                  {teams.map(team => (
-                    <Card key={team.id} className="p-4 bg-card/50">
-                      <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-                        <div className="flex-grow">
-                          <p className="text-xl font-semibold text-primary">{team.name}</p>
-                          <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
+                  <TooltipProvider>
+                    {teams.map(team => (
+                      <Card key={team.id} className="p-4 bg-card/50">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+                          <div className="flex-grow">
+                            <p className="text-xl font-semibold text-primary">{team.name}</p>
+                            <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
+                              <Award className="mr-2 h-4 w-4" /> Sumar Punto
+                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="icon" className="transition-transform hover:scale-105">
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Eliminar {team.name}</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Eliminar {team.name}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
-                            <Award className="mr-2 h-4 w-4" /> Sumar Punto
-                          </Button>
-                          <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="sm" className="transition-transform hover:scale-105">
-                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
+                  </TooltipProvider>
                 </div>
               )}
             </CardContent>
