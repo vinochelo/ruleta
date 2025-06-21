@@ -131,34 +131,34 @@ export default function HomePage() {
     toast({ title: "Equipo Añadido", description: `¡El equipo "${trimmedName}" se ha unido!` });
   };
 
-  const handleIncrementScore = (teamId: string) => {
-    const teamToUpdate = teams.find(t => t.id === teamId);
-    if (teamToUpdate && !isSpeaking) {
-        speakFn(`${teamToUpdate.name} un punto.`);
-    }
-    persistTeams(teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team));
-  };
-
-  const handleRemoveTeam = (teamId: string) => {
-    const teamToRemove = teams.find(t => t.id === teamId);
-    persistTeams(teams.filter(team => team.id !== teamId));
-    if (teamToRemove) {
-      toast({ title: "Equipo Eliminado", description: `El equipo "${teamToRemove.name}" ha sido eliminado.`, variant: "destructive" });
-    }
-  };
-
-  const handleResetAllScores = () => {
-    persistTeams(teams.map(team => ({ ...team, score: 0 })));
-    toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones de los equipos se han reiniciado a 0." });
-    if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
-  };
-  
   const speakFn = useCallback((text: string) => {
       if (speechSupported && !isSpeaking) {
           speak(text);
       }
   }, [speechSupported, isSpeaking, speak]);
 
+  const handleIncrementScore = useCallback((teamId: string) => {
+    const teamToUpdate = teams.find(t => t.id === teamId);
+    if (teamToUpdate && !isSpeaking) {
+        speakFn(`${teamToUpdate.name} un punto.`);
+    }
+    persistTeams(teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team));
+  }, [teams, isSpeaking, speakFn, persistTeams]);
+
+  const handleRemoveTeam = useCallback((teamId: string) => {
+    const teamToRemove = teams.find(t => t.id === teamId);
+    persistTeams(teams.filter(team => team.id !== teamId));
+    if (teamToRemove) {
+      toast({ title: "Equipo Eliminado", description: `El equipo "${teamToRemove.name}" ha sido eliminado.`, variant: "destructive" });
+    }
+  }, [teams, persistTeams, toast]);
+
+  const handleResetAllScores = useCallback(() => {
+    persistTeams(teams.map(team => ({ ...team, score: 0 })));
+    toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones de los equipos se han reiniciado a 0." });
+    if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
+  }, [teams, persistTeams, toast, isSpeaking, speakFn]);
+  
 
   const handleSpinEnd = useCallback((category: Category, color: string) => {
     setSelectedCategoryFull(category);

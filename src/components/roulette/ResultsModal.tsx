@@ -11,7 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Gift, Clock, RotateCcw, TimerIcon, XCircle } from 'lucide-react';
+import { Gift, Clock, RotateCcw, TimerIcon, XCircle, Play } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,7 +55,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setIsPictionaryRoundActive(false);
       setTimerKey(prev => prev + 1); 
     }
-  }, [isOpen]); // Removed selectedWord to avoid premature reset if only word changes
+  }, [isOpen]);
 
 
   const handleTimeButtonClick = (duration: number) => {
@@ -130,14 +130,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 onTimerEnd={handleTimerEndInternal}
                 autoStart={isPictionaryRoundActive} 
               />
-              {!isPictionaryRoundActive && activeTimerDuration && ( 
-                <div className="text-center space-y-4 p-4 bg-destructive/10 rounded-md">
-                  <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo para "{selectedWord}"!</p>
-                  <Button onClick={handleResetTimerSelection} variant="outline" className="w-full transition-transform hover:scale-105">
-                      <Clock className="mr-2 h-4 w-4" /> Elegir Nuevo Tiempo Para Esta Palabra
-                  </Button>
-                </div>
-              )}
                {isPictionaryRoundActive && ( 
                  <Button onClick={handleResetTimerSelection} variant="outline" className="w-full transition-transform hover:scale-105">
                     <RotateCcw className="mr-2 h-4 w-4" /> Cambiar Tiempo / Reiniciar Palabra
@@ -161,13 +153,31 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
               </div>
             </>
           )}
+           {!isPictionaryRoundActive && activeTimerDuration && ( 
+                <div className="text-center space-y-4 p-4 mt-4 bg-destructive/10 rounded-md">
+                  <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo!</p>
+                  <p className="text-lg text-muted-foreground">
+                    La palabra era: <span className="font-bold text-foreground">{selectedWord}</span>
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-3 pt-4">
+                    <Button onClick={handleResetTimerSelection} variant="outline" className="w-full transition-transform hover:scale-105 text-lg py-3">
+                        <RotateCcw className="mr-2 h-5 w-5" /> Intentar de Nuevo
+                    </Button>
+                    <Button onClick={handleCloseDialog} className="w-full transition-transform hover:scale-105 text-lg py-3">
+                        <Play className="mr-2 h-5 w-5" /> Girar Ruleta
+                    </Button>
+                  </div>
+                </div>
+              )}
         </div>
 
         <DialogFooter className="p-6 pt-4">
-          <Button variant="outline" onClick={handleCloseDialog} className="transition-transform hover:scale-105 w-full sm:w-auto text-lg py-3">
-            <XCircle className="mr-2 h-5 w-5" />
-            Cerrar y Nueva Palabra
-          </Button>
+           {(!activeTimerDuration || isPictionaryRoundActive) && (
+            <Button variant="outline" onClick={handleCloseDialog} className="transition-transform hover:scale-105 w-full sm:w-auto text-lg py-3">
+              <XCircle className="mr-2 h-5 w-5" />
+              Cerrar y Nueva Palabra
+            </Button>
+           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
