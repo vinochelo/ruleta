@@ -202,7 +202,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-8 flex flex-col items-center p-6 pt-2 sm:p-8 sm:pt-4">
+      <CardContent className="flex flex-col items-center p-4 sm:p-6">
         <div className="relative" style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}>
           <svg 
             viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
