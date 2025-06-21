@@ -39,6 +39,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(autoStart);
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  const timerEndSoundRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     setTimeLeft(initialDuration);
@@ -65,6 +66,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         intervalIdRef.current = null;
       }
       onTimerEnd();
+      timerEndSoundRef.current?.play().catch(console.error);
       return;
     }
 
@@ -116,6 +118,11 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 
   return (
     <Card className="w-full max-w-sm mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
+      <audio
+        ref={timerEndSoundRef}
+        src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c97a5a8762.mp3?filename=bell-notification-83241.mp3"
+        preload="auto"
+      />
       <CardHeader>
         <CardTitle className="title-text text-2xl flex items-center justify-center gap-2">
           <TimerIcon className="h-6 w-6" />
@@ -145,4 +152,5 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 };
 
 export default Timer;
+
 
