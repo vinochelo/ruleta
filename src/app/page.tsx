@@ -18,6 +18,7 @@ import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus, Sparkles, User, Us
 import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from '@/lib/utils';
 
 interface Category {
   id: string;
@@ -67,6 +68,7 @@ export default function HomePage() {
   const [usedWords, setUsedWords] = useState<Record<string, string[]>>({});
   const [useAIImages, setUseAIImages] = useState(true);
   const [gameMode, setGameMode] = useState<'teams' | 'players'>('teams');
+  const [animatingScoreTeamId, setAnimatingScoreTeamId] = useState<string | null>(null);
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -201,6 +203,7 @@ export default function HomePage() {
 
   const handleIncrementScore = useCallback((teamId: string) => {
     playPointSound();
+    setAnimatingScoreTeamId(teamId);
 
     const updatedTeams = teams.map(team =>
       team.id === teamId ? { ...team, score: team.score + 1 } : team
@@ -393,7 +396,14 @@ export default function HomePage() {
                           </div>
                           
                           <div className="flex items-center gap-3 flex-shrink-0">
-                              <p className="text-5xl font-bold tabular-nums drop-shadow-sm" style={{ color: team.color }}>
+                              <p 
+                                className={cn(
+                                  "text-5xl font-bold tabular-nums drop-shadow-sm",
+                                  animatingScoreTeamId === team.id && "score-pop-animation"
+                                )}
+                                style={{ color: team.color }}
+                                onAnimationEnd={() => setAnimatingScoreTeamId(null)}
+                              >
                                   {team.score}
                               </p>
                               <Tooltip>

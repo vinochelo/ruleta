@@ -138,3 +138,13 @@
   top: -20px; /* start off-screen */
   animation: confetti-fall 3s linear infinite;
 }
+
+@keyframes score-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5) rotate(-5deg); }
+  100% { transform: scale(1); }
+}
+
+.score-pop-animation {
+  animation: score-pop 0.5s ease-out;
+}
