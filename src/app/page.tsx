@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Award } from 'lucide-react';
+import { Volume2, PlusCircle, Trash2, RotateCcw, Users } from 'lucide-react';
 import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 
 interface Category {
@@ -267,13 +267,7 @@ export default function HomePage() {
                   <TooltipProvider>
                     {teams.map(team => (
                       <Card key={team.id} className="p-4 bg-card/50">
-                        <div className="grid grid-cols-2 sm:grid-cols-[auto_1fr_auto] items-center gap-y-2 gap-x-4">
-                          {/* Team Info - Centered */}
-                          <div className="col-span-2 sm:col-span-1 sm:col-start-2 text-center">
-                            <p className="text-xl font-semibold text-primary">{team.name}</p>
-                            <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
-                          </div>
-                          
+                        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4">
                           {/* Delete Button - Left */}
                           <div className="justify-self-start">
                             <Tooltip>
@@ -289,11 +283,25 @@ export default function HomePage() {
                             </Tooltip>
                           </div>
                           
+                          {/* Team Info - Center */}
+                          <div className="text-center">
+                            <p className="text-xl font-semibold text-primary">{team.name}</p>
+                            <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
+                          </div>
+                          
                           {/* Add Point Button - Right */}
                           <div className="justify-self-end">
-                            <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
-                              <Award className="mr-2 h-4 w-4" /> Sumar Punto
-                            </Button>
+                             <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button onClick={() => handleIncrementScore(team.id)} size="icon" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-12 h-12 rounded-full">
+                                  <PlusCircle className="h-6 w-6" />
+                                  <span className="sr-only">Sumar Punto</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Sumar Punto</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         </div>
                       </Card>
