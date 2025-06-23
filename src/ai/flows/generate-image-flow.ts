@@ -14,8 +14,8 @@ import { z } from 'zod';
 
 // --- Common Helper Function ---
 
-// A robust helper to generate a single image. It returns null on failure.
-async function generateSingleImage(prompt: string, context: string): Promise<string | null> {
+// A robust helper to generate a single image. Returns an object with the URL or an error.
+async function generateSingleImage(prompt: string, context: string): Promise<{ imageUrl: string | null; error: string | null }> {
   console.log(`[${context}] Generating image with prompt: "${prompt.substring(0, 50)}..."`);
   try {
     const result = await ai.generate({
@@ -33,21 +33,25 @@ async function generateSingleImage(prompt: string, context: string): Promise<str
 
     if (media?.url) {
       console.log(`[${context}] Successfully generated image. Finish reason: ${finishReason}`);
-      return media.url;
+      return { imageUrl: media.url, error: null };
     }
-
-    console.warn(`[${context}] Image generation finished with reason '${finishReason}' but returned no media URL.`);
+    
+    let reasonText = `Razón: ${finishReason}.`;
     if (finishReason === 'safety') {
-        console.error(`[${context}] Image generation was blocked due to safety settings.`);
+      reasonText = "La imagen fue bloqueada por los filtros de seguridad de la IA.";
+    } else if (finishReason === 'recitation') {
+      reasonText = "La solicitud fue bloqueada por motivos de recitación.";
+    } else if (finishReason === 'quota') {
+      reasonText = "Se ha alcanzado la cuota de la API. Inténtalo de nuevo más tarde.";
     }
-    return null;
 
-  } catch (error) {
-    console.error(`[${context}] Image generation request FAILED.`, error);
-    if (error instanceof Error && error.message.includes('quota')) {
-        console.error(`[${context}] Potential quota limit hit.`);
-    }
-    return null;
+    console.warn(`[${context}] Image generation finished but returned no media URL. ${reasonText}`);
+    return { imageUrl: null, error: `La IA no devolvió una imagen. ${reasonText}` };
+
+  } catch (error: any) {
+    console.error(`[${context}] Image generation request FAILED.`, JSON.stringify(error, null, 2));
+    const errorMessage = error?.message || "Error desconocido al contactar el servicio de IA.";
+    return { imageUrl: null, error: `Error en la solicitud a la IA: ${errorMessage}` };
   }
 }
 
@@ -86,15 +90,15 @@ const generateQuickImageFlow = ai.defineFlow(
     
     const prompt = `A simple icon of: '${input.word}'. Visual depiction only, no words.`;
     
-    const imageUrl = await generateSingleImage(prompt, "QuickImage");
+    const { imageUrl, error } = await generateSingleImage(prompt, "QuickImage");
     
     if (imageUrl) {
         console.log(`Quick image flow finished for: "${input.word}". Success: true`);
         return { imageDataUri: imageUrl, error: null };
     } else {
-        const errorMsg = "La generación de la imagen falló. Revisa los registros del servidor para más detalles (posibles problemas de cuota o filtros de seguridad).";
-        console.log(`Quick image flow finished for: "${input.word}". Success: false`);
-        return { imageDataUri: null, error: errorMsg };
+        const finalError = error || "Ocurrió un error inesperado en la generación de la imagen.";
+        console.log(`Quick image flow finished for: "${input.word}". Success: false. Error: ${finalError}`);
+        return { imageDataUri: null, error: finalError };
     }
   }
 );
@@ -143,9 +147,19 @@ const generateArtisticImagesFlow = ai.defineFlow(
     const imagePromises = prompts.map((prompt, i) => generateSingleImage(prompt, `ArtisticImage-${i}`));
     const results = await Promise.all(imagePromises);
 
-    const successfulUris = results.filter((uri): uri is string => !!uri);
+    const successfulUris = results
+      .filter(res => res.imageUrl)
+      .map(res => res.imageUrl as string);
 
     console.log(`Artistic image flow finished for "${input.word}". Generated ${successfulUris.length} of ${prompts.length} requested images.`);
+
+    // For artistic images, we don't return an error to the client,
+    // as it's a non-critical background task. We just log it.
+    results.forEach(res => {
+        if (res.error) {
+            console.warn(`[ArtisticImage] Sub-task failed: ${res.error}`);
+        }
+    });
 
     return { imageDataUris: successfulUris, error: null };
   }
