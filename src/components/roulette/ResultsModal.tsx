@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -93,9 +92,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           variant: "destructive",
           duration: 15000,
         });
-        setAiHelpActive(false);
+        setAiHelpActive(false); // Go back to the "get inspiration" button
         setIsGeneratingQuick(false); // Stop loading state
-        return; // Abort
+        return; 
       }
 
       if (quickResult.imageDataUri) {
@@ -198,16 +197,16 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const wordLength = selectedWord?.length || 0;
   let wordFontSizeClass = 'text-4xl sm:text-6xl lg:text-7xl';
   if (wordLength > 8) {
-    wordFontSizeClass = 'text-4xl sm:text-5xl lg:text-6xl';
+    wordFontSizeClass = 'text-3xl sm:text-5xl lg:text-6xl';
   }
   if (wordLength > 15) {
-    wordFontSizeClass = 'text-3xl sm:text-4xl lg:text-5xl';
+    wordFontSizeClass = 'text-2xl sm:text-4xl lg:text-5xl';
   }
   if (wordLength > 20) {
-    wordFontSizeClass = 'text-2xl sm:text-3xl lg:text-4xl';
+    wordFontSizeClass = 'text-xl sm:text-3xl lg:text-4xl';
   }
   if (wordLength > 24) {
-    wordFontSizeClass = 'text-xl sm:text-2xl lg:text-3xl';
+    wordFontSizeClass = 'text-lg sm:text-2xl lg:text-3xl';
   }
 
   const renderContent = () => {
@@ -322,7 +321,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           </Button>
         </DialogClose>
 
-        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-center gap-6 h-full">
+        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-evenly gap-6 h-full">
           
           <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center text-center min-h-[300px] lg:min-h-0">
              {renderContent()}
@@ -363,7 +362,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         <Button
                         key={duration}
                         onClick={() => handleTimeButtonClick(duration)}
-                        className={`text-xl font-bold py-6 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
+                        className={`text-xl font-bold py-4 sm:py-6 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
                         disabled={isPictionaryRoundActive}
                         >
                         <TimerIcon className="mr-2 h-5 w-5" />
