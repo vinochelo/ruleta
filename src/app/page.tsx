@@ -117,6 +117,29 @@ export default function HomePage() {
       }
     }
   }, []);
+  
+  const playPointSound = () => {
+    if (typeof window !== 'undefined' && window.AudioContext) {
+      const audioContext = new window.AudioContext();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.2);
+
+      oscillator.onended = () => {
+        audioContext.close().catch(console.error);
+      };
+    }
+  };
 
   const persistTeams = useCallback((updatedTeams: Team[]) => {
     setTeams(updatedTeams);
@@ -147,18 +170,19 @@ export default function HomePage() {
   }, [speechSupported, isSpeaking, speak]);
 
   const handleIncrementScore = useCallback((teamId: string) => {
-    const teamToUpdate = teams.find(t => t.id === teamId);
-    if (teamToUpdate && !isSpeaking) {
-        speakFn(`${teamToUpdate.name} suma un punto.`);
-    }
-    
-    const updatedTeams = teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team);
-    persistTeams(updatedTeams);
+    playPointSound();
+
+    const updatedTeams = teams.map(team =>
+      team.id === teamId ? { ...team, score: team.score + 1 } : team
+    );
 
     const winningTeam = updatedTeams.find(team => team.id === teamId);
-    if (winningTeam && winningTeam.score >= winningScore) {
+    if (!winningTeam) return;
+
+    const newScore = winningTeam.score;
+
+    if (newScore >= winningScore) {
       setWinner(winningTeam);
-      
       praiseWinner({ teamName: winningTeam.name, score: winningTeam.score })
         .then(result => {
           const message = result.praiseMessage;
@@ -171,8 +195,12 @@ export default function HomePage() {
           setWinnerPraise(fallbackMessage);
           speakFn(fallbackMessage);
         });
+    } else if (newScore > 0 && newScore % 5 === 0 && !isSpeaking) {
+      speakFn(`${winningTeam.name} tiene ${newScore} puntos.`);
     }
-  }, [teams, isSpeaking, speakFn, persistTeams, winningScore]);
+
+    persistTeams(updatedTeams);
+  }, [teams, winningScore, isSpeaking, persistTeams, speakFn, winnerPraise]);
 
   const handleRemoveTeam = useCallback((teamId: string) => {
     const teamToRemove = teams.find(t => t.id === teamId);
