@@ -303,15 +303,13 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               className="absolute top-[-10px] left-1/2 -translate-x-1/2 z-10"
               style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
           >
-              <g transform="rotate(180 12 12)">
-                  <path
-                      fill="hsl(var(--destructive))"
-                      stroke="#FFFFFF"
-                      strokeWidth="1.2"
-                      strokeLinejoin="round"
-                      d="M20.66,11.37,18,8.71V6A1,1,0,0,0,17,5H13a1,1,0,0,0,0,2h3V9.59l-1.1-1.1a1,1,0,0,0-1.41,0L12,9.9,9.51,7.41a1,1,0,0,0-1.41,0L7,8.51V7h3a1,1,0,0,0,0-2H6A1,1,0,0,0,5,6V8.71L2.34,11.37a1,1,0,0,0,0,1.41L8,18.45V21a1,1,0,0,0,1,1h6a1,1,0,0,0,1-1V18.45l5.66-5.67A1,1,0,0,0,20.66,11.37Z"
-                  />
-              </g>
+              <path
+                  fill="hsl(var(--destructive))"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.2"
+                  strokeLinejoin="round"
+                  d="M12.01,22a1,1,0,0,1-.71-.29l-3.43-3.42a1,1,0,0,1,0-1.41,1,1,0,0,1,1.41,0l1.22,1.22V11a1,1,0,0,1,1-1H14a1,1,0,0,1,1,1v7.1l1.21-1.21a1,1,0,0,1,1.42,1.42l-3.41,3.41A1,1,0,0,1,12.01,22Zm8.5-12.71-3.11-3.11a1,1,0,0,0-1.42,0L15.12,7H10.33L9.18,5.85a1,1,0,0,0-1.42,0l-1.42,1.42a1,1,0,0,0,0,1.41L8.5,10.83a1,1,0,0,0,1.41,0l1.42-1.41h4.83l.85.85a1,1,0,0,0,1.41,0l2-2A1,1,0,0,0,20.51,9.29Z"
+              />
           </svg>
           {/* Center spin button */}
           <div 

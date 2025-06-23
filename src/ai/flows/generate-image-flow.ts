@@ -68,10 +68,10 @@ const generateImageFlow = ai.defineFlow(
     
     const allPrompts = [
         // Reference Images (NO TEXT)
-        `A very simple, clear, black and white line drawing of '${input.word}' for a Pictionary game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
-        `A simple, colorful cartoon drawing of '${input.word}' for a Pictionary game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
-        `A minimalist, easy-to-guess icon representing '${input.word}'. For a drawing game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
-        `A simple pencil sketch of '${input.word}'. For a Pictionary game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
+        `A simple, minimalist, black and white line drawing of ONLY '${input.word}'. The background must be pure white. The drawing must be clear and easily guessable for a Pictionary game. CRITICAL RULE: Absolutely no text, letters, or numbers are allowed in the image.`,
+        `A simple, colorful cartoon illustration of ONLY '${input.word}'. The style should be bold and easy to recognize. The background must be a single solid color. CRITICAL RULE: Absolutely no text, letters, or numbers are allowed in the image.`,
+        `A photorealistic image of ONLY '${input.word}'. The object should be centered and clearly visible. CRITICAL RULE: Absolutely no text, letters, or numbers are allowed in the image.`,
+        `A simple pencil sketch of ONLY '${input.word}' on a white paper background. The sketch should be clear and focused on the object for a Pictionary game. CRITICAL RULE: Absolutely no text, letters, or numbers are allowed in the image.`,
         // Artistic Text Image (LAST)
         `Create a visually stunning, artistic text design of the word: '${input.word}'. Use a creative, eye-catching font like one from a video game or movie poster. Surprise me with a unique design. The background should be clean.`,
     ];
