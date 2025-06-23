@@ -188,7 +188,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
     setTimerDuration(duration);
-    setIsFinished(false);
+    setIsTimerFinished(false);
     setTimerShouldAutoStart(true); // This will trigger the timer to start on remount
     setTimerKey(prevKey => prevKey + 1);
 
@@ -358,7 +358,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
                 <div className="text-center">
                     <p className="text-base text-muted-foreground">Categoría</p>
-                    <p className="text-5xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+                    <p className="text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                         {selectedCategoryName}
                     </p>
                 </div>
