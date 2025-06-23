@@ -14,6 +14,7 @@ import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle } from 'l
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
+import { cn } from '@/lib/utils';
 
 interface ResultsModalProps {
   isOpen: boolean;
@@ -56,11 +57,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [artisticText, setArtisticText] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
-  
-  // Slideshow state
-  const [slideshowImages, setSlideshowImages] = useState<string[]>([]);
-  const [currentSlideshowIndex, setCurrentSlideshowIndex] = useState(0);
-  const [displayState, setDisplayState] = useState<'initial' | 'slideshow' | 'final_reveal'>('initial');
 
   const { toast } = useToast();
   
@@ -72,9 +68,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setReferenceImages([]);
     setArtisticText(null);
     setGenerationError(null);
-    setSlideshowImages([]);
-    setCurrentSlideshowIndex(0);
-    setDisplayState('initial');
   }, []);
 
   const startImageGeneration = useCallback(async (word: string) => {
@@ -95,7 +88,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           title: "Error de Generación de Imagen",
           description: quickResult.error,
           variant: "destructive",
-          duration: 15000, // Longer duration for this important message
+          duration: 15000,
         });
         setIsGeneratingQuick(false); // Stop loading state
         return; // Abort
@@ -114,7 +107,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 setReferenceImages(allArtistic);
                 setArtisticText(newArtisticText);
             }
-            // Silently ignore errors from artistic generation as it's non-critical
         }).catch(err => {
             console.error("Artistic image generation failed:", err);
         }).finally(() => {
@@ -122,8 +114,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         });
 
       } else {
-        // This case should not happen if my new flow logic is correct (it will always return an error string if URI is null)
-        // But as a fallback:
         const errorMessage = "La IA devolvió una respuesta vacía inesperada.";
         setGenerationError(errorMessage);
         toast({ title: "Error Inesperado", description: errorMessage, variant: "destructive" });
@@ -153,34 +143,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       }
     }
   }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
-  
-  // Effect to build and start slideshow when images are ready
-  useEffect(() => {
-    const newSlideshowImages: string[] = [];
-    if (quickImage) newSlideshowImages.push(quickImage);
-    if (referenceImages.length > 0) newSlideshowImages.push(...referenceImages);
-
-    if (newSlideshowImages.length > 0) {
-        setSlideshowImages(newSlideshowImages);
-        setDisplayState('slideshow');
-        setCurrentSlideshowIndex(0);
-    }
-  }, [quickImage, referenceImages]);
-  
-  // Effect for cycling through slideshow images
-  useEffect(() => {
-    if (displayState !== 'slideshow' || slideshowImages.length === 0) return;
-
-    const timer = setTimeout(() => {
-      if (currentSlideshowIndex < slideshowImages.length - 1) {
-        setCurrentSlideshowIndex(prev => prev + 1);
-      } else {
-        setDisplayState('final_reveal');
-      }
-    }, 4000); // 4 seconds per image
-
-    return () => clearTimeout(timer);
-  }, [displayState, currentSlideshowIndex, slideshowImages]);
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
@@ -217,110 +179,98 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   if (wordLength > 8) {
     wordFontSizeClass = 'text-5xl lg:text-6xl';
   }
-  if (wordLength > 12) {
+  if (wordLength > 15) {
     wordFontSizeClass = 'text-4xl lg:text-5xl';
   }
-  if (wordLength > 16) {
+  if (wordLength > 20) {
     wordFontSizeClass = 'text-3xl lg:text-4xl';
   }
-  if (wordLength > 20) {
-    wordFontSizeClass = 'text-2xl lg:text-3xl';
-  }
   if (wordLength > 24) {
-    wordFontSizeClass = 'text-xl lg:text-2xl';
+    wordFontSizeClass = 'text-2xl lg:text-3xl';
   }
 
   const renderContent = () => {
-    const ContentBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
-      <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+    const ContentContainer: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => (
+      <div className={cn("w-full aspect-square max-w-md lg:max-w-lg bg-transparent flex flex-col items-center justify-center p-0 relative gap-4", className)}>
         {children}
       </div>
     );
+  
+    const MainImageBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
+        <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+          {children}
+        </div>
+      );
     
-    // Initial State: No AI help requested or enabled
     if (!aiHelpActive) {
       return (
-        <ContentBox>
-          <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+        <ContentContainer>
+          <MainImageBox>
+            <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
               <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
               <p className="text-xl text-muted-foreground">La ayuda de IA está desactivada.</p>
               <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Obtener Inspiración de IA
               </Button>
-          </div>
-        </ContentBox>
+            </div>
+          </MainImageBox>
+        </ContentContainer>
       );
     }
     
-    // State: Loading the first quick image
-    if (isGeneratingQuick) {
-        return (
-          <ContentBox>
-            <div className="flex flex-col items-center justify-center gap-4 text-primary">
-              <Loader2 className="h-16 w-16 animate-spin" />
-              <p className="text-xl font-medium">Generando imagen de referencia...</p>
-            </div>
-          </ContentBox>
-        );
-    }
-
-    // State: Error during generation
-    if (generationError && !quickImage) {
-        return (
-          <ContentBox>
-            <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-              <AlertCircle className="h-24 w-24 text-destructive" />
-              <p className="text-lg text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
-              <Button onClick={handleRequestAiHelp} size="lg" variant="destructive" className="transition-transform hover:scale-105">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Reintentar
-              </Button>
-            </div>
-          </ContentBox>
-        );
-    }
-    
-    // State: Displaying slideshow
-    if (displayState === 'slideshow' && slideshowImages.length > 0) {
-      const currentImageUrl = slideshowImages[currentSlideshowIndex];
+    if (isGeneratingQuick || (generationError && !quickImage)) {
       return (
-        <ContentBox>
-          {currentImageUrl && <Image src={currentImageUrl} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
-          {isGeneratingArtistic && <Loader2 className="absolute top-4 right-4 h-6 w-6 text-primary animate-spin" />}
-        </ContentBox>
-      );
-    }
-
-    // State: Final reveal with artistic text
-    if (displayState === 'final_reveal') {
-        return (
-          <ContentBox>
-            {artisticText ? (
-              <Image src={artisticText} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
-            ) : (
-              // Fallback if artistic text fails but others succeed
-              quickImage ? <Image src={quickImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized /> :
-              <div className="text-center flex flex-col items-center justify-center gap-4">
-                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-                <p className="text-muted-foreground">No se generó la imagen artística final.</p>
+        <ContentContainer>
+          <MainImageBox>
+            {isGeneratingQuick && (
+              <div className="flex flex-col items-center justify-center gap-4 text-primary">
+                <Loader2 className="h-16 w-16 animate-spin" />
+                <p className="text-xl font-medium">Generando imagen de referencia...</p>
               </div>
             )}
-             {isGeneratingArtistic && <Loader2 className="absolute top-4 right-4 h-6 w-6 text-primary animate-spin" />}
-          </ContentBox>
-        );
+            {generationError && !quickImage && (
+              <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+                <AlertCircle className="h-24 w-24 text-destructive" />
+                <p className="text-lg text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
+                <Button onClick={handleRequestAiHelp} size="lg" variant="destructive" className="transition-transform hover:scale-105">
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  Reintentar
+                </Button>
+              </div>
+            )}
+          </MainImageBox>
+        </ContentContainer>
+      );
     }
-    
-    // Default/fallback view if something unexpected happens
+
     return (
-        <ContentBox>
-            <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+      <ContentContainer>
+        <MainImageBox>
+          {quickImage && <Image src={quickImage} alt={`Inspiración principal para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
+        </MainImageBox>
+
+        <div className="w-full h-24 flex-shrink-0">
+          {isGeneratingArtistic ? (
+            <div className="h-full flex items-center justify-center bg-card/50 rounded-lg p-4 animate-pulse">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="ml-4 text-muted-foreground">Generando más ideas...</p>
             </div>
-        </ContentBox>
+          ) : (
+            (referenceImages.length > 0 || artisticText) && (
+              <div className="h-full grid grid-cols-4 gap-2 animate-in fade-in duration-500">
+                {[...referenceImages, artisticText].filter((img): img is string => !!img).map((img, index) => (
+                   <div key={index} className="relative w-full h-full bg-card rounded-lg overflow-hidden shadow-md border-2 border-transparent hover:border-primary transition-all">
+                     <Image src={img} alt={`Inspiración artística ${index + 1}`} layout="fill" objectFit="cover" unoptimized />
+                   </div>
+                ))}
+              </div>
+            )
+          )}
+        </div>
+      </ContentContainer>
     );
   };
-
 
   if (!selectedCategoryName) return null;
 
@@ -348,12 +298,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
         <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 h-full">
           
-          {/* Image and Word Section */}
           <div className="flex-1 w-full lg:max-w-2xl flex flex-col items-center justify-center text-center gap-4">
              {renderContent()}
           </div>
 
-          {/* Timer and Controls Section */}
           <div className="flex-1 w-full lg:max-w-md flex flex-col items-center justify-center gap-6">
             <div className="text-center">
               <p className="text-lg text-muted-foreground">Categoría</p>
