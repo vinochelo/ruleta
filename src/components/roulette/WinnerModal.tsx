@@ -21,9 +21,10 @@ interface Team {
 interface WinnerModalProps {
   winner: Team | null;
   onPlayAgain: () => void;
+  praiseMessage: string | null;
 }
 
-const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain }) => {
+const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMessage }) => {
   if (!winner) {
     return null;
   }
@@ -37,7 +38,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain }) => {
             ¡Felicidades, {winner.name}!
           </DialogTitle>
           <DialogDescription className="text-muted-foreground pt-2 text-lg">
-            Han ganado la partida con {winner.score} puntos.
+            {praiseMessage ? praiseMessage : `Han ganado la partida con ${winner.score} puntos.`}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="p-6 pt-0">

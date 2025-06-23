@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Award } from 'lucide-react';
+import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 
 interface Category {
   id: string;
@@ -51,6 +52,7 @@ export default function HomePage() {
   const [newTeamName, setNewTeamName] = useState('');
   const [winningScore, setWinningScore] = useState<number>(10);
   const [winner, setWinner] = useState<Team | null>(null);
+  const [winnerPraise, setWinnerPraise] = useState<string | null>(null);
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -155,6 +157,19 @@ export default function HomePage() {
     const winningTeam = updatedTeams.find(team => team.id === teamId);
     if (winningTeam && winningTeam.score >= winningScore) {
       setWinner(winningTeam);
+      
+      praiseWinner({ teamName: winningTeam.name, score: winningTeam.score })
+        .then(result => {
+          const message = result.praiseMessage;
+          setWinnerPraise(message);
+          speakFn(message);
+        })
+        .catch(error => {
+          console.error("AI praise error:", error);
+          const fallbackMessage = `¡Felicidades, ${winningTeam.name}! ¡Han ganado con ${winningTeam.score} puntos!`;
+          setWinnerPraise(fallbackMessage);
+          speakFn(fallbackMessage);
+        });
     }
   }, [teams, isSpeaking, speakFn, persistTeams, winningScore]);
 
@@ -175,6 +190,7 @@ export default function HomePage() {
   const handlePlayAgain = useCallback(() => {
     handleResetAllScores();
     setWinner(null);
+    setWinnerPraise(null);
   }, [handleResetAllScores]);
 
 
@@ -303,7 +319,7 @@ export default function HomePage() {
         speakFn={speakFn}
       />
       
-      <WinnerModal winner={winner} onPlayAgain={handlePlayAgain} />
+      <WinnerModal winner={winner} onPlayAgain={handlePlayAgain} praiseMessage={winnerPraise} />
 
       {!speechSupported && (
         <Card className="mt-8 bg-destructive/10 border-destructive/30">
