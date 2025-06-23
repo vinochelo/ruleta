@@ -1,15 +1,18 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
 import Roulette from '@/components/roulette/Roulette';
 import ResultsModal from '@/components/roulette/ResultsModal';
+import WinnerModal from '@/components/roulette/WinnerModal';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Award } from 'lucide-react';
 
 interface Category {
@@ -46,6 +49,8 @@ export default function HomePage() {
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [newTeamName, setNewTeamName] = useState('');
+  const [winningScore, setWinningScore] = useState<number>(10);
+  const [winner, setWinner] = useState<Team | null>(null);
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -143,8 +148,15 @@ export default function HomePage() {
     if (teamToUpdate && !isSpeaking) {
         speakFn(`${teamToUpdate.name} suma un punto.`);
     }
-    persistTeams(teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team));
-  }, [teams, isSpeaking, speakFn, persistTeams]);
+    
+    const updatedTeams = teams.map(team => team.id === teamId ? { ...team, score: team.score + 1 } : team);
+    persistTeams(updatedTeams);
+
+    const winningTeam = updatedTeams.find(team => team.id === teamId);
+    if (winningTeam && winningTeam.score >= winningScore) {
+      setWinner(winningTeam);
+    }
+  }, [teams, isSpeaking, speakFn, persistTeams, winningScore]);
 
   const handleRemoveTeam = useCallback((teamId: string) => {
     const teamToRemove = teams.find(t => t.id === teamId);
@@ -160,6 +172,11 @@ export default function HomePage() {
     if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
   }, [teams, persistTeams, toast, isSpeaking, speakFn]);
   
+  const handlePlayAgain = useCallback(() => {
+    handleResetAllScores();
+    setWinner(null);
+  }, [handleResetAllScores]);
+
 
   const handleSpinEnd = useCallback((category: Category, color: string) => {
     setSelectedCategoryFull(category);
@@ -192,6 +209,26 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="winning-score">Puntos para Ganar</Label>
+                <Select
+                  value={String(winningScore)}
+                  onValueChange={(value) => setWinningScore(Number(value))}
+                >
+                  <SelectTrigger id="winning-score" className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Elige puntuación" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 Puntos</SelectItem>
+                    <SelectItem value="10">10 Puntos</SelectItem>
+                    <SelectItem value="15">15 Puntos</SelectItem>
+                    <SelectItem value="20">20 Puntos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
               <form onSubmit={handleAddTeam} className="flex flex-col sm:flex-row gap-2 items-center">
                 <Input
                   type="text"
@@ -265,6 +302,8 @@ export default function HomePage() {
         speakTimeSelection={speakTimeSelectionCallback}
         speakFn={speakFn}
       />
+      
+      <WinnerModal winner={winner} onPlayAgain={handlePlayAgain} />
 
       {!speechSupported && (
         <Card className="mt-8 bg-destructive/10 border-destructive/30">
