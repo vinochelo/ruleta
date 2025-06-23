@@ -6,28 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
 
-interface TimerProps {
-  initialDuration: number; // in seconds
-  onTimerEnd: () => void;
-  autoStart?: boolean;
-}
-
 const playBeep = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Higher pitch beep
-    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime); // Softer beep
+    oscillator.type = 'square'; // Changed to a more "retro game" sound
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note, less shrill
+    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.1); // Beep duration 0.1s
+    oscillator.stop(audioContext.currentTime + 0.1);
 
     oscillator.onended = () => {
       audioContext.close().catch(console.error); // Clean up context
@@ -120,7 +114,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
     <Card className="w-full max-w-sm mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
       <audio
         ref={timerEndSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c97a5a8762.mp3?filename=bell-notification-83241.mp3"
+        src="https://cdn.pixabay.com/download/audio/2022/03/13/audio_2c8a3d671e.mp3?filename=game-over-arcade-6435.mp3"
         preload="auto"
       />
       <CardHeader>
@@ -152,5 +146,6 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 };
 
 export default Timer;
+
 
 
