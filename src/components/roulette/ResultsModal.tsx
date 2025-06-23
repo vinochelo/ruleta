@@ -94,13 +94,16 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog();}}>
       <DialogContent className="sm:max-w-lg bg-card shadow-xl rounded-lg">
-        <DialogHeader className="p-6">
-          <DialogTitle className="flex items-center gap-2 text-3xl title-text">
+        <DialogHeader className="p-6 text-center">
+          <DialogTitle className="flex items-center justify-center gap-2 text-3xl title-text">
             <Gift className="h-8 w-8 text-primary" />
             Ronda de Pictionary
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground pt-2 text-xl">
-            Categoría: <span className="font-semibold text-foreground">{selectedCategoryName}</span>
+           <DialogDescription className="pt-2 text-center">
+            <span className="text-lg text-muted-foreground">Categoría</span>
+            <p className="text-5xl font-bold font-roulette" style={wordStyle}>
+              {selectedCategoryName}
+            </p>
           </DialogDescription>
         </DialogHeader>
 
