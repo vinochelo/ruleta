@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Gift, Clock, RotateCcw, TimerIcon, XCircle, Play } from 'lucide-react';
-import Timer from '@/components/timer/Timer';
+import { Gift, RotateCcw, TimerIcon, XCircle, Play } from 'lucide-react';
+import Timer, { type TimerProps } from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResultsModalProps {
@@ -66,7 +65,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     toast({ title: "¡A dibujar!", description: `Tienes ${duration} segundos para "${selectedWord}".` });
   };
 
-  const handleTimerEndInternal = () => {
+  const handleTimerEndInternal = useCallback(() => {
     setIsPictionaryRoundActive(false);
     toast({ title: "¡Tiempo!", description: "La ronda ha terminado.", variant: "destructive" });
     
@@ -75,7 +74,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             speakFn(`La palabra era ${selectedWord}.`);
         }, 2000); 
     }
-  };
+  }, [selectedWord, speakFn, toast]);
   
   const handleCloseDialog = () => {
     setActiveTimerDuration(null);

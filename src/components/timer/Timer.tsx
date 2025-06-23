@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,8 +11,8 @@ const playBeep = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'square'; // Changed to a more "retro game" sound
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4 note, less shrill
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
     gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
 
@@ -24,10 +23,16 @@ const playBeep = () => {
     oscillator.stop(audioContext.currentTime + 0.1);
 
     oscillator.onended = () => {
-      audioContext.close().catch(console.error); // Clean up context
+      audioContext.close().catch(console.error);
     };
   }
 };
+
+export interface TimerProps {
+  initialDuration: number;
+  onTimerEnd: () => void;
+  autoStart?: boolean;
+}
 
 const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = false }) => {
   const [timeLeft, setTimeLeft] = useState(initialDuration);
@@ -35,55 +40,51 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
   const timerEndSoundRef = useRef<HTMLAudioElement>(null);
 
+  // This effect resets the timer when the key/initialDuration/autoStart changes
   useEffect(() => {
     setTimeLeft(initialDuration);
     setIsRunning(autoStart);
+    // Clean up any existing interval when props change
     if (intervalIdRef.current) {
       clearInterval(intervalIdRef.current);
       intervalIdRef.current = null;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDuration, autoStart]); 
+  }, [initialDuration, autoStart]);
 
+  // This effect handles the timer logic (the interval)
   useEffect(() => {
     if (!isRunning) {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-      return;
-    }
-
-    if (timeLeft <= 0) {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-      onTimerEnd();
-      timerEndSoundRef.current?.play().catch(console.error);
       return;
     }
 
     intervalIdRef.current = setInterval(() => {
       setTimeLeft((prevTime) => {
         const newTime = prevTime - 1;
+
         if (newTime <= 0) {
-          if (intervalIdRef.current) clearInterval(intervalIdRef.current);
-        } else if (newTime <= 10) { // Beep in the last 10 seconds
+          clearInterval(intervalIdRef.current!);
+          intervalIdRef.current = null;
+          timerEndSoundRef.current?.play().catch(console.error); // Play sound first
+          onTimerEnd(); // Then update parent
+          return 0;
+        }
+
+        if (newTime <= 10) {
           playBeep();
         }
+
         return newTime;
       });
     }, 1000);
 
+    // Cleanup function for when isRunning becomes false or component unmounts
     return () => {
       if (intervalIdRef.current) {
         clearInterval(intervalIdRef.current);
         intervalIdRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isRunning, timeLeft]); 
+  }, [isRunning, onTimerEnd]);
 
 
   const handleStartPause = useCallback(() => {
@@ -146,6 +147,3 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 };
 
 export default Timer;
-
-
-
