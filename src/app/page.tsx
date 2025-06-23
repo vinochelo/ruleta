@@ -49,6 +49,7 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
 
 const CATEGORIES_STORAGE_KEY = 'ruletaRupestreCategories';
 const TEAMS_STORAGE_KEY = 'ruletaRupestreTeams';
+const GAME_MODE_STORAGE_KEY = 'ruletaRupestreGameMode';
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -133,6 +134,18 @@ export default function HomePage() {
       }
     }
   }, []);
+
+  // Load and Persist Game Mode
+  useEffect(() => {
+    const storedGameMode = localStorage.getItem(GAME_MODE_STORAGE_KEY);
+    if (storedGameMode === 'teams' || storedGameMode === 'players') {
+      setGameMode(storedGameMode as 'teams' | 'players');
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(GAME_MODE_STORAGE_KEY, gameMode);
+  }, [gameMode]);
   
   const playPointSound = () => {
     if (typeof window !== 'undefined' && window.AudioContext) {
@@ -313,7 +326,7 @@ export default function HomePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-3 pt-0">
-               <Tabs defaultValue="teams" onValueChange={(value) => setGameMode(value as 'teams' | 'players')} className="w-full">
+               <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as 'teams' | 'players')} className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="teams">Equipos</TabsTrigger>
                       <TabsTrigger value="players">Jugadores</TabsTrigger>
