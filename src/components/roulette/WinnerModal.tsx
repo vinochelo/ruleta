@@ -12,6 +12,7 @@ interface Team {
   id: string;
   name: string;
   score: number;
+  color?: string;
 }
 
 interface WinnerModalProps {
@@ -55,6 +56,10 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
     return null;
   }
 
+  const winnerNameStyle = {
+    color: winner.color || 'hsl(var(--primary))',
+  };
+
   return (
     <Dialog open={!!winner} onOpenChange={(open) => { if (!open) onPlayAgain() }}>
       <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/80 backdrop-blur-xl border-0 shadow-none flex items-center justify-center p-0">
@@ -68,7 +73,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
             <Trophy className="h-48 w-48 text-yellow-400 drop-shadow-[0_8px_8px_rgba(0,0,0,0.4)]" />
             <div className='space-y-4'>
                 <h1 className="text-7xl font-bold title-text">
-                    ¡Felicidades, {winner.name}!
+                    ¡Felicidades, <span style={winnerNameStyle}>{winner.name}</span>!
                 </h1>
                 <p className="text-2xl text-foreground/80 max-w-3xl mx-auto">
                     {praiseMessage ? praiseMessage : `¡Han ganado la partida!`}

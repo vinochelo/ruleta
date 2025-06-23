@@ -22,10 +22,16 @@ interface Category {
   words: string[];
 }
 
+const TEAM_COLORS = [
+  "#EF4444", "#3B82F6", "#22C55E", "#F97316",
+  "#8B5CF6", "#EC4899", "#14B8A6", "#EAB308",
+];
+
 interface Team {
   id: string;
   name: string;
   score: number;
+  color: string;
 }
 
 const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
@@ -98,10 +104,11 @@ export default function HomePage() {
       try {
         const parsedStoredTeams: unknown = JSON.parse(storedTeamsRaw);
         if (Array.isArray(parsedStoredTeams)) {
-          const validatedTeams = (parsedStoredTeams as any[]).map(team => ({
+          const validatedTeams = (parsedStoredTeams as any[]).map((team, index) => ({
             id: String(team.id || crypto.randomUUID()),
             name: String(team.name || "Equipo sin nombre"),
             score: Number(team.score) || 0,
+            color: String(team.color || TEAM_COLORS[index % TEAM_COLORS.length]),
           }));
           const uniqueTeamsMap = new Map<string, Team>();
           validatedTeams.forEach(team => {
@@ -160,7 +167,8 @@ export default function HomePage() {
       toast({ title: "Error", description: "Ya existe un equipo con este nombre.", variant: "destructive" });
       return;
     }
-    const newTeam: Team = { id: crypto.randomUUID(), name: trimmedName, score: 0 };
+    const newTeamColor = TEAM_COLORS[teams.length % TEAM_COLORS.length];
+    const newTeam: Team = { id: crypto.randomUUID(), name: trimmedName, score: 0, color: newTeamColor };
     persistTeams([...teams, newTeam]);
     setNewTeamName('');
     toast({ title: "Equipo Añadido", description: `¡El equipo "${trimmedName}" se ha unido!` });
@@ -320,11 +328,10 @@ export default function HomePage() {
                   <TooltipProvider>
                     {teams.map(team => (
                       <Card key={team.id} className="bg-card/50 shadow-inner overflow-hidden">
-                        <CardContent className="p-2 flex items-center justify-between gap-2">
-                          {/* Delete Button - Left */}
+                        <CardContent className="p-2 flex items-center justify-between gap-4">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button onClick={() => handleRemoveTeam(team.id)} variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-full h-8 w-8">
+                              <Button onClick={() => handleRemoveTeam(team.id)} variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-full h-8 w-8 flex-shrink-0">
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Eliminar {team.name}</span>
                               </Button>
@@ -334,28 +341,30 @@ export default function HomePage() {
                             </TooltipContent>
                           </Tooltip>
                           
-                          {/* Team Info - Center */}
-                          <div className="flex-grow flex items-baseline justify-center gap-3 text-center mx-2 overflow-hidden">
-                            <p className="text-xl font-bold text-primary truncate" title={team.name}>{team.name}</p>
-                            <p className="text-4xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
+                          <div className="flex-grow overflow-hidden">
+                            <p className="text-xl font-bold truncate" style={{ color: team.color }}>{team.name}</p>
                           </div>
                           
-                          {/* Add Point Button - Right */}
-                           <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => handleIncrementScore(team.id)}
-                                className="w-16 h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center p-1"
-                                aria-label={`Sumar 1 punto a ${team.name}`}
-                              >
-                                <Plus className="h-5 w-5" />
-                                <span className="text-xs font-semibold">Punto</span>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left">
-                              <p>Sumar 1 punto a {team.name}</p>
-                            </TooltipContent>
-                          </Tooltip>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                              <p className="text-5xl font-bold tabular-nums drop-shadow-sm" style={{ color: team.color }}>
+                                  {team.score}
+                              </p>
+                              <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  onClick={() => handleIncrementScore(team.id)}
+                                  className="w-14 h-14 rounded-full text-white shadow-lg transition-transform hover:scale-105 flex items-center justify-center"
+                                  style={{ backgroundColor: team.color }}
+                                  aria-label={`Sumar 1 punto a ${team.name}`}
+                                >
+                                  <Plus className="h-8 w-8" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">
+                                <p>Sumar 1 punto a {team.name}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
