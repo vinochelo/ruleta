@@ -37,7 +37,7 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    const referenceImagePromises = Array.from({length: 2}).map(() => {
+    const referenceImagePromises = Array.from({length: 4}).map(() => {
       return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
         prompt: `Crea una imagen de referencia para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar. CRÍTICO: La imagen generada NO debe contener ningún texto, letra o número; solo la representación visual de la palabra.`,
@@ -64,7 +64,7 @@ const generateImageFlow = ai.defineFlow(
         )
         .map((result) => result.value.media!.url);
         
-      // Returns [ref1, ref2, artistic]
+      // Returns [ref1, ref2, ref3, ref4, artistic]
       return {imageDataUris};
     } catch (error) {
       console.error('Image generation failed:', error);

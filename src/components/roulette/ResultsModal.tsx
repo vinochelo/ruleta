@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, TimerIcon, X, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { TimerIcon, X, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateImageForWord } from '@/ai/flows/generate-image-flow';
@@ -142,12 +142,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     onClose();
   };
 
-  const handleResetTimerSelection = () => {
-    setActiveTimerDuration(null);
-    setIsPictionaryRoundActive(false);
-    setTimerKey(prevKey => prevKey + 1);
-  };
-
   const renderContent = () => {
     const ContentBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
       <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
@@ -233,7 +227,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             
             <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full">
               <p className="text-md text-muted-foreground">Palabra a dibujar</p>
-              <p className="text-6xl font-bold text-foreground drop-shadow-md font-roulette">
+              <p 
+                className="text-6xl font-bold drop-shadow-md font-roulette" 
+                style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
+              >
                 {selectedWord}
               </p>
             </div>
@@ -269,13 +266,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             {!isPictionaryRoundActive && activeTimerDuration && (
               <div className="text-center space-y-4 p-6 mt-4 bg-card/80 backdrop-blur-sm rounded-2xl w-full max-w-md shadow-xl border border-border/20">
                 <p className="text-3xl font-bold text-destructive">¡Se acabó el tiempo!</p>
-                <p className="text-muted-foreground pb-2">¿Qué hacemos ahora?</p>
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 pt-2">
                   <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-7 rounded-xl shadow-lg">
                     <Play className="mr-3 h-6 w-6" /> Girar la Ruleta
-                  </Button>
-                  <Button onClick={handleResetTimerSelection} size="lg" variant="outline" className="w-full transition-transform hover:scale-105 text-md py-6 rounded-xl">
-                    <RotateCcw className="mr-2 h-5 w-5" /> Intentar de Nuevo
                   </Button>
                 </div>
               </div>
