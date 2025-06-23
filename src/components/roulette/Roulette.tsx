@@ -49,16 +49,16 @@ const playTickSound = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.05);
+    oscillator.type = 'sine'; // Softer wave type
+    oscillator.frequency.setValueAtTime(900, audioContext.currentTime); // Lower frequency
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime); // Softer volume
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.08);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.05);
+    oscillator.stop(audioContext.currentTime + 0.08);
 
     oscillator.onended = () => {
       audioContext.close().catch(console.error);

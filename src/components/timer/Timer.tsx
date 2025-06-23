@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
@@ -29,6 +29,29 @@ const playBeep = () => {
   }
 };
 
+const playTimerEndSound = () => {
+  if (typeof window !== 'undefined' && window.AudioContext) {
+    const audioContext = new window.AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine'; // A clean tone
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
+    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime); // Make it noticeable
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.5);
+
+    oscillator.onended = () => {
+      audioContext.close().catch(console.error);
+    };
+  }
+};
+
 export interface TimerProps {
   initialDuration: number;
   onTimerEnd: () => void;
@@ -38,8 +61,7 @@ export interface TimerProps {
 const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = false }) => {
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(autoStart);
-  const timerEndSoundRef = useRef<HTMLAudioElement>(null);
-
+  
   // Effect to handle the countdown interval
   useEffect(() => {
     if (!isRunning) {
@@ -54,7 +76,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   // Effect to handle side-effects of time changes (end of timer, beeps)
   useEffect(() => {
     if (timeLeft === 0 && isRunning) {
-      timerEndSoundRef.current?.play().catch(console.error);
+      playTimerEndSound();
       onTimerEnd();
       setIsRunning(false); // Stop the timer
     } else if (timeLeft > 0 && timeLeft <= 10 && isRunning) {
@@ -85,11 +107,6 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 
   return (
     <Card className="w-full max-w-sm mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
-      <audio
-        ref={timerEndSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2021/11/23/audio_a7561a0f67.mp3?filename=bell-notification-83248.mp3"
-        preload="auto"
-      />
       <CardHeader>
         <CardTitle className="title-text text-2xl flex items-center justify-center gap-2">
           <TimerIcon className="h-6 w-6" />
