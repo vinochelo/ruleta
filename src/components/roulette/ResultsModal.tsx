@@ -199,6 +199,18 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     }
   };
 
+  const wordLength = selectedWord?.length || 0;
+  let wordFontSizeClass = 'text-7xl lg:text-8xl';
+  if (wordLength > 12) {
+    wordFontSizeClass = 'text-6xl lg:text-7xl';
+  }
+  if (wordLength > 18) {
+    wordFontSizeClass = 'text-5xl lg:text-6xl';
+  }
+  if (wordLength > 24) {
+    wordFontSizeClass = 'text-4xl lg:text-5xl';
+  }
+
   const renderContent = () => {
     const ContentBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
       <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
@@ -334,10 +346,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
               </p>
             </div>
             
-            <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full">
+            <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full min-h-[190px] flex flex-col justify-center">
               <p className="text-md text-muted-foreground">Palabra a dibujar</p>
               <p 
-                className="text-7xl lg:text-8xl font-bold drop-shadow-md font-roulette" 
+                className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette break-words`} 
                 style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
               >
                 {selectedWord}
