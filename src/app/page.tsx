@@ -60,6 +60,7 @@ export default function HomePage() {
   const [winner, setWinner] = useState<Team | null>(null);
   const [winnerPraise, setWinnerPraise] = useState<string | null>(null);
   const [totalPointsScored, setTotalPointsScored] = useState(0);
+  const [usedWords, setUsedWords] = useState<Record<string, string[]>>({});
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -245,6 +246,7 @@ export default function HomePage() {
   const handleResetAllScores = useCallback(() => {
     persistTeams(teams.map(team => ({ ...team, score: 0 })));
     setTotalPointsScored(0);
+    setUsedWords({});
     toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones de los equipos se han reiniciado a 0." });
     if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
   }, [teams, persistTeams, toast, isSpeaking, speakFn]);
@@ -259,16 +261,35 @@ export default function HomePage() {
   const handleSpinEnd = useCallback((category: Category, color: string) => {
     setSelectedCategoryFull(category);
     setSelectedCategoryColor(color);
-    let wordToDraw = category.name; 
-    if (category.words && category.words.length > 0) {
-      wordToDraw = category.words[Math.floor(Math.random() * category.words.length)];
+
+    const wordsInCat = category.words || [];
+    const usedInCat = usedWords[category.id] || [];
+    let availableWords = wordsInCat.filter(word => !usedInCat.includes(word));
+
+    if (availableWords.length === 0 && wordsInCat.length > 0) {
+      toast({
+        title: '¡Vuelta a empezar!',
+        description: `Se han usado todas las palabras de "${category.name}". Se reinicia la lista.`,
+      });
+      availableWords = wordsInCat;
+      setUsedWords(prev => ({ ...prev, [category.id]: [] }));
     }
+
+    let wordToDraw = category.name; 
+    if (availableWords.length > 0) {
+      wordToDraw = availableWords[Math.floor(Math.random() * availableWords.length)];
+      setUsedWords(prev => ({
+        ...prev,
+        [category.id]: [...(prev[category.id] || []), wordToDraw]
+      }));
+    }
+    
     setSelectedWord(wordToDraw);
     setIsModalOpen(true);
 
     const announcement = `Categoría: ${category.name}.`;
      if (!isSpeaking) speakFn(announcement);
-  }, [speakFn, isSpeaking]);
+  }, [speakFn, isSpeaking, usedWords, toast]);
 
   const speakTimeSelectionCallback = useCallback((duration: number) => {
     if (!isSpeaking) speakFn(`${duration} segundos.`);

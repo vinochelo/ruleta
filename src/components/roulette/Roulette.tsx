@@ -60,20 +60,41 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine'; // A softer wave type
-    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5 note, a bit softer than 800Hz
-    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-    // Make it decay very quickly for a "tick" sound
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.05);
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.06);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.05);
+    oscillator.stop(audioContext.currentTime + 0.06);
 
     oscillator.onended = () => {
       audioContext.close().catch(console.error);
+    };
+  }, []);
+
+  const playSpinEndSound = useCallback(() => {
+    if (typeof window === 'undefined' || !window.AudioContext) return;
+    const audioContext = new window.AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5 note
+    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.4);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.4);
+
+    oscillator.onended = () => {
+        audioContext.close().catch(console.error);
     };
   }, []);
 
@@ -181,14 +202,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         if (progress < 1) {
             animationFrameId.current = requestAnimationFrame(animate);
         } else {
+            setRotation(finalRotationValue);
             setIsSpinning(false);
+            playSpinEndSound();
             onSpinEnd(selectedCategory, selectedColor);
         }
     };
 
     animationFrameId.current = requestAnimationFrame(animate);
 
-  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation, playTickSound]);
+  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation, playTickSound, playSpinEndSound]);
   
   useEffect(() => {
     return () => {
