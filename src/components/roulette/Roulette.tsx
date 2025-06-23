@@ -125,7 +125,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
       
       const midAngle = startAngle + anglePerSegment / 2;
-      const textPathStartRadiusFactor = 0.40;
+      const textPathStartRadiusFactor = 0.55;
       const textPathEndRadiusFactor = 0.88;
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
@@ -303,16 +303,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               className="absolute top-[-12px] left-1/2 -translate-x-1/2 z-10"
               style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
           >
-              <path
-                  d="M20.25 11.66C20.25 16.34 14.53 21.5 12.01 21.5C9.49001 21.5 3.75 16.34 3.75 11.66C3.75 7.61 7.42001 3.5 12.01 3.5C16.6 3.5 20.25 7.61 20.25 11.66Z"
-                  fill="hsl(var(--primary))"
-                  stroke="#FFFFFF"
-                  strokeWidth="1.5"
-              />
-              <path
-                  d="M12 14C13.6569 14 15 12.6569 15 11C15 9.34315 13.6569 8 12 8C10.3431 8 9 9.34315 9 11C9 12.6569 10.3431 14 12 14Z"
-                  fill="white"
-              />
+            <path
+              d="M12 2 C7 2 3 6 3 11 C3 18 12 22 12 22 S21 18 21 11 C21 6 17 2 12 2 Z"
+              fill="hsl(var(--primary))"
+              stroke="#FFFFFF"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M12 11a2 2 0 100-4 2 2 0 000 4z"
+              fill="white"
+            />
           </svg>
           {/* Center spin button */}
           <div 
