@@ -26,7 +26,7 @@ interface ResultsModalProps {
   useAIImages: boolean;
 }
 
-type DisplayState = 'generating' | 'sequencing' | 'revealed';
+type DisplayState = 'generating' | 'showing_references' | 'final_reveal';
 
 const TIMER_OPTIONS = [
   { duration: 30, color: "bg-sky-500 hover:bg-sky-600", textColor: "text-white" },
@@ -49,67 +49,73 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [isPictionaryRoundActive, setIsPictionaryRoundActive] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   
-  const [displayState, setDisplayState] = useState<DisplayState>('revealed');
-  const [generatedImageUrls, setGeneratedImageUrls] = useState<string[]>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [displayState, setDisplayState] = useState<DisplayState>('final_reveal');
+  const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [artisticImage, setArtisticImage] = useState<string | null>(null);
+  const [currentReferenceIndex, setCurrentReferenceIndex] = useState(0);
 
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect runs whenever the modal is opened with a new word.
     if (isOpen) {
-      // Reset state for the new round
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
       setTimerKey(prev => prev + 1);
       
-      setGeneratedImageUrls([]);
-      setCurrentImageIndex(0);
+      setReferenceImages([]);
+      setArtisticImage(null);
+      setCurrentReferenceIndex(0);
 
       if (selectedWord && useAIImages) {
         setDisplayState('generating');
         generateImageForWord({ word: selectedWord })
           .then(result => {
             if (result.imageDataUris && result.imageDataUris.length > 0) {
-              setGeneratedImageUrls(result.imageDataUris);
-              setDisplayState('sequencing');
+              const allImages = [...result.imageDataUris];
+              const newArtisticImage = allImages.pop() || null;
+              const newReferenceImages = allImages;
+              
+              setReferenceImages(newReferenceImages);
+              setArtisticImage(newArtisticImage);
+              setDisplayState(newReferenceImages.length > 0 ? 'showing_references' : 'final_reveal');
+
             } else {
               toast({
                   title: "Error de Imagen",
-                  description: "No se pudieron generar imágenes. Mostrando la palabra.",
+                  description: "No se pudieron generar imágenes. Mostrando solo la palabra.",
                   variant: "destructive"
               });
-              setDisplayState('revealed');
+              setDisplayState('final_reveal');
             }
           })
           .catch(error => {
             console.error("AI image generation error:", error);
             toast({
-              title: "Error de Imagen",
+              title: "Error de IA",
               description: "No se pudo generar una imagen para la palabra.",
               variant: "destructive"
             });
-            setDisplayState('revealed');
+            setDisplayState('final_reveal');
           });
       } else {
-        setDisplayState('revealed');
+        setDisplayState('final_reveal');
       }
     }
   }, [isOpen, selectedWord, useAIImages, toast]);
 
   useEffect(() => {
-    if (displayState !== 'sequencing') return;
+    if (displayState !== 'showing_references' || referenceImages.length === 0) return;
 
     const timer = setTimeout(() => {
-      if (currentImageIndex < generatedImageUrls.length - 1) {
-        setCurrentImageIndex(prev => prev + 1);
+      if (currentReferenceIndex < referenceImages.length - 1) {
+        setCurrentReferenceIndex(prev => prev + 1);
       } else {
-        setDisplayState('revealed');
+        setDisplayState('final_reveal');
       }
-    }, 3000); // 3 seconds per image
+    }, 4000); // 4 seconds per image
 
     return () => clearTimeout(timer);
-  }, [displayState, currentImageIndex, generatedImageUrls]);
+  }, [displayState, currentReferenceIndex, referenceImages]);
 
 
   const handleTimeButtonClick = (duration: number) => {
@@ -142,47 +148,59 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setTimerKey(prevKey => prevKey + 1);
   };
 
-  const renderImageAndWordContent = () => {
+  const renderContent = () => {
     const wordStyle = { color: selectedCategoryColor || 'hsl(var(--primary))' };
+
+    const WordToDraw = () => (
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm p-2 px-6 rounded-xl shadow-lg z-10">
+        <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
+        <p className="text-5xl font-bold text-center" style={wordStyle}>
+          {selectedWord}
+        </p>
+      </div>
+    );
     
+    const ContentBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
+      <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+        {children}
+      </div>
+    );
+
     switch (displayState) {
       case 'generating':
         return (
-          <div className="flex flex-col items-center justify-center gap-4 text-primary">
-            <Loader2 className="h-16 w-16 animate-spin" />
-            <p className="text-xl font-medium">Creando imágenes...</p>
-          </div>
+          <ContentBox>
+            <div className="flex flex-col items-center justify-center gap-4 text-primary">
+              <Loader2 className="h-16 w-16 animate-spin" />
+              <p className="text-xl font-medium">Generando inspiración...</p>
+            </div>
+          </ContentBox>
         );
-      case 'sequencing':
-        const currentImageUrl = generatedImageUrls[currentImageIndex];
+      case 'showing_references':
+        const currentImageUrl = referenceImages[currentReferenceIndex];
         return (
-          <>
-            {currentImageUrl ? (
-              <Image src={currentImageUrl} alt={`Generated image ${currentImageIndex + 1} for ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized/>
+          <ContentBox>
+            <WordToDraw />
+            {currentImageUrl && <Image src={currentImageUrl} alt={`Referencia ${currentReferenceIndex + 1}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
+              <p className="text-lg font-semibold text-foreground/80 bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full">Referencia {currentReferenceIndex + 1} de {referenceImages.length}</p>
+            </div>
+          </ContentBox>
+        );
+      case 'final_reveal':
+        return (
+          <ContentBox>
+            {artisticImage ? (
+              <Image src={artisticImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
             ) : (
-              <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
-                <ImageIcon className="h-16 w-16" />
-                <p className="text-xl font-medium">Error al cargar imagen</p>
+              <div className="text-center">
+                <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
+                <p className="text-7xl lg:text-8xl font-bold break-words leading-tight" style={wordStyle}>
+                  {selectedWord}
+                </p>
               </div>
             )}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
-                <p className="text-2xl font-bold text-foreground/80 animate-pulse">¡Adivina la palabra!</p>
-                <div className="flex gap-2">
-                    {generatedImageUrls.map((_, index) => (
-                        <div key={index} className={`h-3 w-3 rounded-full transition-all ${index === currentImageIndex ? 'bg-primary scale-125' : 'bg-muted'}`} />
-                    ))}
-                </div>
-            </div>
-          </>
-        );
-      case 'revealed':
-        return (
-          <div className="text-center">
-            <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
-            <p className="text-7xl lg:text-8xl font-bold break-words leading-tight" style={wordStyle}>
-              {selectedWord}
-            </p>
-          </div>
+          </ContentBox>
         );
     }
   };
@@ -205,12 +223,12 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         
         <DialogClose asChild>
           <Button
-            variant="destructive"
+            variant="default"
             size="icon"
-            className="absolute top-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110"
+            className="absolute top-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 bg-red-600 hover:bg-red-700"
             aria-label="Cerrar"
           >
-            <X className="h-8 w-8" />
+            <X className="h-9 w-9 text-white" />
           </Button>
         </DialogClose>
 
@@ -218,9 +236,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           
           {/* Image and Word Section */}
           <div className="flex-1 w-full lg:max-w-2xl flex flex-col items-center justify-center text-center gap-4">
-            <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
-                {renderImageAndWordContent()}
-            </div>
+             {renderContent()}
           </div>
 
           {/* Timer and Controls Section */}
@@ -250,7 +266,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={duration}
                       onClick={() => handleTimeButtonClick(duration)}
                       className={`text-2xl font-bold py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
-                      disabled={displayState !== 'revealed'}
+                      disabled={displayState === 'generating'}
                     >
                       <TimerIcon className="mr-2 h-6 w-6" />
                       {duration}s

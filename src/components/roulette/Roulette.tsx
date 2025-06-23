@@ -60,9 +60,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine'; // Softer wave
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // Lower, less sharp frequency
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime); 
+    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.08);
 
     oscillator.connect(gainNode);

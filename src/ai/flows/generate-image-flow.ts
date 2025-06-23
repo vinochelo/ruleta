@@ -37,25 +37,34 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    const generationPromises = Array.from({length: 3}).map((_, i) => {
+    const referenceImagePromises = Array.from({length: 2}).map(() => {
       return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen visualmente atractiva para la palabra: '${input.word}'. Variación ${i + 1} de 3. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar, pero no fotorrealista. CRÍTICO: La imagen generada NO debe contener ningún texto, letra o número; solo la representación visual de la palabra.`,
+        prompt: `Crea una imagen de referencia para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar. CRÍTICO: La imagen generada NO debe contener ningún texto, letra o número; solo la representación visual de la palabra.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
       });
     });
 
+    const artisticTextPromise = ai.generate({
+        model: 'googleai/gemini-2.0-flash-preview-image-generation',
+        prompt: `Crea una imagen de texto artística y muy llamativa para la palabra: '${input.word}'. El estilo debe ser colorido, enérgico y con una tipografía divertida, como el título de un juego. La palabra debe ser el foco central y claramente legible. Esta imagen es para mostrar la palabra ganadora de forma impactante.`,
+        config: {
+          responseModalities: ['TEXT', 'IMAGE'],
+        },
+    });
+
     try {
-      const results = await Promise.allSettled(generationPromises);
+      const results = await Promise.allSettled([...referenceImagePromises, artisticTextPromise]);
       const imageDataUris = results
         .filter(
           (result): result is PromiseFulfilledResult<{media?: {url: string}}> =>
             result.status === 'fulfilled' && !!result.value.media?.url
         )
         .map((result) => result.value.media!.url);
-
+        
+      // Returns [ref1, ref2, artistic]
       return {imageDataUris};
     } catch (error) {
       console.error('Image generation failed:', error);
