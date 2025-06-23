@@ -89,9 +89,23 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     try {
       // --- Stage 1: Generate Quick Image ---
       const quickResult = await generateQuickImage({ word });
+      
+      if (quickResult.error) {
+        setGenerationError(quickResult.error);
+        toast({
+          title: "Error de Generación de Imagen",
+          description: quickResult.error,
+          variant: "destructive",
+          duration: 15000, // Longer duration for this important message
+        });
+        setIsGeneratingQuick(false); // Stop loading state
+        return; // Abort
+      }
+
       if (quickResult.imageDataUri) {
         setQuickImage(quickResult.imageDataUri);
-        
+        setIsGeneratingQuick(false); // Quick image part is done
+
         // --- Stage 2: Generate Artistic Images (in background) ---
         setIsGeneratingArtistic(true);
         generateArtisticImages({ word }).then(artisticResult => {
@@ -101,35 +115,26 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 setReferenceImages(allArtistic);
                 setArtisticText(newArtisticText);
             }
+            // Silently ignore errors from artistic generation as it's non-critical
         }).catch(err => {
             console.error("Artistic image generation failed:", err);
-            // Non-critical error, we still have the quick image.
         }).finally(() => {
             setIsGeneratingArtistic(false);
         });
 
       } else {
-        // Handle failure gracefully
-        const errorMessage = "La IA no pudo generar la imagen. Esto puede deberse a la configuración de la API, los filtros de seguridad o los límites de cuota.";
-        setGenerationError("No se pudo generar la imagen."); // shorter message for the UI element
-        toast({
-          title: "Error de Generación de Imagen",
-          description: errorMessage,
-          variant: "destructive",
-          duration: 9000, // Make it stay longer
-        });
+        // This case should not happen if my new flow logic is correct (it will always return an error string if URI is null)
+        // But as a fallback:
+        const errorMessage = "La IA devolvió una respuesta vacía inesperada.";
+        setGenerationError(errorMessage);
+        toast({ title: "Error Inesperado", description: errorMessage, variant: "destructive" });
+        setIsGeneratingQuick(false);
       }
     } catch (error: any) {
-        console.error("Quick image generation error:", error);
-        const errorMessage = "Ocurrió un problema al generar la imagen. Revisa la configuración de la API.";
-        setGenerationError("No se pudo generar la imagen.");
-        toast({
-          title: "Error de IA",
-          description: errorMessage,
-          variant: "destructive",
-          duration: 9000,
-        });
-    } finally {
+        console.error("Critical image generation flow error:", error);
+        const errorMessage = "Ocurrió un problema de comunicación con el servicio de IA. Revisa la consola del navegador y del servidor.";
+        setGenerationError("Error de comunicación.");
+        toast({ title: "Error de IA", description: errorMessage, variant: "destructive" });
         setIsGeneratingQuick(false);
     }
   }, [toast, resetAIState]);
@@ -267,7 +272,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <ContentBox>
             <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
               <AlertCircle className="h-24 w-24 text-destructive" />
-              <p className="text-xl text-white bg-destructive p-2 rounded-md">{generationError}</p>
+              <p className="text-lg text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
               <Button onClick={handleRequestAiHelp} size="lg" variant="destructive" className="transition-transform hover:scale-105">
                 <Sparkles className="mr-2 h-5 w-5" />
                 Reintentar

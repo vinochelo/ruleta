@@ -12,12 +12,6 @@
 import { ai, geminiImage } from '@/ai/genkit';
 import { z } from 'zod';
 
-// At module load, check if the API key is present. This helps diagnose configuration issues.
-if (!process.env.GOOGLE_API_KEY) {
-  console.error("FATAL: The GOOGLE_API_KEY environment variable is not set.");
-  console.error("Please create a .env file in the project's root directory and add: GOOGLE_API_KEY=your_key_here");
-}
-
 // --- Common Helper Function ---
 
 // A robust helper to generate a single image. It returns null on failure.
@@ -67,6 +61,7 @@ export type QuickImageInput = z.infer<typeof QuickImageInputSchema>;
 
 const QuickImageOutputSchema = z.object({
   imageDataUri: z.string().nullable().describe("A data URI for the generated image. Null if generation fails. Format: 'data:<mimetype>;base64,<encoded_data>'."),
+  error: z.string().nullable().describe("An error message if image generation failed."),
 });
 export type QuickImageOutput = z.infer<typeof QuickImageOutputSchema>;
 
@@ -83,13 +78,24 @@ const generateQuickImageFlow = ai.defineFlow(
     outputSchema: QuickImageOutputSchema,
   },
   async (input) => {
-    // Ultra-simplified prompt to maximize success rate
+    if (!process.env.GOOGLE_API_KEY) {
+      const errorMsg = "La variable de entorno GOOGLE_API_KEY no está configurada. Por favor, añádela a un archivo .env en la raíz de tu proyecto.";
+      console.error(`FATAL: ${errorMsg}`);
+      return { imageDataUri: null, error: errorMsg };
+    }
+    
     const prompt = `A simple icon of: '${input.word}'. Visual depiction only, no words.`;
     
     const imageUrl = await generateSingleImage(prompt, "QuickImage");
     
-    console.log(`Quick image flow finished for: "${input.word}". Success: ${!!imageUrl}`);
-    return { imageDataUri: imageUrl };
+    if (imageUrl) {
+        console.log(`Quick image flow finished for: "${input.word}". Success: true`);
+        return { imageDataUri: imageUrl, error: null };
+    } else {
+        const errorMsg = "La generación de la imagen falló. Revisa los registros del servidor para más detalles (posibles problemas de cuota o filtros de seguridad).";
+        console.log(`Quick image flow finished for: "${input.word}". Success: false`);
+        return { imageDataUri: null, error: errorMsg };
+    }
   }
 );
 
@@ -107,6 +113,7 @@ const ArtisticImagesOutputSchema = z.object({
     .describe(
       "A list of data URIs for the generated images. Can be an empty array if generation fails. Format: 'data:<mimetype>;base64,<encoded_data>'. The last image is the artistic text."
     ),
+  error: z.string().nullable().describe("An error message if image generation failed."),
 });
 export type ArtisticImagesOutput = z.infer<typeof ArtisticImagesOutputSchema>;
 
@@ -134,12 +141,12 @@ const generateArtisticImagesFlow = ai.defineFlow(
     ];
 
     const imagePromises = prompts.map((prompt, i) => generateSingleImage(prompt, `ArtisticImage-${i}`));
-    const results = await Promise.all(imagePromises); // Using Promise.all to see if any fail loudly
+    const results = await Promise.all(imagePromises);
 
     const successfulUris = results.filter((uri): uri is string => !!uri);
 
     console.log(`Artistic image flow finished for "${input.word}". Generated ${successfulUris.length} of ${prompts.length} requested images.`);
 
-    return { imageDataUris: successfulUris };
+    return { imageDataUris: successfulUris, error: null };
   }
 );
