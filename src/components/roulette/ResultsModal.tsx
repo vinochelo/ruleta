@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
@@ -156,6 +157,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     }
   }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
 
+  // Effect for automatic slideshow
+  useEffect(() => {
+    if (allImages.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % allImages.length);
+      }, 3000); // Change image every 3 seconds
+
+      return () => clearInterval(timer);
+    }
+  }, [allImages.length]);
+
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
     setActiveTimerDuration(duration);
@@ -184,14 +196,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     if (selectedWord) {
       startImageGeneration(selectedWord);
     }
-  };
-
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % allImages.length);
-  };
-
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + allImages.length) % allImages.length);
   };
 
   const wordLength = selectedWord?.length || 0;
@@ -274,35 +278,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         <ContentContainer>
           <MainImageBox>
             <Image src={allImages[currentImageIndex]} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
-
-            {allImages.length > 1 && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white transition-opacity opacity-50 hover:opacity-100"
-                  onClick={handlePrevImage}
-                  aria-label="Imagen Anterior"
-                >
-                  <ChevronLeft className="h-8 w-8" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white transition-opacity opacity-50 hover:opacity-100"
-                  onClick={handleNextImage}
-                  aria-label="Siguiente Imagen"
-                >
-                  <ChevronRight className="h-8 w-8" />
-                </Button>
-              </>
-            )}
-            
-            {allImages.length > 1 && (
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-black/50 text-white text-xs font-bold px-2 py-1 rounded-full">
-                {currentImageIndex + 1} / {allImages.length}
-              </div>
-            )}
 
             {isGeneratingArtistic && (
               <div className="absolute top-2 right-2 z-10 flex items-center gap-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full animate-pulse">
