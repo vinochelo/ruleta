@@ -323,18 +323,17 @@ const CategoryManagement: React.FC = () => {
               disabled={isAISuggesting}
             />
             <div className="flex gap-2">
-              <Button type="submit" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting || newCategoryName.trim() === ''}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Añadir Vacía
-              </Button>
               <Button 
                 type="button" 
-                variant="outline" 
                 onClick={() => handleOpenAISuggestions(newCategoryName)}
                 className="transition-transform hover:scale-105 flex-1 sm:flex-none"
                 disabled={isAISuggesting || newCategoryName.trim() === ''}
               >
                 <Brain className="mr-2 h-4 w-4" />
                 Añadir con IA
+              </Button>
+              <Button type="submit" variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting || newCategoryName.trim() === ''}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Añadir Vacía
               </Button>
             </div>
           </form>
