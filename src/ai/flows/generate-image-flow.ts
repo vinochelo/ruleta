@@ -36,22 +36,35 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
       return { imageUrl: media.url, error: null };
     }
     
-    let reasonText = `Razón: ${finishReason}.`;
+    // If we are here, media.url is null.
+    let reasonText = `La IA no devolvió una imagen. Razón del final: ${finishReason || 'desconocida'}.`;
     if (finishReason === 'safety') {
-      reasonText = "La imagen fue bloqueada por los filtros de seguridad de la IA.";
+      reasonText = "La imagen no se generó porque la solicitud fue bloqueada por los filtros de seguridad de la IA.";
     } else if (finishReason === 'recitation') {
-      reasonText = "La solicitud fue bloqueada por motivos de recitación.";
+      reasonText = "La solicitud fue bloqueada por motivos de recitación (posible plagio).";
     } else if (finishReason === 'quota') {
-      reasonText = "Se ha alcanzado la cuota de la API. Inténtalo de nuevo más tarde.";
+      reasonText = "Se ha alcanzado la cuota de la API. Revisa tu plan de facturación de Google Cloud o inténtalo de nuevo más tarde.";
     }
 
     console.warn(`[${context}] Image generation finished but returned no media URL. ${reasonText}`);
-    return { imageUrl: null, error: `La IA no devolvió una imagen. ${reasonText}` };
+    return { imageUrl: null, error: reasonText };
 
   } catch (error: any) {
     console.error(`[${context}] Image generation request FAILED.`, JSON.stringify(error, null, 2));
-    const errorMessage = error?.message || "Error desconocido al contactar el servicio de IA.";
-    return { imageUrl: null, error: `Error en la solicitud a la IA: ${errorMessage}` };
+    
+    let detailedErrorMessage = "Error desconocido al contactar el servicio de IA.";
+    if (error?.message) {
+        if (error.message.includes('API key not valid')) {
+            detailedErrorMessage = "La clave de API de Google no es válida. Por favor, verifica que la has copiado correctamente en el archivo .env.";
+        } else if (error.message.includes('permission denied') || error.message.includes('PERMISSION_DENIED')) {
+            detailedErrorMessage = "Permiso denegado. Asegúrate de que la API de Vertex AI (o la API de Gemini) esté habilitada en tu proyecto de Google Cloud.";
+        } else {
+            detailedErrorMessage = error.message;
+        }
+    }
+    
+    const finalError = `La solicitud a la IA falló: ${detailedErrorMessage}`;
+    return { imageUrl: null, error: finalError };
   }
 }
 
