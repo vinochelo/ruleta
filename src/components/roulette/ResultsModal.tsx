@@ -11,10 +11,10 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import { TimerIcon, X, Play, Image as ImageIcon, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
-import { generateImageForWord } from '@/ai/flows/generate-image-flow';
+import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
 
 interface ResultsModalProps {
   isOpen: boolean;
@@ -26,8 +26,6 @@ interface ResultsModalProps {
   speakFn: (text: string) => void;
   useAIImages: boolean;
 }
-
-type DisplayState = 'generating' | 'showing_references' | 'final_reveal';
 
 const TIMER_OPTIONS = [
   { duration: 30, color: "bg-sky-500 hover:bg-sky-600", textColor: "text-white" },
@@ -46,95 +44,130 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   speakFn,
   useAIImages,
 }) => {
+  // Timer and game state
   const [activeTimerDuration, setActiveTimerDuration] = useState<number | null>(null);
   const [isPictionaryRoundActive, setIsPictionaryRoundActive] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
-  
-  const [displayState, setDisplayState] = useState<DisplayState>('final_reveal');
-  const [referenceImages, setReferenceImages] = useState<string[]>([]);
-  const [artisticImage, setArtisticImage] = useState<string | null>(null);
-  const [currentReferenceIndex, setCurrentReferenceIndex] = useState(0);
+
+  // AI Image Generation State
   const [aiHelpActive, setAiHelpActive] = useState(false);
+  const [isGeneratingQuick, setIsGeneratingQuick] = useState(false);
+  const [isGeneratingArtistic, setIsGeneratingArtistic] = useState(false);
+  const [quickImage, setQuickImage] = useState<string | null>(null);
+  const [referenceImages, setReferenceImages] = useState<string[]>([]);
+  const [artisticText, setArtisticText] = useState<string | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  
+  // Slideshow state
+  const [slideshowImages, setSlideshowImages] = useState<string[]>([]);
+  const [currentSlideshowIndex, setCurrentSlideshowIndex] = useState(0);
+  const [displayState, setDisplayState] = useState<'initial' | 'slideshow' | 'final_reveal'>('initial');
 
   const { toast } = useToast();
   
-  const generateImages = useCallback(async (word: string) => {
+  const resetAIState = useCallback(() => {
+    setAiHelpActive(false);
+    setIsGeneratingQuick(false);
+    setIsGeneratingArtistic(false);
+    setQuickImage(null);
+    setReferenceImages([]);
+    setArtisticText(null);
+    setGenerationError(null);
+    setSlideshowImages([]);
+    setCurrentSlideshowIndex(0);
+    setDisplayState('initial');
+  }, []);
+
+  const startImageGeneration = useCallback(async (word: string) => {
     if (!word) return;
-    setDisplayState('generating');
+    
+    resetAIState();
+    setAiHelpActive(true);
+    setIsGeneratingQuick(true);
+    setGenerationError(null);
+
     try {
-        const result = await generateImageForWord({ word });
-        if (result.imageDataUris && result.imageDataUris.length > 0) {
-            const allImages = [...result.imageDataUris];
-            const newArtisticImage = allImages.pop() || null;
-            const newReferenceImages = allImages;
-            
-            setReferenceImages(newReferenceImages);
-            setArtisticImage(newArtisticImage);
-            setCurrentReferenceIndex(0); // Reset index for new images
-            setDisplayState(newReferenceImages.length > 0 ? 'showing_references' : 'final_reveal');
-        } else {
-            toast({
-                title: "Error de IA",
-                description: "La IA no pudo generar imágenes. Puedes jugar sin ellas.",
-                variant: "destructive"
-            });
-            setDisplayState('final_reveal');
-            setAiHelpActive(false); // Disable AI help on failure to show the button again
-        }
-    } catch (error) {
-        console.error("AI image generation error:", error);
+      // --- Stage 1: Generate Quick Image ---
+      const quickResult = await generateQuickImage({ word });
+      if (quickResult.imageDataUri) {
+        setQuickImage(quickResult.imageDataUri);
+        
+        // --- Stage 2: Generate Artistic Images (in background) ---
+        setIsGeneratingArtistic(true);
+        generateArtisticImages({ word }).then(artisticResult => {
+            if (artisticResult.imageDataUris && artisticResult.imageDataUris.length > 0) {
+                const allArtistic = [...artisticResult.imageDataUris];
+                const newArtisticText = allArtistic.pop() || null;
+                setReferenceImages(allArtistic);
+                setArtisticText(newArtisticText);
+            }
+        }).catch(err => {
+            console.error("Artistic image generation failed:", err);
+            // Non-critical error, we still have the quick image.
+        }).finally(() => {
+            setIsGeneratingArtistic(false);
+        });
+
+      } else {
+        throw new Error("La IA no pudo generar la imagen inicial.");
+      }
+    } catch (error: any) {
+        console.error("Quick image generation error:", error);
+        const errorMessage = "Ocurrió un problema al generar la imagen. Inténtalo de nuevo.";
+        setGenerationError(errorMessage);
         toast({
           title: "Error de IA",
-          description: "Ocurrió un problema al generar las imágenes. Reinténtalo.",
+          description: errorMessage,
           variant: "destructive"
         });
-        setDisplayState('final_reveal');
-        setAiHelpActive(false); // Disable AI help on failure to show the button again
+    } finally {
+        setIsGeneratingQuick(false);
     }
-  }, [toast]);
-
+  }, [toast, resetAIState]);
+  
   // Effect to manage state when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Reset state on open
+      // Reset timer state
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
       setTimerKey(prev => prev + 1);
-      setReferenceImages([]);
-      setArtisticImage(null);
-      setCurrentReferenceIndex(0);
-      setAiHelpActive(useAIImages); // Set initial state from prop
-      
-      // If AI is disabled from the start, go straight to final_reveal
-      // The button to enable it will be available there.
-      if (!useAIImages) {
-          setDisplayState('final_reveal');
+      // Reset AI state
+      resetAIState();
+
+      if (useAIImages && selectedWord) {
+        startImageGeneration(selectedWord);
       }
     }
-  }, [isOpen, useAIImages]);
-
-  // Effect to trigger image generation if conditions are met
+  }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
+  
+  // Effect to build and start slideshow when images are ready
   useEffect(() => {
-      if (isOpen && aiHelpActive && selectedWord) {
-          generateImages(selectedWord);
-      }
-  }, [isOpen, aiHelpActive, selectedWord, generateImages]);
+    const newSlideshowImages: string[] = [];
+    if (quickImage) newSlideshowImages.push(quickImage);
+    if (referenceImages.length > 0) newSlideshowImages.push(...referenceImages);
 
-  // Effect for cycling through reference images
+    if (newSlideshowImages.length > 0) {
+        setSlideshowImages(newSlideshowImages);
+        setDisplayState('slideshow');
+        setCurrentSlideshowIndex(0);
+    }
+  }, [quickImage, referenceImages]);
+  
+  // Effect for cycling through slideshow images
   useEffect(() => {
-    if (displayState !== 'showing_references' || referenceImages.length === 0) return;
+    if (displayState !== 'slideshow' || slideshowImages.length === 0) return;
 
     const timer = setTimeout(() => {
-      if (currentReferenceIndex < referenceImages.length - 1) {
-        setCurrentReferenceIndex(prev => prev + 1);
+      if (currentSlideshowIndex < slideshowImages.length - 1) {
+        setCurrentSlideshowIndex(prev => prev + 1);
       } else {
         setDisplayState('final_reveal');
       }
     }, 4000); // 4 seconds per image
 
     return () => clearTimeout(timer);
-  }, [displayState, currentReferenceIndex, referenceImages]);
-
+  }, [displayState, currentSlideshowIndex, slideshowImages]);
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
@@ -161,8 +194,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
   
   const handleRequestAiHelp = () => {
-    if (!aiHelpActive) {
-      setAiHelpActive(true);
+    if (selectedWord) {
+      startImageGeneration(selectedWord);
     }
   };
 
@@ -172,55 +205,92 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         {children}
       </div>
     );
-
-    switch (displayState) {
-      case 'generating':
+    
+    // Initial State: No AI help requested or enabled
+    if (!aiHelpActive) {
+      return (
+        <ContentBox>
+          <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+              <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+              <p className="text-xl text-muted-foreground">La ayuda de IA está desactivada.</p>
+              <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+                <Sparkles className="mr-2 h-5 w-5" />
+                Obtener Inspiración de IA
+              </Button>
+          </div>
+        </ContentBox>
+      );
+    }
+    
+    // State: Loading the first quick image
+    if (isGeneratingQuick) {
         return (
           <ContentBox>
             <div className="flex flex-col items-center justify-center gap-4 text-primary">
               <Loader2 className="h-16 w-16 animate-spin" />
-              <p className="text-xl font-medium">Generando inspiración...</p>
+              <p className="text-xl font-medium">Generando imagen de referencia...</p>
             </div>
-          </ContentBox>
-        );
-      case 'showing_references':
-        const currentImageUrl = referenceImages[currentReferenceIndex];
-        return (
-          <ContentBox>
-            {currentImageUrl && <Image src={currentImageUrl} alt={`Referencia ${currentReferenceIndex + 1}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
-              <p className="text-lg font-semibold text-foreground/80 bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full">Referencia {currentReferenceIndex + 1} de {referenceImages.length}</p>
-            </div>
-          </ContentBox>
-        );
-      case 'final_reveal':
-        if (!aiHelpActive) {
-            return (
-              <ContentBox>
-                <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-                    <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-                    <p className="text-xl text-muted-foreground">La ayuda de IA está desactivada.</p>
-                    <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      Obtener Inspiración de IA
-                    </Button>
-                </div>
-              </ContentBox>
-            );
-        }
-        return (
-          <ContentBox>
-            {artisticImage ? (
-              <Image src={artisticImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
-            ) : (
-              <div className="text-center flex flex-col items-center justify-center gap-4">
-                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-                <p className="text-muted-foreground">No se generó la imagen artística.</p>
-              </div>
-            )}
           </ContentBox>
         );
     }
+
+    // State: Error during generation
+    if (generationError && !quickImage) {
+        return (
+          <ContentBox>
+            <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+              <AlertCircle className="h-24 w-24 text-destructive" />
+              <p className="text-xl text-white bg-destructive p-2 rounded-md">{generationError}</p>
+              <Button onClick={handleRequestAiHelp} size="lg" variant="destructive" className="transition-transform hover:scale-105">
+                <Sparkles className="mr-2 h-5 w-5" />
+                Reintentar
+              </Button>
+            </div>
+          </ContentBox>
+        );
+    }
+    
+    // State: Displaying slideshow
+    if (displayState === 'slideshow' && slideshowImages.length > 0) {
+      const currentImageUrl = slideshowImages[currentSlideshowIndex];
+      return (
+        <ContentBox>
+          {currentImageUrl && <Image src={currentImageUrl} alt={`Referencia ${currentSlideshowIndex + 1}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
+            <p className="text-lg font-semibold text-foreground/80 bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full">Referencia {currentSlideshowIndex + 1} de {slideshowImages.length}</p>
+          </div>
+          {isGeneratingArtistic && <Loader2 className="absolute top-4 right-4 h-6 w-6 text-primary animate-spin" />}
+        </ContentBox>
+      );
+    }
+
+    // State: Final reveal with artistic text
+    if (displayState === 'final_reveal') {
+        return (
+          <ContentBox>
+            {artisticText ? (
+              <Image src={artisticText} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
+            ) : (
+              // Fallback if artistic text fails but others succeed
+              quickImage ? <Image src={quickImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized /> :
+              <div className="text-center flex flex-col items-center justify-center gap-4">
+                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+                <p className="text-muted-foreground">No se generó la imagen artística final.</p>
+              </div>
+            )}
+             {isGeneratingArtistic && <Loader2 className="absolute top-4 right-4 h-6 w-6 text-primary animate-spin" />}
+          </ContentBox>
+        );
+    }
+    
+    // Default/fallback view if something unexpected happens
+    return (
+        <ContentBox>
+            <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+            </div>
+        </ContentBox>
+    );
   };
 
 
