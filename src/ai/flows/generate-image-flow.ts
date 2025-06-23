@@ -23,6 +23,25 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
       prompt,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
+        // Added safety settings to be less restrictive, as Pictionary words should be generally safe.
+        safetySettings: [
+          {
+            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_HATE_SPEECH',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_HARASSMENT',
+            threshold: 'BLOCK_NONE',
+          },
+          {
+            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+            threshold: 'BLOCK_NONE',
+          },
+        ],
       },
     });
 
@@ -59,11 +78,15 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
         } else if (error.message.includes('permission denied') || error.message.includes('PERMISSION_DENIED')) {
             detailedErrorMessage = "Permiso denegado. Asegúrate de que la API de Vertex AI (o la API de Gemini) esté habilitada en tu proyecto de Google Cloud.";
         } else {
-            detailedErrorMessage = error.message;
+             // Include the raw error message for better debugging.
+            detailedErrorMessage = `La IA devolvió un error: ${error.message}`;
         }
+    } else {
+        // If there's no message, stringify the whole error object.
+        detailedErrorMessage = `Ocurrió un error inesperado. Detalles: ${JSON.stringify(error)}`;
     }
     
-    const finalError = `La solicitud a la IA falló: ${detailedErrorMessage}`;
+    const finalError = `La solicitud a la IA falló. ${detailedErrorMessage}`;
     return { imageUrl: null, error: finalError };
   }
 }
