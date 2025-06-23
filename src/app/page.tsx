@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Volume2, PlusCircle, Trash2, RotateCcw, Users } from 'lucide-react';
+import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus } from 'lucide-react';
 import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 
 interface Category {
@@ -198,7 +198,7 @@ export default function HomePage() {
         })
         .catch(error => {
           console.error("AI praise error:", error);
-          const fallbackMessage = `¡Felicidades, ${winningTeam.name}! ¡Han ganado con ${winningTeam.score} puntos!`;
+          const fallbackMessage = `¡Felicidades, ${winningTeam.name}! ¡Han ganado!`;
           setWinnerPraise(fallbackMessage);
           speakFn(fallbackMessage);
         });
@@ -320,48 +320,44 @@ export default function HomePage() {
                 <div className="space-y-4">
                   <TooltipProvider>
                     {teams.map(team => (
-                      <Card key={team.id} className="p-4 bg-card/50">
-                        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4">
+                      <Card key={team.id} className="bg-card/50 shadow-inner overflow-hidden">
+                        <CardContent className="p-4 flex items-center justify-between gap-4">
                           {/* Delete Button - Left */}
-                          <div className="justify-self-start">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="icon" className="transition-transform hover:scale-105">
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Eliminar {team.name}</span>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Eliminar {team.name}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button onClick={() => handleRemoveTeam(team.id)} variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-full transition-all hover:scale-110">
+                                <Trash2 className="h-5 w-5" />
+                                <span className="sr-only">Eliminar {team.name}</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Eliminar {team.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
                           
                           {/* Team Info - Center */}
-                          <div className="text-center">
-                            <p className="text-2xl font-semibold text-primary">{team.name}</p>
-                            <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
+                          <div className="flex flex-col items-center flex-grow text-center">
+                            <p className="text-2xl font-bold text-primary truncate max-w-[200px] sm:max-w-xs">{team.name}</p>
+                            <p className="text-7xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
                           </div>
                           
                           {/* Add Point Button - Right */}
-                          <div className="justify-self-end">
-                             <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  onClick={() => handleIncrementScore(team.id)}
-                                  className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-20 h-20 rounded-full flex flex-col items-center justify-center"
-                                  aria-label={`Sumar 1 punto a ${team.name}`}
-                                >
-                                  <span className="text-2xl font-bold">+1</span>
-                                  <span className="text-sm font-normal">Punto</span>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Sumar 1 punto a {team.name}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        </div>
+                           <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                onClick={() => handleIncrementScore(team.id)}
+                                className="w-24 h-24 rounded-2xl bg-green-500 hover:bg-green-600 text-white shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center"
+                                aria-label={`Sumar 1 punto a ${team.name}`}
+                              >
+                                <Plus className="h-8 w-8" />
+                                <span className="text-lg font-semibold">Punto</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              <p>Sumar 1 punto a {team.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </CardContent>
                       </Card>
                     ))}
                   </TooltipProvider>

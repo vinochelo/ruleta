@@ -4,10 +4,6 @@ import { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Trophy, Play } from 'lucide-react';
@@ -28,14 +24,14 @@ const confettiColors = ['#F87171', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '
 
 const Confetti = () => (
   <div className="confetti-container" aria-hidden="true">
-    {Array.from({ length: 50 }).map((_, i) => (
+    {Array.from({ length: 150 }).map((_, i) => (
       <div
         key={i}
         className="confetti-piece"
         style={{
           left: `${Math.random() * 100}%`,
           backgroundColor: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-          animationDuration: `${2 + Math.random() * 3}s`,
+          animationDuration: `${3 + Math.random() * 4}s`,
           animationDelay: `${Math.random() * 5}s`,
           transform: `rotate(${Math.random() * 360}deg)`
         }}
@@ -61,28 +57,28 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
 
   return (
     <Dialog open={!!winner} onOpenChange={(open) => { if (!open) onPlayAgain() }}>
-      <DialogContent className="sm:max-w-md bg-card shadow-xl rounded-lg overflow-hidden">
+      <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/80 backdrop-blur-xl border-0 shadow-none flex items-center justify-center p-0">
         <Confetti />
         <audio
           ref={winnerSoundRef}
           src="https://cdn.pixabay.com/download/audio/2022/11/22/audio_5177114b82.mp3?filename=success-fanfare-trumpets-6185.mp3"
           preload="auto"
         />
-        <DialogHeader className="p-6 items-center text-center z-20">
-          <Trophy className="h-20 w-20 text-yellow-400 mb-4 drop-shadow-lg" />
-          <DialogTitle className="title-text text-3xl">
-            ¡Felicidades, {winner.name}!
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground pt-2 text-lg">
-            {praiseMessage ? praiseMessage : `¡Han ganado la partida!`}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="p-6 pt-0 z-20">
-          <Button onClick={onPlayAgain} className="w-full transition-transform hover:scale-105 text-lg py-3">
-            <Play className="mr-2 h-5 w-5" />
-            Jugar de Nuevo
-          </Button>
-        </DialogFooter>
+        <div className="flex flex-col items-center justify-center text-center p-6 z-20 space-y-8">
+            <Trophy className="h-48 w-48 text-yellow-400 drop-shadow-[0_8px_8px_rgba(0,0,0,0.4)]" />
+            <div className='space-y-4'>
+                <h1 className="text-7xl font-bold title-text">
+                    ¡Felicidades, {winner.name}!
+                </h1>
+                <p className="text-2xl text-foreground/80 max-w-3xl mx-auto">
+                    {praiseMessage ? praiseMessage : `¡Han ganado la partida!`}
+                </p>
+            </div>
+            <Button onClick={onPlayAgain} className="w-full max-w-xs transition-transform hover:scale-105 text-2xl py-8 mt-8 rounded-full">
+                <Play className="mr-4 h-8 w-8" />
+                Jugar de Nuevo
+            </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
