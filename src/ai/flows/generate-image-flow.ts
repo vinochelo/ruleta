@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview A robust AI flow to generate images for a Pictionary game.
- * This flow is designed for maximum reliability by generating images in parallel.
+ * This flow is designed for maximum reliability by generating images sequentially.
  *
  * - generateImageForWord - The primary function to generate images.
  * - GenerateImageInput - Input schema.
@@ -64,49 +64,33 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    console.log(`Starting new robust image generation for: "${input.word}"`);
+    console.log(`Starting new SEQUENTIAL image generation for: "${input.word}"`);
     
-    // Prompts for 4 different artistic reference images (NO TEXT)
-    const referencePrompts = [
+    const allPrompts = [
+        // Reference Images (NO TEXT)
         `A very simple, clear, black and white line drawing of '${input.word}' for a Pictionary game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
         `A simple, colorful cartoon drawing of '${input.word}' for a Pictionary game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
         `A minimalist, easy-to-guess icon representing '${input.word}'. For a drawing game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
         `A simple pencil sketch of '${input.word}'. For a Pictionary game. ABSOLUTE RULE: The image must not contain any text, letters, or numbers.`,
+        // Artistic Text Image (LAST)
+        `Create a visually stunning, artistic text design of the word: '${input.word}'. Use a creative, eye-catching font like one from a video game or movie poster. Surprise me with a unique design. The background should be clean.`,
     ];
 
-    // Prompt for the final artistic text image
-    const artisticTextPrompt = `Create a visually stunning, artistic text design of the word: '${input.word}'. Use a creative, eye-catching font like one from a video game or movie poster. Surprise me with a unique design. The background should be clean.`;
+    const imageDataUris: string[] = [];
 
-    // Generate reference images in parallel for speed
-    const referencePromises = referencePrompts.map(prompt => generateSingleImage(prompt));
-    
-    // Generate artistic text image at the same time
-    const artisticTextPromise = generateSingleImage(artisticTextPrompt);
-    
-    // Wait for all promises to settle (i.e., either succeed or fail)
-    const referenceResults = await Promise.allSettled(referencePromises);
-
-    // Filter out failed promises and get the successful image URIs
-    const referenceImageDataUris = referenceResults
-        .filter(result => result.status === 'fulfilled' && result.value)
-        .map(result => (result as Promise.FulfilledResult<string>).value);
-    
-    console.log(`Successfully generated ${referenceImageDataUris.length} reference images.`);
-
-    // Wait for the artistic text image
-    const artisticImageResult = await artisticTextPromise;
-
-    // Assemble the final array, with the artistic image at the end
-    const finalImageDataUris = [...referenceImageDataUris];
-    if (artisticImageResult) {
-        finalImageDataUris.push(artisticImageResult);
-        console.log(`Successfully generated artistic text image.`);
-    } else {
-        console.warn(`Could not generate the artistic text image for "${input.word}".`);
+    // Generate all images sequentially for maximum stability
+    for (const prompt of allPrompts) {
+        const imageUrl = await generateSingleImage(prompt);
+        if (imageUrl) {
+            imageDataUris.push(imageUrl);
+        } else {
+            // Log that a specific image failed, but continue with the rest
+            console.warn(`Skipping a failed image generation for prompt: "${prompt.substring(0, 50)}..."`);
+        }
     }
     
-    console.log(`Image generation flow finished. Generated ${finalImageDataUris.length} images in total.`);
+    console.log(`Image generation flow finished. Generated ${imageDataUris.length} of ${allPrompts.length} requested images.`);
 
-    return { imageDataUris: finalImageDataUris };
+    return { imageDataUris };
   }
 );
