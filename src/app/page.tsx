@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
@@ -266,15 +267,15 @@ export default function HomePage() {
                   <TooltipProvider>
                     {teams.map(team => (
                       <Card key={team.id} className="p-4 bg-card/50">
-                        <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-                          <div className="flex-grow">
+                        <div className="grid grid-cols-2 sm:grid-cols-[auto_1fr_auto] items-center gap-y-2 gap-x-4">
+                          {/* Team Info - Centered */}
+                          <div className="col-span-2 sm:col-span-1 sm:col-start-2 text-center">
                             <p className="text-xl font-semibold text-primary">{team.name}</p>
                             <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
                           </div>
-                          <div className="flex gap-2 flex-shrink-0">
-                            <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
-                              <Award className="mr-2 h-4 w-4" /> Sumar Punto
-                            </Button>
+                          
+                          {/* Delete Button - Left */}
+                          <div className="justify-self-start">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button onClick={() => handleRemoveTeam(team.id)} variant="destructive" size="icon" className="transition-transform hover:scale-105">
@@ -286,6 +287,13 @@ export default function HomePage() {
                                 <p>Eliminar {team.name}</p>
                               </TooltipContent>
                             </Tooltip>
+                          </div>
+                          
+                          {/* Add Point Button - Right */}
+                          <div className="justify-self-end">
+                            <Button onClick={() => handleIncrementScore(team.id)} size="sm" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105">
+                              <Award className="mr-2 h-4 w-4" /> Sumar Punto
+                            </Button>
                           </div>
                         </div>
                       </Card>
