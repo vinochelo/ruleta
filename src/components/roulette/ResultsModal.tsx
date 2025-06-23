@@ -48,6 +48,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   // Timer and game state
   const [activeTimerDuration, setActiveTimerDuration] = useState<number | null>(null);
   const [isPictionaryRoundActive, setIsPictionaryRoundActive] = useState(false);
+  const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
 
   // AI Image Generation State
@@ -144,6 +145,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       // Reset timer state
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
+      setIsTimerFinished(false);
       setTimerKey(prev => prev + 1);
       // Reset AI state
       resetAIState();
@@ -175,6 +177,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
   const handleTimerEndInternal = useCallback(() => {
     setIsPictionaryRoundActive(false);
+    setIsTimerFinished(true);
     toast({ title: "¡Tiempo!", description: "La ronda ha terminado.", variant: "destructive" });
     if (selectedWord) {
       setTimeout(() => {
@@ -347,15 +350,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         {selectedWord}
                     </p>
                 </div>
-
-                {activeTimerDuration && selectedWord ? (
-                <Timer
-                    key={timerKey}
-                    initialDuration={activeTimerDuration}
-                    onTimerEnd={handleTimerEndInternal}
-                    autoStart={isPictionaryRoundActive}
-                />
-                ) : (
+                
                 <div className="w-full space-y-4">
                     <h3 className="text-lg font-medium text-center text-foreground/90">Selecciona el Tiempo:</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -364,7 +359,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         key={duration}
                         onClick={() => handleTimeButtonClick(duration)}
                         className={`text-xl font-bold py-4 sm:py-6 transition-transform hover:scale-105 active:scale-95 w-full rounded-lg shadow-lg ${color} ${textColor}`}
-                        disabled={isPictionaryRoundActive}
+                        disabled={isPictionaryRoundActive || isTimerFinished}
                         >
                         <TimerIcon className="mr-2 h-5 w-5" />
                         {duration}s
@@ -372,9 +367,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     ))}
                     </div>
                 </div>
+
+                {activeTimerDuration && selectedWord && (
+                  <Timer
+                      key={timerKey}
+                      initialDuration={activeTimerDuration}
+                      onTimerEnd={handleTimerEndInternal}
+                      autoStart={isPictionaryRoundActive}
+                  />
                 )}
 
-                {!isPictionaryRoundActive && activeTimerDuration && (
+                {isTimerFinished && (
                     <div className="text-center space-y-3 p-4 bg-card/80 backdrop-blur-sm rounded-xl w-full max-w-sm shadow-lg border border-border/20">
                         <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo!</p>
                         <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-6 rounded-xl shadow-lg">
