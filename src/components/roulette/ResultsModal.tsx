@@ -123,16 +123,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
-      <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
+      <DialogContent 
+        showCloseButton={false} 
+        className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto"
+      >
         
-        <div className="absolute top-4 right-4 z-50">
-          <DialogClose asChild>
-            <Button variant="ghost" className="transition-transform hover:scale-110 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30">
-              <XCircle className="h-8 w-8 text-white" />
-              <span className="sr-only">Cerrar</span>
-            </Button>
-          </DialogClose>
-        </div>
+        <DialogClose asChild className="absolute top-4 right-4 z-50">
+          <Button variant="ghost" className="transition-transform hover:scale-110 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30">
+            <XCircle className="h-8 w-8 text-white" />
+            <span className="sr-only">Cerrar</span>
+          </Button>
+        </DialogClose>
 
         <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 h-full">
           
