@@ -59,6 +59,12 @@ async function generateSingleImage(prompt: string, attempt: number, type: 'refer
     }
 }
 
+const ARTISTIC_STYLES = [
+  "Estilo de dibujos animados simple y colorido",
+  "Estilo de dibujo a lápiz en blanco y negro",
+  "Estilo de pintura digital vibrante y detallada",
+  "Estilo de arte pixelado (pixel art) de 8 bits",
+];
 
 const generateImageFlow = ai.defineFlow(
   {
@@ -69,23 +75,23 @@ const generateImageFlow = ai.defineFlow(
   async (input) => {
     const referenceImages: string[] = [];
     let artisticImage: string | null = null;
-
-    const referencePrompt = `Estilo de dibujos animados sencillo y colorido para un juego de Pictionary: '${input.word}'. REGLA CRÍTICA Y OBLIGATORIA: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números.`;
-    const artisticPrompt = `Crea una imagen que sea solamente el texto artístico de la palabra: '${input.word}'. Usa una tipografía muy creativa y llamativa, como de un videojuego o película. Sorpréndeme con un diseño diferente cada vez.`;
-
-    // 1. Generate Reference Images Sequentially for stability
+    
+    // 1. Generate Reference Images Sequentially for stability with different styles
     console.log(`Starting reference image generation for "${input.word}"...`);
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < ARTISTIC_STYLES.length; i++) {
+        const style = ARTISTIC_STYLES[i];
+        const referencePrompt = `${style} para un juego de Pictionary: '${input.word}'. REGLA CRÍTICA Y OBLIGATORIA: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números.`;
         const imageUrl = await generateSingleImage(referencePrompt, i + 1, 'reference');
         if (imageUrl) {
             referenceImages.push(imageUrl);
         } else {
-            console.log(`Skipping failed reference image #${i + 1}.`);
+            console.log(`Skipping failed reference image #${i + 1} with style: ${style}.`);
         }
     }
 
     // 2. Generate Artistic Text Image
     console.log(`Starting artistic text image generation for "${input.word}"...`);
+    const artisticPrompt = `Crea una imagen que sea solamente el texto artístico de la palabra: '${input.word}'. Usa una tipografía muy creativa y llamativa, como de un videojuego o película. Sorpréndeme con un diseño diferente cada vez.`;
     artisticImage = await generateSingleImage(artisticPrompt, 1, 'artistic');
     
     // 3. Assemble the final array

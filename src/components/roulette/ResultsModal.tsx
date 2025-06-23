@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { TimerIcon, X, Play, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateImageForWord } from '@/ai/flows/generate-image-flow';
@@ -54,55 +54,59 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [artisticImage, setArtisticImage] = useState<string | null>(null);
   const [currentReferenceIndex, setCurrentReferenceIndex] = useState(0);
+  const [aiHelpActive, setAiHelpActive] = useState(false);
 
   const { toast } = useToast();
+  
+  const generateImages = useCallback(async (word: string) => {
+    setDisplayState('generating');
+    try {
+        const result = await generateImageForWord({ word });
+        if (result.imageDataUris && result.imageDataUris.length > 0) {
+            const allImages = [...result.imageDataUris];
+            const newArtisticImage = allImages.pop() || null;
+            const newReferenceImages = allImages;
+            
+            setReferenceImages(newReferenceImages);
+            setArtisticImage(newArtisticImage);
+            setDisplayState(newReferenceImages.length > 0 ? 'showing_references' : 'final_reveal');
+        } else {
+            toast({
+                title: "Error de Imagen",
+                description: "No se pudieron generar imágenes. Mostrando solo la palabra.",
+                variant: "destructive"
+            });
+            setDisplayState('final_reveal');
+        }
+    } catch (error) {
+        console.error("AI image generation error:", error);
+        toast({
+          title: "Error de IA",
+          description: "No se pudo generar una imagen para la palabra.",
+          variant: "destructive"
+        });
+        setDisplayState('final_reveal');
+    }
+  }, [toast]);
 
   useEffect(() => {
     if (isOpen) {
+      // Reset state on open
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
       setTimerKey(prev => prev + 1);
-      
       setReferenceImages([]);
       setArtisticImage(null);
       setCurrentReferenceIndex(0);
-
+      setAiHelpActive(useAIImages); // Set initial state for help
+      
       if (selectedWord && useAIImages) {
-        setDisplayState('generating');
-        generateImageForWord({ word: selectedWord })
-          .then(result => {
-            if (result.imageDataUris && result.imageDataUris.length > 0) {
-              const allImages = [...result.imageDataUris];
-              const newArtisticImage = allImages.pop() || null;
-              const newReferenceImages = allImages;
-              
-              setReferenceImages(newReferenceImages);
-              setArtisticImage(newArtisticImage);
-              setDisplayState(newReferenceImages.length > 0 ? 'showing_references' : 'final_reveal');
-
-            } else {
-              toast({
-                  title: "Error de Imagen",
-                  description: "No se pudieron generar imágenes. Mostrando solo la palabra.",
-                  variant: "destructive"
-              });
-              setDisplayState('final_reveal');
-            }
-          })
-          .catch(error => {
-            console.error("AI image generation error:", error);
-            toast({
-              title: "Error de IA",
-              description: "No se pudo generar una imagen para la palabra.",
-              variant: "destructive"
-            });
-            setDisplayState('final_reveal');
-          });
+        generateImages(selectedWord);
       } else {
         setDisplayState('final_reveal');
       }
     }
-  }, [isOpen, selectedWord, useAIImages, toast]);
+  }, [isOpen, selectedWord, useAIImages, generateImages]);
 
   useEffect(() => {
     if (displayState !== 'showing_references' || referenceImages.length === 0) return;
@@ -142,6 +146,13 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setIsPictionaryRoundActive(false);
     onClose();
   };
+  
+  const handleRequestAiHelp = () => {
+    if (selectedWord) {
+        setAiHelpActive(true);
+        generateImages(selectedWord);
+    }
+  };
 
   const renderContent = () => {
     const ContentBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
@@ -171,6 +182,20 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           </ContentBox>
         );
       case 'final_reveal':
+        if (!aiHelpActive) {
+            return (
+              <ContentBox>
+                <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+                    <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+                    <p className="text-xl text-muted-foreground">La asistencia de IA está desactivada.</p>
+                    <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Obtener Inspiración de IA
+                    </Button>
+                </div>
+              </ContentBox>
+            );
+        }
         return (
           <ContentBox>
             {artisticImage ? (
