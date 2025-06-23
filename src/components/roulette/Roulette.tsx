@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -125,7 +126,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
       
       const midAngle = startAngle + anglePerSegment / 2;
-      const textPathStartRadiusFactor = 0.35;
+      const textPathStartRadiusFactor = 0.25;
       const textPathEndRadiusFactor = 0.88;
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
@@ -303,13 +304,13 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               className="absolute top-[-10px] left-1/2 -translate-x-1/2 z-10"
               style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
           >
-              <path
-                  fill="hsl(var(--destructive))"
-                  stroke="#FFFFFF"
-                  strokeWidth="1.2"
-                  strokeLinejoin="round"
-                  d="M12.01,22a1,1,0,0,1-.71-.29l-3.43-3.42a1,1,0,0,1,0-1.41,1,1,0,0,1,1.41,0l1.22,1.22V11a1,1,0,0,1,1-1H14a1,1,0,0,1,1,1v7.1l1.21-1.21a1,1,0,0,1,1.42,1.42l-3.41,3.41A1,1,0,0,1,12.01,22Zm8.5-12.71-3.11-3.11a1,1,0,0,0-1.42,0L15.12,7H10.33L9.18,5.85a1,1,0,0,0-1.42,0l-1.42,1.42a1,1,0,0,0,0,1.41L8.5,10.83a1,1,0,0,0,1.41,0l1.42-1.41h4.83l.85.85a1,1,0,0,0,1.41,0l2-2A1,1,0,0,0,20.51,9.29Z"
-              />
+            <path 
+              d="M9.82,21.5c-0.23,0-0.46-0.09-0.63-0.26l-3.23-3.23c-0.35-0.35-0.35-0.92,0-1.27c0.35-0.35,0.92-0.35,1.27,0l1.96,1.96V11.23 c0-0.5,0.4-0.9,0.9-0.9h3.75c0.5,0,0.9,0.4,0.9,0.9v7.46l1.96-1.96c0.35-0.35,0.92-0.35,1.27,0c0.35,0.35,0.35,0.92,0,1.27 l-3.23,3.23c-0.17,0.17-0.4,0.26-0.63,0.26H9.82z M8.23,9.58c-0.23,0-0.46-0.09-0.63-0.26L4.37,6.08c-0.35-0.35-0.35-0.92,0-1.27 l1.27-1.27c0.35-0.35,0.92-0.35,1.27,0l1.6,1.6h5.81l1.6-1.6c0.35-0.35,0.92-0.35,1.27,0l1.27,1.27c0.35,0.35,0.35,0.92,0,1.27 l-3.23,3.23c-0.17,0.17-0.4,0.26-0.63,0.26H8.23z" 
+              fill="hsl(var(--destructive))" 
+              stroke="#FFFFFF" 
+              strokeWidth="0.5" 
+              strokeLinejoin="round" 
+            />
           </svg>
           {/* Center spin button */}
           <div 

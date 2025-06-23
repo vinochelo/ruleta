@@ -259,7 +259,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <div className="flex-1 w-full lg:max-w-md flex flex-col items-center justify-center gap-6">
             <div className="text-center">
               <p className="text-lg text-muted-foreground">Categoría</p>
-              <p className="text-5xl lg:text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+              <p className="text-4xl lg:text-5xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                 {selectedCategoryName}
               </p>
             </div>
@@ -267,7 +267,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full">
               <p className="text-md text-muted-foreground">Palabra a dibujar</p>
               <p 
-                className="text-6xl font-bold drop-shadow-md font-roulette" 
+                className="text-7xl lg:text-8xl font-bold drop-shadow-md font-roulette" 
                 style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
               >
                 {selectedWord}
@@ -292,6 +292,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={duration}
                       onClick={() => handleTimeButtonClick(duration)}
                       className={`text-2xl font-bold py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
+                      disabled={isPictionaryRoundActive}
                     >
                       <TimerIcon className="mr-2 h-6 w-6" />
                       {duration}s
