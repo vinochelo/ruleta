@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -126,7 +125,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
       
       const midAngle = startAngle + anglePerSegment / 2;
-      const textPathStartRadiusFactor = 0.25;
+      const textPathStartRadiusFactor = 0.40;
       const textPathEndRadiusFactor = 0.88;
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
@@ -297,20 +296,23 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           </svg>
           {/* Pointer */}
           <svg
-              width="48"
-              height="48"
+              width="52"
+              height="52"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
-              className="absolute top-[-10px] left-1/2 -translate-x-1/2 z-10"
+              className="absolute top-[-12px] left-1/2 -translate-x-1/2 z-10"
               style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
           >
-            <path 
-              d="M9.82,21.5c-0.23,0-0.46-0.09-0.63-0.26l-3.23-3.23c-0.35-0.35-0.35-0.92,0-1.27c0.35-0.35,0.92-0.35,1.27,0l1.96,1.96V11.23 c0-0.5,0.4-0.9,0.9-0.9h3.75c0.5,0,0.9,0.4,0.9,0.9v7.46l1.96-1.96c0.35-0.35,0.92-0.35,1.27,0c0.35,0.35,0.35,0.92,0,1.27 l-3.23,3.23c-0.17,0.17-0.4,0.26-0.63,0.26H9.82z M8.23,9.58c-0.23,0-0.46-0.09-0.63-0.26L4.37,6.08c-0.35-0.35-0.35-0.92,0-1.27 l1.27-1.27c0.35-0.35,0.92-0.35,1.27,0l1.6,1.6h5.81l1.6-1.6c0.35-0.35,0.92-0.35,1.27,0l1.27,1.27c0.35,0.35,0.35,0.92,0,1.27 l-3.23,3.23c-0.17,0.17-0.4,0.26-0.63,0.26H8.23z" 
-              fill="hsl(var(--destructive))" 
-              stroke="#FFFFFF" 
-              strokeWidth="0.5" 
-              strokeLinejoin="round" 
-            />
+              <path
+                  d="M20.25 11.66C20.25 16.34 14.53 21.5 12.01 21.5C9.49001 21.5 3.75 16.34 3.75 11.66C3.75 7.61 7.42001 3.5 12.01 3.5C16.6 3.5 20.25 7.61 20.25 11.66Z"
+                  fill="hsl(var(--primary))"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.5"
+              />
+              <path
+                  d="M12 14C13.6569 14 15 12.6569 15 11C15 9.34315 13.6569 8 12 8C10.3431 8 9 9.34315 9 11C9 12.6569 10.3431 14 12 14Z"
+                  fill="white"
+              />
           </svg>
           {/* Center spin button */}
           <div 
