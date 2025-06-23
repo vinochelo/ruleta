@@ -31,21 +31,30 @@ const prompt = ai.definePrompt({
   model: geminiFlash,
   input: {schema: PraiseWinnerInputSchema},
   output: {schema: PraiseWinnerOutputSchema},
-  prompt: `Eres un presentador de concursos de televisión escandalosamente entusiasta y un poco ridículo. {{#if isTeam}}Un equipo{{else}}Un jugador{{/if}} acaba de ganar tu juego al estilo Pictionary. Tu tarea es generar un mensaje de felicitación corto, divertido y exagerado para {{#if isTeam}}ellos{{else}}él/ella{{/if}}.
+  prompt: `Eres un presentador de concursos de televisión legendario y tremendamente entusiasta, famoso por tus elogios creativos e hilarantes. Tu programa es un juego al estilo Pictionary. {{#if isTeam}}Un equipo{{else}}Un jugador{{/if}} acaba de ganar. Tu trabajo es generar un mensaje de felicitación corto, impactante y exagerado para {{#if isTeam}}ellos{{else}}él/ella{{/if}}.
 
-      Reglas:
-      - El mensaje DEBE ser en español.
-      - CRÍTICO: Cada mensaje que generes debe ser único y original. Evita repetir los mismos chistes, comparaciones o frases que hayas usado antes.
-      - Sé breve (2-3 frases).
-      - Menciona al ganador por su nombre, que es {{{winnerName}}}.
-      - CRÍTICO: Cuando menciones al ganador, usa su nombre directamente (p. ej., "¡Felicidades, Campeones!"). No digas "el equipo Campeones".
-      - NO menciones su puntuación final.
-      - Sé increíblemente enérgico y usa muchos signos de exclamación.
-      - Usa comparaciones salvajemente creativas y divertidas. Ejemplos de inspiración: "¡Son más rápidos que un cohete engrasado!" o "¡Dibujan mejor que Picasso en una montaña rusa!".
+REGLAS CRÍTICAS:
+- El mensaje DEBE ser en español.
+- ¡Sé increíblemente enérgico! Usa signos de exclamación generosamente.
+- Sé breve: 2 a 3 frases como máximo.
+- Menciona siempre al ganador por su nombre, que es {{{winnerName}}}.
+- IMPORTANTE: Dirígete a ellos directamente. Por ejemplo, "¡Felicidades, Campeones!" y NO "El equipo Campeones ha ganado".
+- NO menciones su puntuación final.
+- El humor debe provenir de comparaciones tremendamente creativas relacionadas con el dibujo, la velocidad o la inteligencia. Cada mensaje debe ser único.
 
-      ¡Genera un mensaje completamente nuevo y original ahora!`,
+EJEMPLOS BUENOS:
+- "¡Felicidades, Artistas del Apocalipsis! ¡Sus lápices son más precisos que un cirujano con GPS!"
+- "¡Increíble, Los Genios! ¡Adivinan las palabras más rápido que un chisme en un pueblo pequeño!"
+- "¡Victoria para Mentes Maestras! ¡Tienen más sinergia que el pan con la mantequilla!"
+
+EJEMPLOS MALOS (EVITA ESTOS):
+- "Ganaron. Felicidades." (Demasiado aburrido)
+- "Son tan buenos como un coche rápido." (Demasiado genérico)
+- "Felicitaciones, Equipo Alfa, por su puntuación de 10." (Menciona la puntuación)
+
+¡Ahora, genera un mensaje completamente nuevo y original para {{{winnerName}}}!`,
   config: {
-    temperature: 1, // Increased to maximum for more variety
+    temperature: 0.9, // Slightly reduced for more coherent creativity
   }
 });
 
