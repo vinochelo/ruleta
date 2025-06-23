@@ -44,6 +44,8 @@ const CategoryManagement: React.FC = () => {
   const [categoryForAISuggestion, setCategoryForAISuggestion] = useState<string>('');
   const [isAISuggesting, setIsAISuggesting] = useState(false);
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
+  const [categoryQueue, setCategoryQueue] = useState<string[]>([]);
+
 
   const persistCategories = useCallback((updatedCategories: Category[]) => {
     const uniqueCategoriesMap = new Map<string, Category>();
@@ -97,12 +99,48 @@ const CategoryManagement: React.FC = () => {
     }
   }, [resetToDefaultCategories]);
   
+  const advanceQueue = useCallback(() => {
+    setIsSuggestWordsDialogOpen(false);
+    setCategoryQueue(q => q.slice(1));
+  }, []);
+
+  useEffect(() => {
+      if (categoryQueue.length > 0 && !isSuggestWordsDialogOpen && !isAISuggesting) {
+          const nextCategoryName = categoryQueue[0];
+          
+          const openSuggestionDialogFor = async (categoryName: string) => {
+              setCategoryForAISuggestion(categoryName);
+              setTargetCategoryIdForAIWords(null); // Always for a new category
+              setIsSuggestWordsDialogOpen(true);
+              setIsAISuggesting(true);
+              setAiSuggestedWords([]);
+
+              try {
+                  const result = await suggestWordsForCategory({ categoryName });
+                  const suggestions = result.suggestedWords || [];
+                  setAiSuggestedWords(suggestions);
+                  if (suggestions.length === 0) {
+                      toast({ title: "Sin sugerencias", description: "La IA no generó palabras. Puedes añadirlas manualmente." });
+                  }
+              } catch (error) {
+                  console.error("AI suggestion error:", error);
+                  toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
+                  advanceQueue(); // Skip to next on error
+              } finally {
+                  setIsAISuggesting(false);
+              }
+          };
+
+          openSuggestionDialogFor(nextCategoryName);
+      }
+  }, [categoryQueue, isSuggestWordsDialogOpen, isAISuggesting, advanceQueue, toast]);
+
 
   const handleAddCategory = (e: FormEvent) => {
     e.preventDefault();
     const name = newCategoryName.trim();
-    if (name === '') {
-      toast({ title: "Error", description: "El nombre de la categoría no puede estar vacío.", variant: "destructive" });
+    if (name === '' || name.includes(',')) {
+      toast({ title: "Error", description: "Para añadir una categoría vacía, introduce un solo nombre sin comas.", variant: "destructive" });
       return;
     }
 
@@ -206,52 +244,53 @@ const CategoryManagement: React.FC = () => {
     }
   };
   
-  const handleAddNewCategoryWithAI = async () => {
-    const name = newCategoryName.trim();
-    if (!name) {
-      toast({ title: "Error", description: "El nombre de la categoría no puede estar vacío.", variant: "destructive" });
+  const handleAddNewCategoryWithAI = () => {
+    const names = newCategoryName.trim().split(',').map(name => name.trim()).filter(Boolean);
+
+    if (names.length === 0) {
+      toast({ title: "Error", description: "Introduce al menos un nombre de categoría.", variant: "destructive" });
       return;
     }
-    if (categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
-      toast({ title: "Categoría Duplicada", description: `La categoría "${name}" ya existe.`, variant: "default" });
-      return;
+
+    const uniqueNames = [...new Set(names)];
+
+    const newCategoryNames = uniqueNames.filter(name => 
+      !categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())
+    );
+
+    const existingCategoryNames = uniqueNames.filter(name => 
+      categories.some(cat => cat.name.toLowerCase() === name.toLowerCase())
+    );
+
+    if (existingCategoryNames.length > 0) {
+      toast({
+        title: "Categorías Omitidas",
+        description: `Ya existen las siguientes categorías: ${existingCategoryNames.join(', ')}.`,
+        variant: "default",
+      });
     }
-    if (isAISuggesting) return;
 
-    // Open dialog and set loading state
-    setCategoryForAISuggestion(name);
-    setTargetCategoryIdForAIWords(null); // IMPORTANT: Signals a new category
-    setIsSuggestWordsDialogOpen(true);
-    setIsAISuggesting(true);
-    setAiSuggestedWords([]);
-
-    try {
-        const result = await suggestWordsForCategory({ categoryName: name });
-        const suggestions = result.suggestedWords || [];
-        setAiSuggestedWords(suggestions);
-        if (suggestions.length === 0) {
-            toast({ title: "Sin sugerencias", description: "La IA no generó palabras. Puedes añadirlas manualmente." });
-        }
-    } catch (error) {
-        console.error("AI suggestion error:", error);
-        toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
-        setIsSuggestWordsDialogOpen(false); // Close dialog on error
-    } finally {
-        setIsAISuggesting(false);
+    if (newCategoryNames.length > 0) {
+      toast({
+        title: "Procesando Categorías...",
+        description: `Se abrirá un diálogo de sugerencias para cada una de las ${newCategoryNames.length} nuevas categorías.`,
+      });
+      setCategoryQueue(current => [...current, ...newCategoryNames]);
+      setNewCategoryName('');
     }
   };
   
-  const handleOpenAISuggestions = async (category: Category) => {
-    if (isAISuggesting) {
+  const handleOpenAISuggestionsForExisting = async (category: Category) => {
+    if (isAISuggesting || categoryQueue.length > 0) {
         toast({ title: "Procesando", description: "Hay un proceso de IA activo. Por favor, espera.", variant: "default"});
         return;
     }
   
     setCategoryForAISuggestion(category.name);
-    setTargetCategoryIdForAIWords(category.id);
+    setTargetCategoryIdForAIWords(category.id); // This signals we are editing an existing one
     setIsSuggestWordsDialogOpen(true);
     setIsAISuggesting(true);
-    setAiSuggestedWords([]); // Clear previous suggestions
+    setAiSuggestedWords([]);
 
     try {
         const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: category.name });
@@ -269,22 +308,15 @@ const CategoryManagement: React.FC = () => {
     } catch (error) {
         console.error("AI suggestion error:", error);
         toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
-        setAiSuggestedWords([]); // Ensure it's empty on error
-        setIsSuggestWordsDialogOpen(false); // Close dialog on error
+        setAiSuggestedWords([]);
+        setIsSuggestWordsDialogOpen(false);
     } finally {
         setIsAISuggesting(false);
     }
   };
   
-
   const handleAddAISuggestedWords = (wordsToAdd: string[]) => {
     const cleanWordsToAdd = [...new Set(wordsToAdd.map(w => w.trim()).filter(w => w))].sort();
-    
-    if (cleanWordsToAdd.length === 0 && !targetCategoryIdForAIWords) {
-        toast({ title: "Sin Palabras", description: "No se añadieron palabras. La categoría no fue creada.", variant: "default" });
-    } else if (cleanWordsToAdd.length === 0 && targetCategoryIdForAIWords) {
-        toast({ title: "Sin Palabras Nuevas", description: "No se añadieron palabras nuevas a la categoría.", variant: "default" });
-    }
 
     if (targetCategoryIdForAIWords) { // Editing existing category
       const category = categories.find(cat => cat.id === targetCategoryIdForAIWords);
@@ -306,22 +338,37 @@ const CategoryManagement: React.FC = () => {
       } else if (cleanWordsToAdd.length > 0){
         toast({ title: "Sin Palabras Nuevas", description: `Todas las palabras seleccionadas ya existen en "${category.name}".`, variant: "default" });
       }
-    } else { // Creating new category
-        const newCategory: Category = {
-            id: crypto.randomUUID(),
-            name: categoryForAISuggestion,
-            words: cleanWordsToAdd,
-        };
-        persistCategories([...categories, newCategory]);
-        toast({ title: "Categoría Creada", description: `Se creó "${newCategory.name}" con ${newCategory.words.length} palabra(s).` });
-        setNewCategoryName('');
+      setIsSuggestWordsDialogOpen(false);
+    } else { // Creating new category from the queue
+        if (cleanWordsToAdd.length === 0) {
+            toast({ title: "Sin Palabras", description: `La categoría "${categoryForAISuggestion}" no fue creada porque no se añadieron palabras.`, variant: "default" });
+        } else {
+            const newCategory: Category = {
+                id: crypto.randomUUID(),
+                name: categoryForAISuggestion,
+                words: cleanWordsToAdd,
+            };
+            persistCategories([...categories, newCategory]);
+            toast({ title: "Categoría Creada", description: `Se creó "${newCategory.name}" con ${newCategory.words.length} palabra(s).` });
+        }
+        advanceQueue();
     }
-    
-    setIsSuggestWordsDialogOpen(false);
-    setCategoryForAISuggestion('');
-    setTargetCategoryIdForAIWords(null);
-    setAiSuggestedWords([]);
   };
+
+  const handleSuggestDialogClose = () => {
+    if (targetCategoryIdForAIWords) { // Just closes dialog for existing categories
+      setIsSuggestWordsDialogOpen(false);
+      setTargetCategoryIdForAIWords(null);
+    } else { // It's a new category from the queue, so we advance
+      toast({
+        title: "Creación Cancelada",
+        description: `No se creó la categoría "${categoryQueue[0]}".`,
+        variant: "default",
+      })
+      advanceQueue();
+    }
+  };
+
 
   return (
     <div className="space-y-8">
@@ -331,7 +378,7 @@ const CategoryManagement: React.FC = () => {
             <PlusCircle className="h-6 w-6" />
             Añadir Nueva Categoría
           </CardTitle>
-          <CardDescription>Crea una nueva categoría, con o sin ayuda de la IA para generar palabras.</CardDescription>
+          <CardDescription>Crea una o más categorías (separadas por coma) y la IA sugerirá palabras para cada una.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -339,23 +386,22 @@ const CategoryManagement: React.FC = () => {
               type="text"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="Nombre de la nueva categoría..."
+              placeholder="Nombre(s) de categoría, separados por coma..."
               className="flex-grow"
               aria-label="Nombre de la nueva categoría"
-              disabled={isAISuggesting}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddNewCategoryWithAI()}}
+              disabled={isAISuggesting || categoryQueue.length > 0}
             />
             <div className="flex gap-2">
               <Button 
                 type="button" 
                 onClick={handleAddNewCategoryWithAI}
                 className="transition-transform hover:scale-105 flex-1 sm:flex-none"
-                disabled={isAISuggesting || newCategoryName.trim() === ''}
+                disabled={isAISuggesting || newCategoryName.trim() === '' || categoryQueue.length > 0}
               >
-                {isAISuggesting && targetCategoryIdForAIWords === null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+                {isAISuggesting || categoryQueue.length > 0 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
                 Añadir con IA
               </Button>
-              <Button onClick={(e) => handleAddCategory(e as any)} variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting || newCategoryName.trim() === ''}>
+              <Button onClick={(e) => handleAddCategory(e as any)} variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting || newCategoryName.trim() === '' || categoryQueue.length > 0 || newCategoryName.includes(',')}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Añadir Vacía
               </Button>
             </div>
@@ -400,7 +446,7 @@ const CategoryManagement: React.FC = () => {
                                 onClick={() => handleDeleteWord(category.id, wordIndex)}
                                 className="ml-1 h-4 w-4 text-destructive hover:text-red-700 p-0"
                                 aria-label={`Eliminar palabra ${word}`}
-                                disabled={isAISuggesting}
+                                disabled={isAISuggesting || categoryQueue.length > 0}
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -416,17 +462,17 @@ const CategoryManagement: React.FC = () => {
                               placeholder="Añadir palabra"
                               className="h-8 text-sm"
                               aria-label={`Añadir palabra a ${category.name}`}
-                              disabled={isAISuggesting}
+                              disabled={isAISuggesting || categoryQueue.length > 0}
                             />
-                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8" disabled={isAISuggesting}>
+                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8" disabled={isAISuggesting || categoryQueue.length > 0}>
                               <Plus className="h-4 w-4" />
                             </Button>
                           </form>
                            <Button 
                             size="sm" 
                             variant="outline" 
-                            onClick={() => handleOpenAISuggestions(category)}
-                            disabled={isAISuggesting}
+                            onClick={() => handleOpenAISuggestionsForExisting(category)}
+                            disabled={isAISuggesting || categoryQueue.length > 0}
                             className="h-8 text-xs whitespace-nowrap"
                             >
                              {isAISuggesting && targetCategoryIdForAIWords === category.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Brain className="mr-1 h-3 w-3" />}
@@ -441,7 +487,7 @@ const CategoryManagement: React.FC = () => {
                           onClick={() => setEditingCategory(category)}
                           className="text-blue-500 hover:text-blue-700 transition-colors"
                           aria-label={`Editar nombre de ${category.name}`}
-                          disabled={isAISuggesting}
+                          disabled={isAISuggesting || categoryQueue.length > 0}
                         >
                           <Edit3 className="h-4 w-4" />
                         </Button>
@@ -451,7 +497,7 @@ const CategoryManagement: React.FC = () => {
                           onClick={() => handleDeleteCategory(category.id)}
                           className="text-destructive hover:text-red-700 transition-colors"
                           aria-label={`Eliminar categoría ${category.name}`}
-                          disabled={isAISuggesting}
+                          disabled={isAISuggesting || categoryQueue.length > 0}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -464,7 +510,7 @@ const CategoryManagement: React.FC = () => {
           )}
         </CardContent>
         <CardFooter>
-            <Button variant="outline" onClick={resetToDefaultCategories} className="transition-transform hover:scale-105" disabled={isAISuggesting}>
+            <Button variant="outline" onClick={resetToDefaultCategories} className="transition-transform hover:scale-105" disabled={isAISuggesting || categoryQueue.length > 0}>
                 Restaurar Categorías y Palabras por Defecto
             </Button>
         </CardFooter>
@@ -481,11 +527,7 @@ const CategoryManagement: React.FC = () => {
       
       <SuggestWordsDialog
         isOpen={isSuggestWordsDialogOpen}
-        onClose={() => {
-          setIsSuggestWordsDialogOpen(false);
-          setTargetCategoryIdForAIWords(null);
-          setCategoryForAISuggestion('');
-        }}
+        onClose={handleSuggestDialogClose}
         onAddWords={handleAddAISuggestedWords}
         isLoading={isAISuggesting}
         categoryName={categoryForAISuggestion}
