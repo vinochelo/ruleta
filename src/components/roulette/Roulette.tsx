@@ -43,12 +43,34 @@ function getTextColorForBackground(hexcolor: string): string {
   return yiq >= 128 ? '#000000' : '#FFFFFF'; 
 }
 
+const playTickSound = () => {
+    if (typeof window === 'undefined' || !window.AudioContext) return;
+    const audioContext = new window.AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.05);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.05);
+
+    oscillator.onended = () => {
+      audioContext.close().catch(console.error);
+    };
+};
+
 
 const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(0);
   const [finalSelectedCategoryInfo, setFinalSelectedCategoryInfo] = useState<{category: Category, color: string} | null>(null);
-  const spinSoundRef = useRef<HTMLAudioElement>(null);
+  const tickSoundIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -119,12 +141,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
 
-    if (spinSoundRef.current) {
-        spinSoundRef.current.currentTime = 0;
-        spinSoundRef.current.volume = 0.5;
-        spinSoundRef.current.play().catch(console.error);
+    if (tickSoundIntervalRef.current) {
+        clearInterval(tickSoundIntervalRef.current);
     }
-
+    tickSoundIntervalRef.current = setInterval(playTickSound, 120);
+    
     setIsSpinning(true);
     setFinalSelectedCategoryInfo(null);
 
@@ -148,15 +169,23 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
 
     setTimeout(() => {
+      if (tickSoundIntervalRef.current) {
+        clearInterval(tickSoundIntervalRef.current);
+      }
       setIsSpinning(false);
       setFinalSelectedCategoryInfo({ category: selectedCategory, color: selectedColor});
       onSpinEnd(selectedCategory, selectedColor);
-      if (spinSoundRef.current) {
-        spinSoundRef.current.pause();
-        spinSoundRef.current.currentTime = 0;
-      }
     }, 6000);
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments]);
+  
+  useEffect(() => {
+    // Cleanup interval on component unmount
+    return () => {
+        if (tickSoundIntervalRef.current) {
+            clearInterval(tickSoundIntervalRef.current);
+        }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isSpinning && !finalSelectedCategoryInfo) {
@@ -196,12 +225,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
-      <audio
-        ref={spinSoundRef}
-        src="https://assets.codepen.io/2002878/roulette-wheel-sound.mp3"
-        loop
-        preload="auto"
-      />
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
