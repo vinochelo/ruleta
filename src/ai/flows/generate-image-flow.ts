@@ -40,7 +40,7 @@ const generateImageFlow = ai.defineFlow(
     try {
       const {media} = await ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Generate a simple, fun, colorful, and easily recognizable cartoon-style image for the Pictionary word: '${input.word}'. The image should be on a plain white background, very clear, and suitable for a guessing game. Focus on a single object or concept.`,
+        prompt: `Genera una imagen sencilla, divertida, colorida y fácilmente reconocible al estilo de dibujos animados para la palabra de Pictionary: '${input.word}'. La imagen debe tener un fondo blanco liso, ser muy clara y adecuada para un juego de adivinanzas. Concéntrate en un solo objeto o concepto.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },

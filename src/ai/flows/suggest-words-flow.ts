@@ -32,16 +32,17 @@ const prompt = ai.definePrompt({
   prompt: `Eres un asistente experto en juegos de Pictionary, especializado en crear listas de palabras temáticas. Para la categoría proporcionada, genera una lista de palabras o frases cortas que sean excelentes para dibujar.
 
 **Reglas Críticas:**
-1.  **Relevancia Absoluta:** Todas y cada una de las palabras deben estar **directamente y claramente relacionadas** con la categoría '{{{categoryName}}}'. No incluyas conceptos vagos o tangenciales.
-2.  **Calidad sobre Cantidad:** Genera una lista de alta calidad con **entre 15 y 25 palabras**. Es mejor una lista más corta pero excelente que una larga con palabras de relleno.
-3.  **Facilidad de Dibujo:** Las palabras deben ser conceptos visuales, comunes y reconocibles que una persona promedio pueda dibujar y adivinar. Prioriza sustantivos concretos y verbos de acción.
-4.  **Audiencia General:** Las palabras deben ser aptas para todas las edades.
+1.  **Idioma Español Exclusivamente:** Todas las palabras DEBEN estar en español.
+2.  **Relevancia Absoluta y Estricta:** Todas y cada una de las palabras deben estar **directa, inequívoca y claramente relacionadas** con la categoría '{{{categoryName}}}'. No incluyas conceptos vagos, tangenciales o que solo se relacionen de forma lejana. Si la categoría es "Frutas", solo incluye frutas.
+3.  **Calidad sobre Cantidad:** Genera una lista de alta calidad con **entre 15 y 25 palabras**. Es mejor una lista más corta pero excelente que una larga con palabras de relleno.
+4.  **Facilidad de Dibujo:** Las palabras deben ser conceptos visuales, comunes y reconocibles que una persona promedio pueda dibujar y adivinar. Prioriza sustantivos concretos y verbos de acción.
+5.  **Audiencia General:** Las palabras deben ser aptas para todas las edades.
 
 Categoría: **{{{categoryName}}}**
 
-Genera ahora la lista de palabras.`,
+Genera ahora la lista de palabras, asegurándote de seguir TODAS las reglas.`,
   config: {
-    temperature: 0.7,
+    temperature: 0.5, // Slightly lower temperature for more focus
   }
 });
 
