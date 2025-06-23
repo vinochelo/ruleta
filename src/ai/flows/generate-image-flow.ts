@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate an image for a given Pictionary word.
@@ -40,7 +41,7 @@ const generateImageFlow = ai.defineFlow(
     const referenceImagePromises = Array.from({length: 4}).map(() => {
       return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen de referencia para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar. REGLA CRÍTICA INVIOLABLE: La imagen generada NO DEBE CONTENER NINGÚN TEXTO, LETRA O NÚMERO. Debe ser únicamente una representación visual de la palabra. Ignorar esta regla hace que la imagen sea inútil.`,
+        prompt: `Crea una imagen de referencia para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. Prioriza la velocidad: un estilo simple con líneas claras es preferible a uno muy detallado. La imagen debe ser colorida y fácil de adivinar. REGLA CRÍTICA INVIOLABLE: La imagen generada NO DEBE CONTENER NINGÚN TEXTO, LETRA O NÚMERO. Debe ser únicamente una representación visual de la palabra. Ignorar esta regla hace que la imagen sea inútil.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
@@ -49,7 +50,7 @@ const generateImageFlow = ai.defineFlow(
 
     const artisticTextPromise = ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen de texto artística y muy llamativa para la palabra: '${input.word}'. El estilo debe ser colorido, enérgico y con una tipografía divertida, como el título de un juego. La palabra debe ser el foco central y claramente legible. Esta imagen es para mostrar la palabra ganadora de forma impactante.`,
+        prompt: `Crea una imagen de texto artística y llamativa para la palabra: '${input.word}'. El estilo debe ser colorido, enérgico y con una tipografía divertida, como el título de un juego. La palabra debe ser el foco central y claramente legible. Prioriza un diseño claro y rápido de generar.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
