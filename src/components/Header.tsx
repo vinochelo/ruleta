@@ -1,11 +1,10 @@
-
 import Link from 'next/link';
 import { Gamepad2, ListChecks } from 'lucide-react';
 
 export default function Header() {
   return (
     <header className="bg-card/80 backdrop-blur-md shadow-md sticky top-0 z-50">
-      <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Invisible spacer to balance the nav on the right, for centering the title */}
           <div className="flex items-center gap-4 invisible" aria-hidden="true">
