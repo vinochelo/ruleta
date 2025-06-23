@@ -26,7 +26,7 @@ const WHEEL_SIZE = 600;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2; 
 const CENTER_Y = WHEEL_SIZE / 2; 
-const TEXT_MAX_LENGTH = 20;
+const TEXT_MAX_LENGTH = 22;
 const FONT_SIZE_CATEGORY = 18;
 
 const round = (num: number, decimalPlaces: number = 3): number => {
@@ -125,8 +125,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       ].join(' ');
       
       const midAngle = startAngle + anglePerSegment / 2;
-      const textPathStartRadiusFactor = 0.55;
-      const textPathEndRadiusFactor = 0.88;
+      const textPathStartRadiusFactor = 0.40;
+      const textPathEndRadiusFactor = 0.85;
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathEndRadiusFactor);
@@ -303,16 +303,17 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               className="absolute top-[-12px] left-1/2 -translate-x-1/2 z-10"
               style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
           >
-            <path
-              d="M12 2 C7 2 3 6 3 11 C3 18 12 22 12 22 S21 18 21 11 C21 6 17 2 12 2 Z"
-              fill="hsl(var(--primary))"
-              stroke="#FFFFFF"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M12 11a2 2 0 100-4 2 2 0 000 4z"
-              fill="white"
-            />
+             <path 
+                d="M12 2C12 2 15 6.5 15 11C15 15.5 12 22 12 22C12 22 9 15.5 9 11C9 6.5 12 2 12 2Z" 
+                fill="hsl(var(--primary))"
+                stroke="#FFFFFF"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+             />
+             <path
+                d="M12 11a2 2 0 100-4 2 2 0 000 4z"
+                fill="white"
+             />
           </svg>
           {/* Center spin button */}
           <div 
