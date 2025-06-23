@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
@@ -328,16 +329,16 @@ export default function HomePage() {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                <Label htmlFor="ai-images-switch" className="flex items-center gap-2 font-medium text-sm cursor-pointer">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Asistencia de dibujo por IA
-                </Label>
-                <Switch
-                  id="ai-images-switch"
-                  checked={useAIImages}
-                  onCheckedChange={setUseAIImages}
-                />
+              <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="ai-images-switch" className="flex items-center gap-2 font-medium text-sm">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Ayuda con Imágenes (IA)
+                  </Label>
+                  <Switch
+                      id="ai-images-switch"
+                      checked={useAIImages}
+                      onCheckedChange={setUseAIImages}
+                  />
               </div>
 
               <Separator />

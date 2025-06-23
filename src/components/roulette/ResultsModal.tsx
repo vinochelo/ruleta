@@ -59,6 +59,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const { toast } = useToast();
   
   const generateImages = useCallback(async (word: string) => {
+    if (!word) return;
     setDisplayState('generating');
     try {
         const result = await generateImageForWord({ word });
@@ -69,26 +70,30 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             
             setReferenceImages(newReferenceImages);
             setArtisticImage(newArtisticImage);
+            setCurrentReferenceIndex(0); // Reset index for new images
             setDisplayState(newReferenceImages.length > 0 ? 'showing_references' : 'final_reveal');
         } else {
             toast({
-                title: "Error de Imagen",
-                description: "No se pudieron generar imágenes. Mostrando solo la palabra.",
+                title: "Error de IA",
+                description: "La IA no pudo generar imágenes. Puedes jugar sin ellas.",
                 variant: "destructive"
             });
             setDisplayState('final_reveal');
+            setAiHelpActive(false); // Disable AI help on failure to show the button again
         }
     } catch (error) {
         console.error("AI image generation error:", error);
         toast({
           title: "Error de IA",
-          description: "No se pudo generar una imagen para la palabra.",
+          description: "Ocurrió un problema al generar las imágenes. Reinténtalo.",
           variant: "destructive"
         });
         setDisplayState('final_reveal');
+        setAiHelpActive(false); // Disable AI help on failure to show the button again
     }
   }, [toast]);
 
+  // Effect to manage state when modal opens
   useEffect(() => {
     if (isOpen) {
       // Reset state on open
@@ -98,16 +103,24 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setReferenceImages([]);
       setArtisticImage(null);
       setCurrentReferenceIndex(0);
-      setAiHelpActive(useAIImages); // Set initial state for help
+      setAiHelpActive(useAIImages); // Set initial state from prop
       
-      if (selectedWord && useAIImages) {
-        generateImages(selectedWord);
-      } else {
-        setDisplayState('final_reveal');
+      // If AI is disabled from the start, go straight to final_reveal
+      // The button to enable it will be available there.
+      if (!useAIImages) {
+          setDisplayState('final_reveal');
       }
     }
-  }, [isOpen, selectedWord, useAIImages, generateImages]);
+  }, [isOpen, useAIImages]);
 
+  // Effect to trigger image generation if conditions are met
+  useEffect(() => {
+      if (isOpen && aiHelpActive && selectedWord) {
+          generateImages(selectedWord);
+      }
+  }, [isOpen, aiHelpActive, selectedWord, generateImages]);
+
+  // Effect for cycling through reference images
   useEffect(() => {
     if (displayState !== 'showing_references' || referenceImages.length === 0) return;
 
@@ -148,9 +161,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
   
   const handleRequestAiHelp = () => {
-    if (selectedWord) {
-        setAiHelpActive(true);
-        generateImages(selectedWord);
+    if (!aiHelpActive) {
+      setAiHelpActive(true);
     }
   };
 
@@ -187,7 +199,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
               <ContentBox>
                 <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
                     <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-                    <p className="text-xl text-muted-foreground">La asistencia de IA está desactivada.</p>
+                    <p className="text-xl text-muted-foreground">La ayuda de IA está desactivada.</p>
                     <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
                       <Sparkles className="mr-2 h-5 w-5" />
                       Obtener Inspiración de IA
@@ -201,8 +213,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             {artisticImage ? (
               <Image src={artisticImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
             ) : (
-              <div className="text-center">
+              <div className="text-center flex flex-col items-center justify-center gap-4">
                 <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+                <p className="text-muted-foreground">No se generó la imagen artística.</p>
               </div>
             )}
           </ContentBox>
