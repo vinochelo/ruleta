@@ -366,10 +366,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     <Button
                       key={duration}
                       onClick={() => handleTimeButtonClick(duration)}
-                      className={`text-2xl font-bold py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
+                      className={`text-xl sm:text-2xl font-bold py-6 sm:py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
                       disabled={isPictionaryRoundActive}
                     >
-                      <TimerIcon className="mr-2 h-6 w-6" />
+                      <TimerIcon className="mr-2 h-5 sm:h-6 w-5 sm:w-6" />
                       {duration}s
                     </Button>
                   ))}
@@ -379,9 +379,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
             {!isPictionaryRoundActive && activeTimerDuration && (
               <div className="text-center space-y-4 p-6 mt-4 bg-card/80 backdrop-blur-sm rounded-2xl w-full max-w-md shadow-xl border border-border/20">
-                <p className="text-3xl font-bold text-destructive">¡Se acabó el tiempo!</p>
+                <p className="text-2xl sm:text-3xl font-bold text-destructive">¡Se acabó el tiempo!</p>
                 <div className="flex flex-col gap-4 pt-2">
-                  <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-7 rounded-xl shadow-lg">
+                  <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-6 sm:py-7 rounded-xl shadow-lg">
                     <Play className="mr-3 h-6 w-6" /> Girar la Ruleta
                   </Button>
                 </div>

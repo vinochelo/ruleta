@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -261,12 +262,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       <CardContent className="flex flex-col items-center p-4 sm:p-6">
         <div 
           className={cn(
-            "relative", 
+            "relative w-[340px] h-[340px] sm:w-[500px] sm:h-[500px] lg:w-[600px] lg:h-[600px]", 
             (isSpinning || selectableCategories.length === 0)
               ? "cursor-not-allowed opacity-70"
               : "cursor-pointer"
           )}
-          style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}
           onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
           role="button"
           aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}

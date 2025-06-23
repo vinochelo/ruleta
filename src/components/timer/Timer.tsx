@@ -121,7 +121,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className={`text-9xl font-mono font-bold tabular-nums py-4 rounded-md
+        <div className={`text-8xl sm:text-9xl font-mono font-bold tabular-nums py-4 rounded-md
           ${timeLeft <= 10 && timeLeft > 0 && isRunning ? 'text-destructive animate-pulse' : 'text-primary'}
           ${timeLeft === 0 ? 'text-muted-foreground' : ''}
         `}>
