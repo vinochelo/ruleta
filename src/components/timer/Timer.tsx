@@ -139,7 +139,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   );
 
   return (
-    <Card className="w-full max-w-sm mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
+    <Card className="w-full max-w-md mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
       <CardHeader>
         <CardTitle className="title-text text-2xl flex items-center justify-center gap-2">
           <TimerIcon className="h-6 w-6" />
@@ -163,16 +163,16 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={handleStartPause} className="w-full text-xl py-6 transition-transform hover:scale-105" size="lg">
+          <Button onClick={handleStartPause} className="w-full transition-transform hover:scale-105" size="lg">
             <div className="flex items-center justify-center">
-              {isRunning ? <Pause className="mr-3 h-8 w-8" /> : <Play className="mr-3 h-8 w-8" />}
-              <span className="text-2xl">{isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
+              {isRunning ? <Pause className="mr-2 h-6 w-6" /> : <Play className="mr-2 h-6 w-6" />}
+              <span className="text-xl">{isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
             </div>
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full text-xl py-6 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
+          <Button onClick={handleReset} variant="outline" className="w-full transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
             <div className="flex items-center justify-center">
-              <RotateCcw className="mr-3 h-8 w-8" />
-              <span className="text-2xl">Resetear</span>
+              <RotateCcw className="mr-2 h-6 w-6" />
+              <span className="text-xl">Resetear</span>
             </div>
           </Button>
         </div>

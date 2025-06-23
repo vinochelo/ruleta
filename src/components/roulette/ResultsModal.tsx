@@ -115,31 +115,19 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             }
         }).catch(err => {
             console.error("Artistic image generation failed:", err);
-             toast({
-                title: "Error de IA Artística",
-                description: "No se pudieron generar las imágenes adicionales.",
-                variant: "destructive",
-            });
+             // No toast for non-critical background error.
         }).finally(() => {
             setIsGeneratingArtistic(false);
         });
 
       } else {
-        toast({
-            title: "Error de IA",
-            description: "No se pudo generar la imagen principal.",
-            variant: "destructive",
-        });
+        // No toast, just revert the UI
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
       }
     } catch (error: any) {
         console.error("Critical image generation flow error:", error);
-        toast({
-            title: "Error Crítico de IA",
-            description: "La solicitud de generación de imagen falló.",
-            variant: "destructive",
-        });
+        // No toast, just revert the UI
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
     }
@@ -344,7 +332,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           </div>
 
           <div className="flex flex-col justify-center items-center gap-4 lg:w-1/2">
-            <div className="w-full max-w-sm mx-auto space-y-4">
+            <div className="w-full max-w-md mx-auto space-y-4">
 
                 <div className="text-center">
                     <p className="text-base text-muted-foreground">Categoría</p>
@@ -373,7 +361,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
                         }}
                         className={cn(
-                            "text-white text-xl font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4",
+                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4",
                             timerDuration === duration ? 'border-white/80' : 'border-transparent',
                         )}
                         disabled={timerIsActive}
