@@ -33,15 +33,16 @@ const prompt = ai.definePrompt({
 
       Rules:
       - The message must be in Spanish.
+      - CRITICAL: Every message you generate must be unique and original. Avoid repeating the same jokes, comparisons, or phrasing you might have used before.
       - Keep it brief (2-3 sentences).
       - Mention the team's name: {{{teamName}}}.
       - DO NOT mention their final score.
       - Be incredibly energetic and use lots of exclamation points.
-      - Use funny comparisons, like "¡Son más rápidos que un cohete engrasado!" or "¡Dibujan mejor que Picasso en una montaña rusa!".
+      - Use wildly creative and funny comparisons. Examples for inspiration: "¡Son más rápidos que un cohete engrasado!" or "¡Dibujan mejor que Picasso en una montaña rusa!".
 
-      Generate the message now!`,
+      Generate a completely new and original message now!`,
   config: {
-    temperature: 0.9,
+    temperature: 1, // Increased to maximum for more variety
   }
 });
 
