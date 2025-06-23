@@ -3,10 +3,10 @@
 /**
  * @fileOverview AI flows for generating images for the Pictionary game.
  * This file provides two distinct flows: one for a quick, basic image,
- * and another for a set of more elaborate, artistic images.
+ * and another for a single, more elaborate image.
  *
  * - generateQuickImage - Generates a single, simple line drawing for speed.
- * - generateArtisticImages - Generates a variety of artistic images in parallel.
+ * - generateArtisticImages - Generates a single, highly-detailed artistic image.
  */
 
 import { ai, geminiImage } from '@/ai/genkit';
@@ -144,18 +144,19 @@ const generateQuickImageFlow = ai.defineFlow(
 );
 
 
-// --- Flow 2: Artistic Images Generation ---
+// --- Flow 2: Elaborate Image Generation ---
 
 const ArtisticImagesInputSchema = z.object({
-  word: z.string().describe('The word to generate images for.'),
+  word: z.string().describe('The word to generate an image for.'),
 });
 export type ArtisticImagesInput = z.infer<typeof ArtisticImagesInputSchema>;
 
 const ArtisticImagesOutputSchema = z.object({
-  imageDataUris: z
-    .array(z.string())
+  imageDataUri: z
+    .string()
+    .nullable()
     .describe(
-      "A list of data URIs for the generated images. Can be an empty array if generation fails. Format: 'data:<mimetype>;base64,<encoded_data>'. The last image is the artistic text."
+      "A data URI for the generated elaborate image. Null if generation fails. Format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
   error: z.string().nullable().describe("An error message if image generation failed."),
 });
@@ -175,32 +176,19 @@ const generateArtisticImagesFlow = ai.defineFlow(
     outputSchema: ArtisticImagesOutputSchema,
   },
   async (input) => {
-    console.log(`Starting ARTISTIC image generation for: "${input.word}"`);
+    console.log(`Starting ELABORATE image generation for: "${input.word}"`);
     
-    const prompts = [
-      `A colorful cartoon illustration of '${input.word}'. No words or letters.`,
-      `A photorealistic image of '${input.word}'. No words or letters.`,
-      `A simple pencil sketch of '${input.word}'. No words or letters.`,
-      `A stunning, artistic text design of the single word: '${input.word}'.`,
-    ];
+    const prompt = `A highly detailed, photorealistic, and artistic image representing '${input.word}'. The image should be visually stunning and suitable for a game. CRITICAL: The image must not contain any text, letters, or numbers whatsoever. Focus solely on the visual representation of the concept.`;
 
-    const imagePromises = prompts.map((prompt, i) => generateSingleImage(prompt, `ArtisticImage-${i}`));
-    const results = await Promise.all(imagePromises);
-
-    const successfulUris = results
-      .filter(res => res.imageUrl)
-      .map(res => res.imageUrl as string);
-
-    console.log(`Artistic image flow finished for "${input.word}". Generated ${successfulUris.length} of ${prompts.length} requested images.`);
-
-    // For artistic images, we don't return an error to the client,
-    // as it's a non-critical background task. We just log it.
-    results.forEach(res => {
-        if (res.error) {
-            console.warn(`[ArtisticImage] Sub-task failed: ${res.error}`);
-        }
-    });
-
-    return { imageDataUris: successfulUris, error: null };
+    const { imageUrl, error } = await generateSingleImage(prompt, "ElaborateImage");
+    
+    if (imageUrl) {
+        console.log(`Elaborate image flow finished for: "${input.word}". Success: true`);
+        return { imageDataUri: imageUrl, error: null };
+    } else {
+        const finalError = error || "Ocurrió un error inesperado en la generación de la imagen elaborada.";
+        console.log(`Elaborate image flow finished for: "${input.word}". Success: false. Error: ${finalError}`);
+        return { imageDataUri: null, error: finalError };
+    }
   }
 );

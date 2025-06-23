@@ -90,11 +90,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       const quickResult = await generateQuickImage({ word });
       
       if (quickResult.error) {
-        toast({
-            title: "Error de IA",
-            description: quickResult.error,
-            variant: "destructive",
-        });
         setAiHelpActive(false); // Go back to the "get inspiration" button
         setIsGeneratingQuick(false); // Stop loading state
         return; 
@@ -104,14 +99,16 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         setQuickImage(quickResult.imageDataUri);
         setIsGeneratingQuick(false); // Quick image part is done
 
-        // --- Stage 2: Generate Artistic Images (in background) ---
+        // --- Stage 2: Generate Elaborate Image (in background) ---
         setIsGeneratingArtistic(true);
         generateArtisticImages({ word }).then(artisticResult => {
-            if (artisticResult.imageDataUris && artisticResult.imageDataUris.length > 0) {
-                const allArtistic = [...artisticResult.imageDataUris];
-                const newArtisticText = allArtistic.pop() || null;
-                setReferenceImages(allArtistic);
-                setArtisticText(newArtisticText);
+            if (artisticResult.imageDataUri) {
+                setReferenceImages([artisticResult.imageDataUri]);
+                setArtisticText(null); // No more artistic text image
+            }
+            if (artisticResult.error) {
+                // Log non-critical background errors without showing a toast
+                console.warn("Elaborate image generation failed in background:", artisticResult.error);
             }
         }).catch(err => {
             console.error("Artistic image generation failed:", err);
@@ -362,7 +359,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         }}
                         className={cn(
                             "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4",
-                            timerDuration === duration ? 'border-white/80' : 'border-transparent',
+                            timerDuration === duration && isTimerRunning ? 'border-white/80' : 'border-transparent',
                         )}
                         disabled={timerIsActive}
                         >
@@ -375,7 +372,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={timerKey}
                       initialDuration={timerDuration}
                       onTimerEnd={handleTimerEndInternal}
-                      autoStart={isTimerRunning}
+                      autoStart={false}
                     />
                 </div>
             </div>
