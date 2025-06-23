@@ -358,7 +358,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
                 <div className="text-center">
                     <p className="text-base text-muted-foreground">Categoría</p>
-                    <p className="text-3xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+                    <p className="text-4xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                         {selectedCategoryName}
                     </p>
                 </div>
@@ -409,5 +409,3 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
-
-    
