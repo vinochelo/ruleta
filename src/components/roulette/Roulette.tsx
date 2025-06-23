@@ -49,6 +49,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentRotation, setCurrentRotation] = useState(0);
   const [finalSelectedCategoryInfo, setFinalSelectedCategoryInfo] = useState<{category: Category, color: string} | null>(null);
+  const spinSoundRef = useRef<HTMLAudioElement>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -119,6 +120,12 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
 
+    if (spinSoundRef.current) {
+        spinSoundRef.current.currentTime = 0;
+        spinSoundRef.current.volume = 0.5;
+        spinSoundRef.current.play().catch(console.error);
+    }
+
     setIsSpinning(true);
     setFinalSelectedCategoryInfo(null);
 
@@ -186,6 +193,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
+      <audio
+        ref={spinSoundRef}
+        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2db91a629f.mp3?filename=roulette-wheel-105953.mp3"
+        preload="auto"
+      />
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>

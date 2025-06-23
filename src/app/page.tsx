@@ -342,7 +342,7 @@ export default function HomePage() {
                           </Tooltip>
                           
                           <div className="flex-grow overflow-hidden">
-                            <p className="text-xl font-bold truncate" style={{ color: team.color }}>{team.name}</p>
+                            <p className="text-3xl font-bold truncate" style={{ color: team.color }}>{team.name}</p>
                           </div>
                           
                           <div className="flex items-center gap-3 flex-shrink-0">
