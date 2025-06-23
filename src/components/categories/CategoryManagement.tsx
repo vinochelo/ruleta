@@ -31,12 +31,6 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] }
 ];
 
-interface MultiAiContext {
-  isActive: boolean;
-  names: string[];
-  currentIndex: number;
-  originalInput: string;
-}
 
 const CategoryManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,11 +44,6 @@ const CategoryManagement: React.FC = () => {
   const [categoryForAISuggestion, setCategoryForAISuggestion] = useState<string>('');
   const [isAISuggesting, setIsAISuggesting] = useState(false);
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
-
-  const [multiAiContext, setMultiAiContext] = useState<MultiAiContext>({ 
-    isActive: false, names: [], currentIndex: 0, originalInput: '' 
-  });
-  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   const persistCategories = useCallback((updatedCategories: Category[]) => {
     const uniqueCategoriesMap = new Map<string, Category>();
@@ -124,23 +113,63 @@ const CategoryManagement: React.FC = () => {
         toast({ title: "Error", description: "Por favor, introduce nombres de categoría válidos.", variant: "destructive" });
         return;
       }
-
+      
       const uniqueLowerNames = new Set(categoryNamesArray.map(name => name.toLowerCase()));
       if (uniqueLowerNames.size !== categoryNamesArray.length) {
         toast({ title: "Error", description: "Nombres de categoría duplicados en la entrada. Por favor, usa nombres únicos.", variant: "destructive" });
         return;
       }
 
-      for (const catName of categoryNamesArray) {
-        if (categories.some(cat => cat.name.toLowerCase() === catName.toLowerCase())) {
-          toast({ title: "Error", description: `La categoría "${catName}" ya existe. No se procesarán las categorías con IA. Considera editarla o eliminarla primero.`, variant: "destructive" });
-          return;
-        }
+      const existingNames = categoryNamesArray.filter(name => categories.some(cat => cat.name.toLowerCase() === name.toLowerCase()));
+      if (existingNames.length > 0) {
+        toast({ title: "Error", description: `La(s) categoría(s) "${existingNames.join(', ')}" ya existen.`, variant: "destructive" });
+        return;
       }
       
-      setNewCategoryName(''); 
-      setMultiAiContext({ isActive: true, names: categoryNamesArray, currentIndex: 0, originalInput: originalInput });
+      setIsAISuggesting(true);
+      setNewCategoryName('');
 
+      try {
+        const suggestionPromises = categoryNamesArray.map(name => 
+          suggestWordsForCategory({ categoryName: name })
+          .then(result => ({ name, words: result.suggestedWords || [], status: 'fulfilled' }))
+          .catch(error => ({ name, words: [], status: 'rejected', error}))
+        );
+
+        const results = await Promise.all(suggestionPromises);
+        
+        const newCategories = results
+          .filter(r => r.status === 'fulfilled')
+          .map(result => ({
+            id: crypto.randomUUID(),
+            name: result.name,
+            words: result.words,
+        }));
+
+        if (newCategories.length > 0) {
+          persistCategories([...categories, ...newCategories]);
+          const totalWords = newCategories.reduce((sum, cat) => sum + cat.words.length, 0);
+          toast({
+            title: "Proceso Completado",
+            description: `${newCategories.length} categoría(s) añadidas con un total de ${totalWords} palabras.`,
+          });
+        }
+        
+        const failedCategories = results.filter(r => r.status === 'rejected');
+        if (failedCategories.length > 0) {
+            toast({
+                title: "Algunas Sugerencias Fallaron",
+                description: `No se pudieron obtener sugerencias para: ${failedCategories.map(f => f.name).join(', ')}`,
+                variant: "destructive"
+            });
+        }
+
+      } catch (error) {
+        console.error("Batch AI suggestion error:", error);
+        toast({ title: "Error de IA", description: "No se pudieron crear las categorías con sugerencias.", variant: "destructive" });
+      } finally {
+        setIsAISuggesting(false);
+      }
     } else { 
       if (categories.some(cat => cat.name.toLowerCase() === originalInput.toLowerCase())) {
         toast({ title: "Error", description: "Esta categoría ya existe.", variant: "destructive" });
@@ -152,68 +181,6 @@ const CategoryManagement: React.FC = () => {
       toast({ title: "Categoría Añadida", description: `"${newCategory.name}" ha sido añadida.` });
     }
   };
-
-  const proceedToNextMultiAiCategory = useCallback(() => {
-    setIsSuggestWordsDialogOpen(false); // Close dialog first
-    setMultiAiContext(prev => {
-      if (!prev.isActive) return prev;
-      return { ...prev, currentIndex: prev.currentIndex + 1 };
-    });
-  }, [setMultiAiContext]);
-
-  useEffect(() => {
-    if (!multiAiContext.isActive) {
-      setIsBatchProcessing(false);
-      return;
-    }
-    
-    if (multiAiContext.currentIndex >= multiAiContext.names.length) {
-      if (multiAiContext.names.length > 0) { 
-         toast({title: "Proceso en Lote Completado", description: `${multiAiContext.names.length} categoría(s) solicitada(s) con IA han sido procesadas.`});
-      }
-      setMultiAiContext({ isActive: false, names: [], currentIndex: 0, originalInput: '' });
-      return; 
-    }
-
-    setIsBatchProcessing(true);
-
-    const processCurrentAiCategory = async () => {
-      const currentName = multiAiContext.names[multiAiContext.currentIndex];
-      
-      // Check against current categories state, which is a dependency of this useEffect
-      if (categories.some(cat => cat.name.toLowerCase() === currentName.toLowerCase())) {
-        toast({ title: "Categoría Omitida", description: `"${currentName}" ya existe o fue añadida mientras se procesaba. Omitiendo sugerencias IA.`, variant: "default" });
-        proceedToNextMultiAiCategory(); // This will advance the index and re-trigger the effect
-        return;
-      }
-
-      setCategoryForAISuggestion(currentName);
-      setTargetCategoryIdForAIWords(null); 
-      setIsAISuggesting(true);
-      setAiSuggestedWords([]);
-      setIsSuggestWordsDialogOpen(true); 
-
-      try {
-        const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: currentName });
-        const suggested = result.suggestedWords || [];
-        setAiSuggestedWords(suggested);
-        if (suggested.length === 0) {
-            toast({ title: "Sugerencias IA", description: `La IA no generó ninguna palabra para "${currentName}". Aún puedes añadirlas manualmente.`});
-        }
-      } catch (error) {
-        console.error(`AI suggestion error for ${currentName}:`, error);
-        toast({ title: "Error de IA", description: `No se pudieron sugerir palabras para "${currentName}".`, variant: "destructive" });
-        setAiSuggestedWords([]); 
-      } finally {
-        setIsAISuggesting(false); 
-        // Dialog remains open, user interaction (add/cancel) will call proceedToNextMultiAiCategory
-      }
-    };
-
-    processCurrentAiCategory();
-  // eslint-disable-next-line react-hooks/exhaustive-deps 
-  }, [multiAiContext, categories, toast, proceedToNextMultiAiCategory]); // Added categories and toast
-
 
   const handleDeleteCategory = (id: string) => {
     const categoryToDelete = categories.find(cat => cat.id === id);
@@ -305,8 +272,8 @@ const CategoryManagement: React.FC = () => {
   };
 
   const handleAISuggestWordsForExistingCategory = async (category: Category) => {
-    if (isBatchProcessing) {
-      toast({ title: "Procesando", description: "Hay un proceso de IA en lote activo. Por favor, espera.", variant: "default"});
+    if (isAISuggesting) {
+      toast({ title: "Procesando", description: "Hay un proceso de IA activo. Por favor, espera.", variant: "default"});
       return;
     }
     setCategoryForAISuggestion(category.name);
@@ -337,60 +304,42 @@ const CategoryManagement: React.FC = () => {
   };
 
   const handleAddAISuggestedWords = (wordsToAdd: string[]) => {
-    let categoryNameForToast = categoryForAISuggestion;
-
     const cleanWordsToAdd = [...new Set(wordsToAdd.map(w => w.trim()).filter(w => w))].sort();
+    
     if (cleanWordsToAdd.length === 0) {
       toast({ title: "Sin Palabras Válidas", description: "No se seleccionaron palabras válidas para añadir.", variant: "default" });
-      setCategoryForAISuggestion('');
-      setTargetCategoryIdForAIWords(null);
       return;
     }
 
-    if (targetCategoryIdForAIWords) {
-      const category = categories.find(cat => cat.id === targetCategoryIdForAIWords);
-      if (!category) {
-        console.error("Target category for AI words not found:", targetCategoryIdForAIWords);
-        toast({ title: "Error", description: "No se encontró la categoría de destino.", variant: "destructive"});
-        setCategoryForAISuggestion('');
-        setTargetCategoryIdForAIWords(null);
-        return;
-      }
-      categoryNameForToast = category.name;
+    if (!targetCategoryIdForAIWords) return;
 
-      const uniqueNewWords = cleanWordsToAdd.filter(word =>
-        !category.words.some(existingWord => existingWord.toLowerCase() === word.toLowerCase())
-      );
-
-      if (uniqueNewWords.length === 0 && cleanWordsToAdd.length > 0) {
-        toast({ title: "Sin Palabras Nuevas", description: `Todas las palabras seleccionadas ya existen en "${categoryNameForToast}".`, variant: "default" });
-      } else if (uniqueNewWords.length > 0) {
-        persistCategories(categories.map(cat =>
-          cat.id === targetCategoryIdForAIWords
-          ? { ...cat, words: [...new Set([...cat.words, ...uniqueNewWords])].sort() }
-          : cat
-        ));
-        toast({ title: "Palabras Añadidas", description: `${uniqueNewWords.length} palabras añadidas a "${categoryNameForToast}" desde sugerencias IA.` });
-      }
-    } else {
-      // This is for a NEW category being created through AI batch process
-      const newCategoryNameFromAI = categoryForAISuggestion; // Should be set by the batch process
-      const newCategoryToAdd: Category = {
-        id: crypto.randomUUID(),
-        name: newCategoryNameFromAI,
-        words: cleanWordsToAdd
-      };
-
-      if (categories.some(cat => cat.name.toLowerCase() === newCategoryToAdd.name.toLowerCase())) {
-        toast({ title: "Categoría Duplicada por Nombre", description: `"${newCategoryToAdd.name}" ya existe o fue añadida. No se añadió de nuevo.`, variant: "default" });
-      } else {
-        persistCategories([...categories, newCategoryToAdd]);
-        toast({ title: "Categoría y Palabras Añadidas", description: `"${newCategoryToAdd.name}" creada con ${newCategoryToAdd.words.length} palabras sugeridas por IA.` });
-      }
+    const category = categories.find(cat => cat.id === targetCategoryIdForAIWords);
+    if (!category) {
+      console.error("Target category for AI words not found:", targetCategoryIdForAIWords);
+      toast({ title: "Error", description: "No se encontró la categoría de destino.", variant: "destructive"});
+      return;
     }
 
+    const uniqueNewWords = cleanWordsToAdd.filter(word =>
+      !category.words.some(existingWord => existingWord.toLowerCase() === word.toLowerCase())
+    );
+
+    if (uniqueNewWords.length > 0) {
+      persistCategories(categories.map(cat =>
+        cat.id === targetCategoryIdForAIWords
+        ? { ...cat, words: [...new Set([...cat.words, ...uniqueNewWords])].sort() }
+        : cat
+      ));
+      toast({ title: "Palabras Añadidas", description: `${uniqueNewWords.length} palabras añadidas a "${category.name}" desde sugerencias IA.` });
+    } else {
+      toast({ title: "Sin Palabras Nuevas", description: `Todas las palabras seleccionadas ya existen en "${category.name}".`, variant: "default" });
+    }
+    
+    // Reset and close dialog
+    setIsSuggestWordsDialogOpen(false);
     setCategoryForAISuggestion('');
     setTargetCategoryIdForAIWords(null);
+    setAiSuggestedWords([]);
   };
 
   return (
@@ -412,10 +361,10 @@ const CategoryManagement: React.FC = () => {
               placeholder="Nombre(s) de categoría, ej: Frutas, Países"
               className="flex-grow"
               aria-label="Nombre de la nueva categoría"
-              disabled={isBatchProcessing}
+              disabled={isAISuggesting}
             />
             <div className="flex gap-2">
-              <Button type="submit" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isBatchProcessing || newCategoryName.trim() === ''}>
+              <Button type="submit" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting || newCategoryName.trim() === ''}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Añadir
               </Button>
               <Button 
@@ -423,9 +372,9 @@ const CategoryManagement: React.FC = () => {
                 variant="outline" 
                 onClick={(e) => handleAddCategory(e, true)} 
                 className="transition-transform hover:scale-105 flex-1 sm:flex-none"
-                disabled={isBatchProcessing || newCategoryName.trim() === '' || (isAISuggesting && targetCategoryIdForAIWords === null)}
+                disabled={isAISuggesting || newCategoryName.trim() === ''}
               >
-                {(isAISuggesting && targetCategoryIdForAIWords === null && !isBatchProcessing) || isBatchProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
+                {isAISuggesting && !targetCategoryIdForAIWords ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
                 Sugerir con IA
               </Button>
             </div>
@@ -470,7 +419,7 @@ const CategoryManagement: React.FC = () => {
                                 onClick={() => handleDeleteWord(category.id, wordIndex)}
                                 className="ml-1 h-4 w-4 text-destructive hover:text-red-700 p-0"
                                 aria-label={`Eliminar palabra ${word}`}
-                                disabled={isBatchProcessing}
+                                disabled={isAISuggesting}
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -486,9 +435,9 @@ const CategoryManagement: React.FC = () => {
                               placeholder="Añadir palabra"
                               className="h-8 text-sm"
                               aria-label={`Añadir palabra a ${category.name}`}
-                              disabled={isBatchProcessing}
+                              disabled={isAISuggesting}
                             />
-                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8" disabled={isBatchProcessing}>
+                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8" disabled={isAISuggesting}>
                               <Plus className="h-4 w-4" />
                             </Button>
                           </form>
@@ -496,7 +445,7 @@ const CategoryManagement: React.FC = () => {
                             size="sm" 
                             variant="outline" 
                             onClick={() => handleAISuggestWordsForExistingCategory(category)}
-                            disabled={isBatchProcessing || (isAISuggesting && targetCategoryIdForAIWords === category.id)}
+                            disabled={isAISuggesting}
                             className="h-8 text-xs whitespace-nowrap"
                             >
                              {(isAISuggesting && targetCategoryIdForAIWords === category.id) ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Brain className="mr-1 h-3 w-3" />}
@@ -511,7 +460,7 @@ const CategoryManagement: React.FC = () => {
                           onClick={() => setEditingCategory(category)}
                           className="text-blue-500 hover:text-blue-700 transition-colors"
                           aria-label={`Editar nombre de ${category.name}`}
-                          disabled={isBatchProcessing}
+                          disabled={isAISuggesting}
                         >
                           <Edit3 className="h-4 w-4" />
                         </Button>
@@ -521,7 +470,7 @@ const CategoryManagement: React.FC = () => {
                           onClick={() => handleDeleteCategory(category.id)}
                           className="text-destructive hover:text-red-700 transition-colors"
                           aria-label={`Eliminar categoría ${category.name}`}
-                          disabled={isBatchProcessing}
+                          disabled={isAISuggesting}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -534,7 +483,7 @@ const CategoryManagement: React.FC = () => {
           )}
         </CardContent>
         <CardFooter>
-            <Button variant="outline" onClick={resetToDefaultCategories} className="transition-transform hover:scale-105" disabled={isBatchProcessing}>
+            <Button variant="outline" onClick={resetToDefaultCategories} className="transition-transform hover:scale-105" disabled={isAISuggesting}>
                 Restaurar Categorías y Palabras por Defecto
             </Button>
         </CardFooter>
@@ -554,10 +503,13 @@ const CategoryManagement: React.FC = () => {
           categoryName={categoryForAISuggestion}
           suggestedWords={aiSuggestedWords}
           isOpen={isSuggestWordsDialogOpen}
-          onClose={() => setIsSuggestWordsDialogOpen(false)} 
+          onClose={() => {
+            setIsSuggestWordsDialogOpen(false);
+            setTargetCategoryIdForAIWords(null);
+            setCategoryForAISuggestion('');
+          }}
           onAddWords={handleAddAISuggestedWords}
-          isLoading={isAISuggesting}
-          onProcessingComplete={proceedToNextMultiAiCategory} 
+          isLoading={isAISuggesting && !!targetCategoryIdForAIWords}
         />
       )}
     </div>

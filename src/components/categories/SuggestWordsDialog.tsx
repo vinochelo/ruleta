@@ -22,10 +22,9 @@ interface SuggestWordsDialogProps {
   categoryName: string;
   suggestedWords: string[];
   isOpen: boolean;
-  onClose: () => void; // Standard close action
+  onClose: () => void;
   onAddWords: (wordsToAdd: string[]) => void;
   isLoading?: boolean;
-  onProcessingComplete?: () => void; // Called when dialog is fully done (added or cancelled)
 }
 
 const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
@@ -35,16 +34,15 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
   onClose,
   onAddWords,
   isLoading = false,
-  onProcessingComplete,
 }) => {
   const [editableWords, setEditableWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen) { // Reset editable words when dialog opens with new suggestions
+    if (isOpen) {
       setEditableWords([...suggestedWords]);
-      setNewWord(''); // Clear manual input as well
+      setNewWord('');
     }
   }, [suggestedWords, isOpen]);
 
@@ -65,48 +63,26 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
       return;
     }
     if (editableWords.some(w => w.toLowerCase() === newWord.trim().toLowerCase())) {
-      toast({ title: "Palabra Duplicada", description: "Esta palabra ya está en la lista.", variant: "destructive" });
+      toast({ title: "Palabra Duplicada", description: "Esta palabra ya está en la lista.", variant: "default" });
       return;
     }
     setEditableWords([...editableWords, newWord.trim()]);
     setNewWord('');
   };
 
-  const handleSubmitAndClose = () => {
+  const handleSubmit = () => {
     const finalWords = editableWords.filter(word => word.trim() !== '');
-    if (finalWords.length === 0 && !isLoading) { //isLoading check to prevent premature toast if AI is still running
+    if (finalWords.length === 0 && !isLoading) {
       toast({ title: "Sin Palabras", description: "No hay palabras para añadir.", variant: "destructive"});
-      // Don't close or call processing complete if no words and not loading, let user add manually or cancel
       return;
     }
     if (finalWords.length > 0) {
       onAddWords(finalWords);
     }
-    // onClose(); // This will be called by the DialogPrimitive.Close or onOpenChange
-    onProcessingComplete?.();
   };
-
-  const handleCancelAndClose = () => {
-    // onClose(); // This will be called by the DialogPrimitive.Close or onOpenChange
-    onProcessingComplete?.();
-  };
-  
-  const handleDialogValidClose = (openStatus: boolean) => {
-    if (!openStatus) { // Means dialog is attempting to close
-        // If not explicitly handled by submit or cancel, treat as cancel for processing
-        // This check ensures onProcessingComplete is called even if user clicks X or outside
-        if (isOpen) { // Check if it was open before this change
-             onProcessingComplete?.();
-        }
-        onClose(); // Call the original onClose to update parent's isOpen state
-    } else {
-        onClose(); // For opening, if managed by parent
-    }
-  };
-
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleDialogValidClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg bg-card shadow-xl rounded-lg">
         <DialogHeader className="p-6">
           <DialogTitle className="title-text text-xl flex items-center gap-2">
@@ -170,14 +146,13 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
         )}
 
         <DialogFooter className="p-6">
-          {/* DialogClose will trigger onOpenChange, which calls handleDialogValidClose -> onProcessingComplete */}
           <DialogClose asChild> 
             <Button type="button" variant="outline" className="transition-transform hover:scale-105">
               Cancelar
             </Button>
           </DialogClose>
           <Button 
-            onClick={handleSubmitAndClose} 
+            onClick={handleSubmit} 
             className="transition-transform hover:scale-105" 
             disabled={isLoading || (editableWords.filter(w => w.trim() !== '').length === 0 && !isLoading)}
           >
@@ -190,4 +165,3 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
 };
 
 export default SuggestWordsDialog;
-
