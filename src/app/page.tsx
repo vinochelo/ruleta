@@ -285,7 +285,7 @@ export default function HomePage() {
                           
                           {/* Team Info - Center */}
                           <div className="text-center">
-                            <p className="text-xl font-semibold text-primary">{team.name}</p>
+                            <p className="text-2xl font-semibold text-primary">{team.name}</p>
                             <p className="text-3xl font-bold text-foreground">{team.score} <span className="text-sm font-normal text-muted-foreground">puntos</span></p>
                           </div>
                           
@@ -293,13 +293,17 @@ export default function HomePage() {
                           <div className="justify-self-end">
                              <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button onClick={() => handleIncrementScore(team.id)} size="icon" className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-12 h-12 rounded-full">
-                                  <PlusCircle className="h-6 w-6" />
-                                  <span className="sr-only">Sumar Punto</span>
+                                <Button
+                                  onClick={() => handleIncrementScore(team.id)}
+                                  className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-16 h-16 rounded-full flex flex-col items-center justify-center p-1 leading-none"
+                                  aria-label={`Sumar 1 punto a ${team.name}`}
+                                >
+                                  <span className="text-xl font-bold">+1</span>
+                                  <span className="text-xs font-normal mt-1">Punto</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Sumar Punto</p>
+                                <p>Sumar 1 punto a {team.name}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
