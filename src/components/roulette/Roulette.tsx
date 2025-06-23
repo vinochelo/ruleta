@@ -26,8 +26,7 @@ const WHEEL_SIZE = 600;
 const WHEEL_RADIUS = WHEEL_SIZE / 2 - 10; 
 const CENTER_X = WHEEL_SIZE / 2; 
 const CENTER_Y = WHEEL_SIZE / 2; 
-const TEXT_MAX_LENGTH = 22;
-const FONT_SIZE_CATEGORY = 18;
+const TEXT_MAX_LENGTH = 25;
 
 const round = (num: number, decimalPlaces: number = 3): number => {
   const factor = Math.pow(10, decimalPlaces);
@@ -108,6 +107,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   const segments = useMemo(() => {
     if (numSegments === 0) return [];
+
+    const FONT_SIZE_CATEGORY = Math.min(18, Math.max(12, 250 / numSegments));
+    
     return displayCategories.map((category, i) => {
       const startAngle = i * anglePerSegment;
       const endAngle = (i + 1) * anglePerSegment;
@@ -124,8 +126,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         `Z`,
       ].join(' ');
       
-      const textPathStartRadiusFactor = 0.25;
-      const textPathEndRadiusFactor = 0.8;
+      const textPathStartRadiusFactor = 0.15;
+      const textPathEndRadiusFactor = 0.9;
       
       const midAngle = startAngle + anglePerSegment / 2;
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
@@ -136,7 +138,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       
       let displayText = category.name;
       if (displayText.length > TEXT_MAX_LENGTH) {
-        displayText = displayText.substring(0, TEXT_MAX_LENGTH - 3) + "...";
+        displayText = displayText.substring(0, TEXT_MAX_LENGTH) + "...";
       }
       
       const segmentColor = rouletteSegmentColors[i % rouletteSegmentColors.length];
@@ -303,8 +305,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                   >
                     <textPath 
                       href={`#${segment.textPathId}`} 
-                      startOffset="50%"
-                      textAnchor="middle"
+                      startOffset="5%"
+                      textAnchor={segment.textAnchor}
                     >
                       {segment.displayText}
                     </textPath>
@@ -336,13 +338,13 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           {/* Center decorative element */}
           <div 
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center pointer-events-none"
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-red-600 rounded-full z-5 flex items-center justify-center pointer-events-none shadow-md"
             )}
           >
              {isSpinning ? (
-                <Loader2 className="w-14 h-14 text-primary animate-spin" /> 
+                <Loader2 className="w-8 h-8 text-white animate-spin" /> 
              ) : (
-                <Play className="w-14 h-14 text-primary" /> 
+                <Play className="w-8 h-8 text-white" /> 
              )}
           </div>
         </div>
