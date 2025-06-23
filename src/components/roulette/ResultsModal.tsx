@@ -23,6 +23,7 @@ interface ResultsModalProps {
   selectedCategoryColor: string | null;
   speakTimeSelection: (duration: number) => void;
   speakFn: (text: string) => void;
+  useAIImages: boolean;
 }
 
 const TIMER_OPTIONS = [
@@ -40,6 +41,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   selectedCategoryColor,
   speakTimeSelection,
   speakFn,
+  useAIImages,
 }) => {
   const [activeTimerDuration, setActiveTimerDuration] = useState<number | null>(null);
   const [isPictionaryRoundActive, setIsPictionaryRoundActive] = useState(false);
@@ -53,41 +55,43 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
       setGeneratedImageUrl(null);
-    } else {
-      setActiveTimerDuration(null);
-      setIsPictionaryRoundActive(false);
-      setTimerKey(prev => prev + 1);
-
-      if (selectedWord) {
-        setIsGeneratingImage(true);
-        setGeneratedImageUrl(null);
-        
-        generateImageForWord({ word: selectedWord })
-          .then(result => {
-            if (result.imageDataUri) {
-              setGeneratedImageUrl(result.imageDataUri);
-            } else {
-                toast({
-                    title: "Error de Imagen",
-                    description: "No se pudo generar una imagen para esta palabra.",
-                    variant: "destructive"
-                });
-            }
-          })
-          .catch(error => {
-            console.error("AI image generation error:", error);
-            toast({
-              title: "Error de Imagen",
-              description: "No se pudo generar una imagen para la palabra.",
-              variant: "destructive"
-            });
-          })
-          .finally(() => {
-            setIsGeneratingImage(false);
-          });
-      }
+      return;
     }
-  }, [isOpen, selectedWord, toast]);
+    // Reset state for new round
+    setActiveTimerDuration(null);
+    setIsPictionaryRoundActive(false);
+    setTimerKey(prev => prev + 1);
+    setGeneratedImageUrl(null);
+    setIsGeneratingImage(false);
+
+    if (selectedWord && useAIImages) {
+      setIsGeneratingImage(true);
+      
+      generateImageForWord({ word: selectedWord })
+        .then(result => {
+          if (result.imageDataUri) {
+            setGeneratedImageUrl(result.imageDataUri);
+          } else {
+              toast({
+                  title: "Error de Imagen",
+                  description: "No se pudo generar una imagen para esta palabra.",
+                  variant: "destructive"
+              });
+          }
+        })
+        .catch(error => {
+          console.error("AI image generation error:", error);
+          toast({
+            title: "Error de Imagen",
+            description: "No se pudo generar una imagen para la palabra.",
+            variant: "destructive"
+          });
+        })
+        .finally(() => {
+          setIsGeneratingImage(false);
+        });
+    }
+  }, [isOpen, selectedWord, useAIImages, toast, speakFn]);
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
@@ -149,27 +153,29 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           
           {/* Image and Word Section */}
           <div className="flex-1 w-full lg:max-w-2xl flex flex-col items-center justify-center text-center gap-4">
-            <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
-                {isGeneratingImage && (
-                    <div className="flex flex-col items-center justify-center gap-4 text-primary">
-                        <Loader2 className="h-16 w-16 animate-spin" />
-                        <p className="text-xl font-medium">Creando imagen...</p>
-                    </div>
-                )}
-                {!isGeneratingImage && generatedImageUrl && (
-                    <Image src={generatedImageUrl} alt={`Generated image for ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized/>
-                )}
-                 {!isGeneratingImage && !generatedImageUrl && (
-                    <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
-                        <ImageIcon className="h-16 w-16" />
-                        <p className="text-xl font-medium">No se pudo generar la imagen</p>
-                    </div>
-                )}
-            </div>
+            {useAIImages && (
+              <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+                  {isGeneratingImage && (
+                      <div className="flex flex-col items-center justify-center gap-4 text-primary">
+                          <Loader2 className="h-16 w-16 animate-spin" />
+                          <p className="text-xl font-medium">Creando imagen...</p>
+                      </div>
+                  )}
+                  {!isGeneratingImage && generatedImageUrl && (
+                      <Image src={generatedImageUrl} alt={`Generated image for ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized/>
+                  )}
+                   {!isGeneratingImage && !generatedImageUrl && (
+                      <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
+                          <ImageIcon className="h-16 w-16" />
+                          <p className="text-xl font-medium">No se pudo generar la imagen</p>
+                      </div>
+                  )}
+              </div>
+            )}
             
             {selectedWord && (
                 <div className="mt-4">
-                    <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
+                    <p className="text-xl text-muted-foreground">{useAIImages ? "Palabra a dibujar" : "Palabra"}</p>
                     <p className="text-7xl lg:text-8xl font-bold break-words leading-tight" style={wordStyle}>
                     {selectedWord}
                     </p>

@@ -13,8 +13,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus } from 'lucide-react';
+import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus, Sparkles } from 'lucide-react';
 import { praiseWinner } from '@/ai/flows/praise-winner-flow';
+import { Switch } from '@/components/ui/switch';
 
 interface Category {
   id: string;
@@ -61,6 +62,7 @@ export default function HomePage() {
   const [winnerPraise, setWinnerPraise] = useState<string | null>(null);
   const [totalPointsScored, setTotalPointsScored] = useState(0);
   const [usedWords, setUsedWords] = useState<Record<string, string[]>>({});
+  const [useAIImages, setUseAIImages] = useState(true);
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -326,6 +328,18 @@ export default function HomePage() {
                 </Select>
               </div>
 
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <Label htmlFor="ai-images-switch" className="flex items-center gap-2 font-medium text-sm">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  Generar Imágenes con IA
+                </Label>
+                <Switch
+                  id="ai-images-switch"
+                  checked={useAIImages}
+                  onCheckedChange={setUseAIImages}
+                />
+              </div>
+
               <Separator />
 
               <form onSubmit={handleAddTeam} className="flex gap-2 items-center">
@@ -416,6 +430,7 @@ export default function HomePage() {
         selectedCategoryColor={selectedCategoryColor}
         speakTimeSelection={speakTimeSelectionCallback}
         speakFn={speakFn}
+        useAIImages={useAIImages}
       />
       
       <WinnerModal winner={winner} onPlayAgain={handlePlayAgain} praiseMessage={winnerPraise} />
