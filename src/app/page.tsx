@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
@@ -273,21 +272,21 @@ export default function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2">
           <Card className="shadow-lg">
-            <CardHeader className="p-4">
-              <CardTitle className="title-text text-xl flex items-center gap-2">
+            <CardHeader className="p-3">
+              <CardTitle className="title-text text-lg flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Equipos y Puntuaciones
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 p-4 pt-0">
-              <div className="space-y-2">
-                <Label htmlFor="winning-score">Puntos para Ganar</Label>
+            <CardContent className="space-y-3 p-3 pt-0">
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="winning-score" className="whitespace-nowrap font-medium text-sm">Puntos para Ganar:</Label>
                 <Select
                   value={String(winningScore)}
                   onValueChange={(value) => setWinningScore(Number(value))}
                 >
-                  <SelectTrigger id="winning-score" className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Elige puntuación" />
+                  <SelectTrigger id="winning-score" className="w-[120px] h-9">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="5">5 Puntos</SelectItem>
@@ -300,32 +299,32 @@ export default function HomePage() {
 
               <Separator />
 
-              <form onSubmit={handleAddTeam} className="flex flex-col sm:flex-row gap-2 items-center">
+              <form onSubmit={handleAddTeam} className="flex gap-2 items-center">
                 <Input
                   type="text"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="Nombre del nuevo equipo"
-                  className="flex-grow"
+                  placeholder="Nuevo equipo..."
+                  className="flex-grow h-9"
                   aria-label="Nombre del nuevo equipo"
                 />
-                <Button type="submit" className="w-full sm:w-auto transition-transform hover:scale-105">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Añadir Equipo
+                <Button type="submit" size="sm" className="transition-transform hover:scale-105">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Añadir
                 </Button>
               </form>
 
               {teams.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No hay equipos todavía. ¡Añade algunos para empezar!</p>
+                <p className="text-muted-foreground text-center py-4 text-sm">No hay equipos todavía.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <TooltipProvider>
                     {teams.map(team => (
                       <Card key={team.id} className="bg-card/50 shadow-inner overflow-hidden">
-                        <CardContent className="p-3 flex items-center justify-between gap-2">
+                        <CardContent className="p-2 flex items-center justify-between gap-2">
                           {/* Delete Button - Left */}
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button onClick={() => handleRemoveTeam(team.id)} variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-full transition-all hover:scale-110">
+                              <Button onClick={() => handleRemoveTeam(team.id)} variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-full h-8 w-8">
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Eliminar {team.name}</span>
                               </Button>
@@ -336,9 +335,9 @@ export default function HomePage() {
                           </Tooltip>
                           
                           {/* Team Info - Center */}
-                          <div className="flex flex-col items-center flex-grow text-center">
-                            <p className="text-xl font-bold text-primary truncate max-w-[150px] sm:max-w-xs">{team.name}</p>
-                            <p className="text-6xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
+                          <div className="flex flex-col items-center flex-grow text-center mx-2">
+                            <p className="text-base font-bold text-primary truncate max-w-[120px] sm:max-w-xs">{team.name}</p>
+                            <p className="text-4xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
                           </div>
                           
                           {/* Add Point Button - Right */}
@@ -346,11 +345,11 @@ export default function HomePage() {
                             <TooltipTrigger asChild>
                               <Button
                                 onClick={() => handleIncrementScore(team.id)}
-                                className="w-20 h-20 rounded-2xl bg-green-500 hover:bg-green-600 text-white shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center"
+                                className="w-16 h-16 rounded-2xl bg-green-500 hover:bg-green-600 text-white shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center p-1"
                                 aria-label={`Sumar 1 punto a ${team.name}`}
                               >
-                                <Plus className="h-6 w-6" />
-                                <span className="text-base font-semibold">Punto</span>
+                                <Plus className="h-5 w-5" />
+                                <span className="text-xs font-semibold">Punto</span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="left">
@@ -365,9 +364,9 @@ export default function HomePage() {
               )}
             </CardContent>
             {teams.length > 0 && (
-              <CardFooter className="p-4 pt-0">
-                <Button onClick={handleResetAllScores} variant="outline" className="w-full transition-transform hover:scale-105">
-                  <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Todas las Puntuaciones
+              <CardFooter className="p-3 pt-0">
+                <Button onClick={handleResetAllScores} variant="outline" size="sm" className="w-full transition-transform hover:scale-105">
+                  <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Puntuaciones
                 </Button>
               </CardFooter>
             )}
