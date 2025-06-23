@@ -62,7 +62,7 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
     } else if (finishReason === 'recitation') {
       reasonText = "La solicitud fue bloqueada por motivos de recitación (posible plagio).";
     } else if (finishReason === 'quota') {
-      reasonText = "Se ha alcanzado la cuota de la API. Revisa tu plan de facturación de Google Cloud o inténtalo de nuevo más tarde.";
+      reasonText = "Has superado la cuota de uso gratuito de la API. Por favor, espera a que se reinicie o habilita la facturación en tu proyecto de Google Cloud.";
     }
 
     console.warn(`[${context}] Image generation finished but returned no media URL. ${reasonText}`);
@@ -73,11 +73,15 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
     
     let detailedErrorMessage = "Error desconocido al contactar el servicio de IA.";
     if (error?.message) {
-        if (error.message.includes('API key not valid')) {
+        const lowerCaseMessage = error.message.toLowerCase();
+        if (lowerCaseMessage.includes('api key not valid')) {
             detailedErrorMessage = "La clave de API de Google no es válida. Por favor, verifica que la has copiado correctamente en el archivo .env.";
-        } else if (error.message.includes('permission denied') || error.message.includes('PERMISSION_DENIED')) {
+        } else if (lowerCaseMessage.includes('permission denied')) {
             detailedErrorMessage = "Permiso denegado. Asegúrate de que la API de Vertex AI (o la API de Gemini) esté habilitada en tu proyecto de Google Cloud.";
-        } else {
+        } else if (lowerCaseMessage.includes('quota') || lowerCaseMessage.includes('429')) {
+            detailedErrorMessage = "Has superado la cuota de uso gratuito de la API. Por favor, espera a que se reinicie o habilita la facturación en tu proyecto de Google Cloud.";
+        }
+        else {
              // Include the raw error message for better debugging.
             detailedErrorMessage = `La IA devolvió un error: ${error.message}`;
         }
