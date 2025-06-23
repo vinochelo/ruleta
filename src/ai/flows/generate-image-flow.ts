@@ -38,7 +38,7 @@ async function generateSingleImage(prompt: string): Promise<string | null> {
     // It's often due to safety filters.
     console.warn(`Image generation finished with reason '${finishReason}' but returned no media URL. Full result:`, JSON.stringify(result, null, 2));
     if (finishReason === 'safety') {
-        console.error("Image generation was blocked due to safety settings despite being relaxed. The prompt may have triggered a non-configurable filter.");
+        console.error("Image generation was blocked due to safety settings. The prompt may have triggered a non-configurable filter.");
     }
     return null;
 
@@ -80,7 +80,7 @@ const generateQuickImageFlow = ai.defineFlow(
   async (input) => {
     console.log(`Starting QUICK image generation for: "${input.word}"`);
     // Simplified prompt for higher reliability
-    const prompt = `Simple black and white line drawing of: '${input.word}'. White background. No text or letters.`;
+    const prompt = `A very simple black and white line drawing of: '${input.word}'. It must have a plain white background. It must not contain any text, letters, or numbers. It must be a visual representation of the concept, not the written word.`;
     
     const imageUrl = await generateSingleImage(prompt);
     
@@ -121,7 +121,7 @@ const generateArtisticImagesFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting ARTISTIC (parallel) image generation for: "${input.word}"`);
-    // Tweaked prompts for clarity and better results
+    
     const prompts = [
       `A colorful cartoon illustration of '${input.word}'. Bold, simple style for a game. It must be a visual depiction of the concept, not write out the word.`,
       `A photorealistic image of '${input.word}'. The subject is centered and clear. This is for a game, so the image must be a visual depiction of the concept, not the written word.`,
