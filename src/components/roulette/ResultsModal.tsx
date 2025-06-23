@@ -288,9 +288,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       return (
         <ContentBox>
           {currentImageUrl && <Image src={currentImageUrl} alt={`Referencia ${currentSlideshowIndex + 1}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
-            <p className="text-lg font-semibold text-foreground/80 bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full">Referencia {currentSlideshowIndex + 1} de {slideshowImages.length}</p>
-          </div>
           {isGeneratingArtistic && <Loader2 className="absolute top-4 right-4 h-6 w-6 text-primary animate-spin" />}
         </ContentBox>
       );
