@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -89,6 +90,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       const quickResult = await generateQuickImage({ word });
       
       if (quickResult.error) {
+        toast({
+            title: "Error al generar imagen",
+            description: quickResult.error,
+            variant: "destructive",
+        });
         setAiHelpActive(false); // Go back to the "get inspiration" button
         setIsGeneratingQuick(false); // Stop loading state
         return; 
@@ -106,28 +112,44 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 setArtisticText(null); // No more artistic text image
             }
             if (artisticResult.error) {
-                // Log non-critical background errors without showing a toast
+                toast({
+                    title: "Error en imagen artística",
+                    description: artisticResult.error,
+                    variant: "destructive",
+                });
                 console.warn("Elaborate image generation failed in background:", artisticResult.error);
             }
         }).catch(err => {
             console.error("Artistic image generation failed:", err);
-             // No toast for non-critical background error.
+            toast({
+                title: "Error Inesperado",
+                description: `La generación de la imagen artística falló: ${err.message || 'Error desconocido'}.`,
+                variant: "destructive",
+            });
         }).finally(() => {
             setIsGeneratingArtistic(false);
         });
 
       } else {
-        // No toast, just revert the UI
+        toast({
+            title: "Error Inesperado",
+            description: "La IA no devolvió una imagen pero no especificó un error. Inténtalo de nuevo.",
+            variant: "destructive",
+        });
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
       }
     } catch (error: any) {
         console.error("Critical image generation flow error:", error);
-        // No toast, just revert the UI
+        toast({
+            title: "Error Crítico de Conexión",
+            description: error.message || "Ocurrió un error irrecuperable al contactar el servicio de IA. Revisa tu conexión o la configuración de la API.",
+            variant: "destructive",
+        });
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
     }
-  }, [resetAIState]);
+  }, [resetAIState, toast]);
 
   // Effect to combine all images into a single array for the slideshow
   useEffect(() => {
@@ -387,3 +409,5 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
+
+    
