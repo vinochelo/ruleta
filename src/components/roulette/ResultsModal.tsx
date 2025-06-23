@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, ArrowLeft, ArrowRight } from 'lucide-react';
+import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
@@ -29,10 +29,10 @@ interface ResultsModalProps {
 }
 
 const TIMER_OPTIONS = [
-  { duration: 30, color: "bg-sky-500 hover:bg-sky-600", textColor: "text-white" },
-  { duration: 60, color: "bg-emerald-500 hover:bg-emerald-600", textColor: "text-white" },
-  { duration: 90, color: "bg-amber-500 hover:bg-amber-600", textColor: "text-white" },
-  { duration: 120, color: "bg-rose-500 hover:bg-rose-600", textColor: "text-white" },
+  { duration: 30 },
+  { duration: 60 },
+  { duration: 90 },
+  { duration: 120 },
 ];
 
 const ResultsModal: React.FC<ResultsModalProps> = ({
@@ -46,8 +46,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   useAIImages,
 }) => {
   // Timer and game state
-  const [activeTimerDuration, setActiveTimerDuration] = useState<number | null>(null);
-  const [isPictionaryRoundActive, setIsPictionaryRoundActive] = useState(false);
+  const [timerDuration, setTimerDuration] = useState<number>(60);
   const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
 
@@ -143,8 +142,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       // Reset timer state
-      setActiveTimerDuration(null);
-      setIsPictionaryRoundActive(false);
+      setTimerDuration(60); // Default to 60s
       setIsTimerFinished(false);
       setTimerKey(prev => prev + 1);
       // Reset AI state
@@ -169,26 +167,23 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
-    setActiveTimerDuration(duration);
-    setIsPictionaryRoundActive(true);
-    setTimerKey(prevKey => prevKey + 1);
-    toast({ title: "¡A dibujar!", description: `Tienes ${duration} segundos para "${selectedWord}".` });
+    setTimerDuration(duration);
+    setIsTimerFinished(false);
+    setTimerKey(prevKey => prevKey + 1); // Remount timer with new duration
+    toast({ title: "Tiempo Seleccionado", description: `El temporizador está listo con ${duration} segundos.` });
   };
-
+  
   const handleTimerEndInternal = useCallback(() => {
-    setIsPictionaryRoundActive(false);
     setIsTimerFinished(true);
-    toast({ title: "¡Tiempo!", description: "La ronda ha terminado.", variant: "destructive" });
     if (selectedWord) {
       setTimeout(() => {
         speakFn(`La palabra era ${selectedWord}.`);
       }, 2000);
     }
-  }, [selectedWord, speakFn, toast]);
+  }, [selectedWord, speakFn]);
+
 
   const handleCloseDialog = () => {
-    setActiveTimerDuration(null);
-    setIsPictionaryRoundActive(false);
     onClose();
   };
   
@@ -351,31 +346,31 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     </p>
                 </div>
                 
-                <div className="w-full space-y-4">
-                    <h3 className="text-lg font-medium text-center text-foreground/90">Selecciona el Tiempo:</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                    {TIMER_OPTIONS.map(({ duration, color, textColor }) => (
+                <Timer
+                  key={timerKey}
+                  initialDuration={timerDuration}
+                  onTimerEnd={handleTimerEndInternal}
+                  autoStart={false}
+                />
+                
+                <div className="w-full space-y-2">
+                    <h3 className="text-base font-medium text-center text-foreground/80">O cambiar el tiempo:</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                    {TIMER_OPTIONS.map(({ duration }) => (
                         <Button
                         key={duration}
                         onClick={() => handleTimeButtonClick(duration)}
-                        className={`text-xl font-bold py-4 sm:py-6 transition-transform hover:scale-105 active:scale-95 w-full rounded-lg shadow-lg ${color} ${textColor}`}
-                        disabled={isPictionaryRoundActive || isTimerFinished}
+                        variant={timerDuration === duration ? 'default' : 'outline'}
+                        className={cn(
+                            "text-sm sm:text-base font-bold py-2 sm:py-3 transition-transform hover:scale-105 active:scale-95 w-full rounded-lg shadow-md",
+                        )}
+                        disabled={isTimerFinished}
                         >
-                        <TimerIcon className="mr-2 h-5 w-5" />
                         {duration}s
                         </Button>
                     ))}
                     </div>
                 </div>
-
-                {activeTimerDuration && selectedWord && (
-                  <Timer
-                      key={timerKey}
-                      initialDuration={activeTimerDuration}
-                      onTimerEnd={handleTimerEndInternal}
-                      autoStart={isPictionaryRoundActive}
-                  />
-                )}
 
                 {isTimerFinished && (
                     <div className="text-center space-y-3 p-4 bg-card/80 backdrop-blur-sm rounded-xl w-full max-w-sm shadow-lg border border-border/20">
@@ -394,3 +389,5 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
+
+    
