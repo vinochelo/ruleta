@@ -5,6 +5,7 @@ import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, TimerIcon, XCircle, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
@@ -125,10 +126,12 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto">
         
         <div className="absolute top-4 right-4 z-50">
-            <Button variant="ghost" onClick={handleCloseDialog} className="transition-transform hover:scale-110 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30">
+          <DialogClose asChild>
+            <Button variant="ghost" className="transition-transform hover:scale-110 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30">
               <XCircle className="h-8 w-8 text-white" />
               <span className="sr-only">Cerrar</span>
             </Button>
+          </DialogClose>
         </div>
 
         <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 h-full">

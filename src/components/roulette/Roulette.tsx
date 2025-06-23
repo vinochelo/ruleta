@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -199,7 +198,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
       <audio
         ref={spinSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_21d15214af.mp3?filename=roulette-wheel-143039.mp3"
+        src="https://cdn.pixabay.com/download/audio/2022/08/14/audio_34199996d9.mp3?filename=spinning-wheel-115689.mp3"
         loop
         preload="auto"
       />
