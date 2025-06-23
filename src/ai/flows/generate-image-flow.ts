@@ -2,6 +2,7 @@
 'use server';
 /**
  * @fileOverview An AI flow to generate an image for a given Pictionary word.
+ * This file has been re-architected for maximum reliability.
  *
  * - generateImageForWord - A function that handles image generation.
  * - GenerateImageInput - The input type for the generateImageForWord function.
@@ -31,6 +32,34 @@ export async function generateImageForWord(
   return generateImageFlow(input);
 }
 
+
+// A robust helper function to generate a single image and handle failures.
+async function generateSingleImage(prompt: string, attempt: number, type: 'reference' | 'artistic'): Promise<string | null> {
+    try {
+        console.log(`Attempt #${attempt} for ${type} image: "${prompt}"`);
+        const { media } = await ai.generate({
+            model: 'googleai/gemini-2.0-flash-preview-image-generation',
+            prompt: prompt,
+            config: {
+                responseModalities: ['TEXT', 'IMAGE'],
+            },
+        });
+        
+        if (media?.url) {
+            console.log(`Successfully generated ${type} image on attempt #${attempt}.`);
+            return media.url;
+        }
+        
+        console.warn(`Image generation succeeded for ${type} on attempt #${attempt} but returned no media URL.`);
+        return null;
+
+    } catch (error) {
+        console.error(`Image generation failed for ${type} on attempt #${attempt}.`, error);
+        return null;
+    }
+}
+
+
 const generateImageFlow = ai.defineFlow(
   {
     name: 'generateImageFlow',
@@ -38,54 +67,38 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    const imageDataUris: string[] = [];
+    const referenceImages: string[] = [];
+    let artisticImage: string | null = null;
 
-    try {
-      // 1. Generate Reference Images in parallel
-      const referenceImagePromises = Array.from({length: 4}).map(() => {
-        return ai.generate({
-          model: 'googleai/gemini-2.0-flash-preview-image-generation',
-          prompt: `Imagen para un juego de Pictionary de la palabra: '${input.word}'. Estilo: caricatura sencilla, colorida y muy fácil de adivinar. REGLA CRÍTICA Y OBLIGATORIA: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números.`,
-          config: {
-            responseModalities: ['TEXT', 'IMAGE'],
-          },
-        });
-      });
+    const referencePrompt = `Estilo de dibujos animados sencillo y colorido para un juego de Pictionary: '${input.word}'. REGLA CRÍTICA Y OBLIGATORIA: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números.`;
+    const artisticPrompt = `Crea una imagen que sea solamente el texto artístico de la palabra: '${input.word}'. Usa una tipografía muy creativa y llamativa, como de un videojuego o película. Sorpréndeme con un diseño diferente cada vez.`;
 
-      const referenceResults = await Promise.allSettled(referenceImagePromises);
-
-      referenceResults.forEach(result => {
-        if (result.status === 'fulfilled' && result.value.media?.url) {
-          imageDataUris.push(result.value.media.url);
-        } else if (result.status === 'rejected') {
-          console.error("Reference image generation promise failed:", result.reason);
+    // 1. Generate Reference Images Sequentially for stability
+    console.log(`Starting reference image generation for "${input.word}"...`);
+    for (let i = 0; i < 4; i++) {
+        const imageUrl = await generateSingleImage(referencePrompt, i + 1, 'reference');
+        if (imageUrl) {
+            referenceImages.push(imageUrl);
+        } else {
+            console.log(`Skipping failed reference image #${i + 1}.`);
         }
-      });
-
-      // 2. Generate Artistic Text Image separately for robustness
-      try {
-        const artisticTextResult = await ai.generate({
-            model: 'googleai/gemini-2.0-flash-preview-image-generation',
-            prompt: `Crea una imagen que sea solamente el texto artístico de la palabra: '${input.word}'. Usa una tipografía muy creativa y llamativa, como de un videojuego o película. Sorpréndeme con un diseño diferente cada vez.`,
-            config: {
-              responseModalities: ['TEXT', 'IMAGE'],
-            },
-        });
-        if (artisticTextResult.media?.url) {
-          // It's important to push this one last, as the UI expects it at the end.
-          imageDataUris.push(artisticTextResult.media.url);
-        }
-      } catch(error) {
-         console.error("Artistic text image generation failed:", error);
-      }
-
-      // The calling component expects reference images first, then the artistic one.
-      // The current order of pushing to the array ensures this.
-      return {imageDataUris};
-
-    } catch (error) {
-      console.error('Image generation flow failed:', error);
-      return {imageDataUris: []};
     }
+
+    // 2. Generate Artistic Text Image
+    console.log(`Starting artistic text image generation for "${input.word}"...`);
+    artisticImage = await generateSingleImage(artisticPrompt, 1, 'artistic');
+    
+    // 3. Assemble the final array
+    // The UI expects reference images first, then the artistic one at the end.
+    const finalImageDataUris = [...referenceImages];
+    if (artisticImage) {
+        finalImageDataUris.push(artisticImage);
+    } else {
+        console.warn(`Could not generate the artistic text image for "${input.word}".`);
+    }
+    
+    console.log(`Image generation flow finished. Generated ${finalImageDataUris.length} images in total.`);
+
+    return { imageDataUris: finalImageDataUris };
   }
 );
