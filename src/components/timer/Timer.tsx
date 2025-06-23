@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -67,8 +66,9 @@ export interface TimerProps {
 }
 
 const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = false }) => {
+  const isIdle = initialDuration === 0;
   const [timeLeft, setTimeLeft] = useState(initialDuration);
-  const [isRunning, setIsRunning] = useState(autoStart);
+  const [isRunning, setIsRunning] = useState(autoStart && !isIdle);
   const [isFinished, setIsFinished] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
   
@@ -134,7 +134,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
       'text-primary': !isFinished && (timeLeft > 10 || !isRunning),
       'text-destructive timer-pulse-warning-animation': timeLeft <= 10 && timeLeft > 0 && isRunning,
       'text-destructive': isFinished,
-      'text-muted-foreground': timeLeft === 0 && !isFinished,
+      'text-muted-foreground': isIdle || (timeLeft === 0 && !isFinished),
     }
   );
 
@@ -163,13 +163,13 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
           )}
         </div>
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={handleStartPause} className="w-full transition-transform hover:scale-105" size="sm">
+          <Button onClick={handleStartPause} className="w-full transition-transform hover:scale-105" size="sm" disabled={isIdle}>
             <div className="flex items-center justify-center">
               {isRunning ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-              <span className="text-sm">{isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
+              <span className="text-sm">{isIdle ? 'Iniciar' : isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
             </div>
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full transition-transform hover:scale-105" size="sm" disabled={timeLeft === initialDuration && !isRunning}>
+          <Button onClick={handleReset} variant="outline" className="w-full transition-transform hover:scale-105" size="sm" disabled={isIdle || (timeLeft === initialDuration && !isRunning)}>
             <div className="flex items-center justify-center">
               <RotateCcw className="mr-2 h-4 w-4" />
               <span className="text-sm">Resetear</span>

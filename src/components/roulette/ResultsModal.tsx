@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -48,10 +47,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   useAIImages,
 }) => {
   // Timer and game state
-  const [timerDuration, setTimerDuration] = useState<number>(60);
+  const [timerDuration, setTimerDuration] = useState<number>(0);
   const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
-  const [timerShouldAutoStart, setTimerShouldAutoStart] = useState(false); // Bug fix: control auto-start
+  const [timerShouldAutoStart, setTimerShouldAutoStart] = useState(false);
   const [animatingButton, setAnimatingButton] = useState<number | null>(null); // For button animation
 
   // AI Image Generation State
@@ -140,10 +139,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       // Reset timer state
-      setTimerDuration(60); // Default to 60s
+      setTimerDuration(0); // Start with 0 duration
       setIsTimerFinished(false);
       setTimerKey(prev => prev + 1);
-      setTimerShouldAutoStart(false); // Bug fix: Don't start on open
+      setTimerShouldAutoStart(false); // Don't start on open
       // Reset AI state
       resetAIState();
 
@@ -362,9 +361,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
                         }}
                         className={cn(
-                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-transform hover:scale-105 border-4 border-transparent",
-                            animatingButton === duration && "animate-button-press"
+                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg border-4 border-transparent",
+                            animatingButton === duration ? "animate-button-press" : "transition-transform hover:scale-105"
                         )}
+                        disabled={timerShouldAutoStart && !isTimerFinished}
                         >
                         {duration}s
                         </Button>
