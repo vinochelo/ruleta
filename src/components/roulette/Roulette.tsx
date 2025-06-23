@@ -43,40 +43,38 @@ function getTextColorForBackground(hexcolor: string): string {
   return yiq >= 128 ? '#000000' : '#FFFFFF'; 
 }
 
-const playTickSound = () => {
-    if (typeof window === 'undefined' || !window.AudioContext) return;
-    const audioContext = new window.AudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = 'sine'; // Softer wave type
-    oscillator.frequency.setValueAtTime(900, audioContext.currentTime); // Lower frequency
-    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime); // Softer volume
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.08);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.08);
-
-    oscillator.onended = () => {
-      audioContext.close().catch(console.error);
-    };
-};
-
-
 const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
-  const [currentRotation, setCurrentRotation] = useState(0);
-  const [finalSelectedCategoryInfo, setFinalSelectedCategoryInfo] = useState<{category: Category, color: string} | null>(null);
-  const tickSoundIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [rotation, setRotation] = useState(0);
+  const animationFrameId = useRef<number | null>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
 
   const numSegments = displayCategories.length;
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
+  
+  const playTickSound = useCallback(() => {
+    if (typeof window === 'undefined' || !window.AudioContext) return;
+    const audioContext = new window.AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1);
+
+    oscillator.onended = () => {
+      audioContext.close().catch(console.error);
+    };
+  }, []);
 
   const getCoordinatesForAngle = useCallback((angleDegrees: number, radius: number) => {
     const angleRadians = ((angleDegrees - 90) * Math.PI) / 180; 
@@ -92,22 +90,21 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       const startAngle = i * anglePerSegment;
       const endAngle = (i + 1) * anglePerSegment;
 
-      const [startX, startY] = getCoordinatesForAngle(startAngle, WHEEL_RADIUS);
-      const [endX, endY] = getCoordinatesForAngle(endAngle, WHEEL_RADIUS);
+      const [startX, startY] = getCoordinatesForAngle(startAngle, WHEEL_RADIUS * 0.95);
+      const [endX, endY] = getCoordinatesForAngle(endAngle, WHEEL_RADIUS * 0.95);
 
       const largeArcFlag = anglePerSegment > 180 ? 1 : 0;
 
       const pathData = [
         `M ${round(CENTER_X)},${round(CENTER_Y)}`,
         `L ${round(startX)},${round(startY)}`,
-        `A ${round(WHEEL_RADIUS)},${round(WHEEL_RADIUS)} 0 ${largeArcFlag} 1 ${round(endX)},${round(endY)}`,
+        `A ${round(WHEEL_RADIUS * 0.95)},${round(WHEEL_RADIUS * 0.95)} 0 ${largeArcFlag} 1 ${round(endX)},${round(endY)}`,
         `Z`,
       ].join(' ');
-
-      const midAngle = startAngle + anglePerSegment / 2;
       
-      const textPathStartRadiusFactor = 0.30; 
-      const textPathEndRadiusFactor = 0.85;   
+      const midAngle = startAngle + anglePerSegment / 2;
+      const textPathStartRadiusFactor = 0.35;
+      const textPathEndRadiusFactor = 0.88;
       
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathEndRadiusFactor);
@@ -141,57 +138,64 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
 
-    if (tickSoundIntervalRef.current) {
-        clearInterval(tickSoundIntervalRef.current);
-    }
-    tickSoundIntervalRef.current = setInterval(playTickSound, 120);
-    
     setIsSpinning(true);
-    setFinalSelectedCategoryInfo(null);
 
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
     const selectedCategory = selectableCategories[randomIndex];
     
     const displayIndex = displayCategories.findIndex(cat => cat.id === selectedCategory.id);
     const targetDisplayIndex = displayIndex !== -1 ? displayIndex : 0; 
-
-    const spins = 8 + Math.floor(Math.random() * 4);
-    const baseRotation = 360 * spins; 
     
-    const targetSegmentMidpointAngle = (targetDisplayIndex * anglePerSegment) + (anglePerSegment / 2);
-    
-    const finalRotationValue = baseRotation - targetSegmentMidpointAngle;
-
-    setCurrentRotation(finalRotationValue);
-
     const selectedSegment = segments.find(seg => seg.id === selectedCategory.id);
     const selectedColor = selectedSegment ? selectedSegment.fill : rouletteSegmentColors[0];
 
+    const spins = 10 + Math.floor(Math.random() * 5);
+    const duration = 8000;
+    
+    const currentRotationNormalized = rotation % 360;
+    const targetSegmentMidpointAngle = (targetDisplayIndex * anglePerSegment) + (anglePerSegment / 2);
+    const targetAngle = 360 - targetSegmentMidpointAngle;
+    const finalRotationValue = rotation - currentRotationNormalized + (360 * spins) + targetAngle;
+    
+    const startTime = performance.now();
+    const startRotation = rotation;
+    let lastTickSegment = Math.floor(startRotation / anglePerSegment);
 
-    setTimeout(() => {
-      if (tickSoundIntervalRef.current) {
-        clearInterval(tickSoundIntervalRef.current);
-      }
-      setIsSpinning(false);
-      setFinalSelectedCategoryInfo({ category: selectedCategory, color: selectedColor});
-      onSpinEnd(selectedCategory, selectedColor);
-    }, 6000);
-  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments]);
-  
-  useEffect(() => {
-    // Cleanup interval on component unmount
-    return () => {
-        if (tickSoundIntervalRef.current) {
-            clearInterval(tickSoundIntervalRef.current);
+    const easeOutQuint = (x: number): number => 1 - Math.pow(1 - x, 5);
+
+    const animate = (currentTime: number) => {
+        const elapsedTime = currentTime - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const easedProgress = easeOutQuint(progress);
+        
+        const newRotation = startRotation + (finalRotationValue - startRotation) * easedProgress;
+        setRotation(newRotation);
+
+        const currentSegment = Math.floor(newRotation / anglePerSegment);
+        if (currentSegment > lastTickSegment) {
+            playTickSound();
+            lastTickSegment = currentSegment;
+        }
+
+        if (progress < 1) {
+            animationFrameId.current = requestAnimationFrame(animate);
+        } else {
+            setIsSpinning(false);
+            onSpinEnd(selectedCategory, selectedColor);
         }
     };
-  }, []);
 
+    animationFrameId.current = requestAnimationFrame(animate);
+
+  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation, playTickSound]);
+  
   useEffect(() => {
-    if (!isSpinning && !finalSelectedCategoryInfo) {
-       setCurrentRotation(0); 
-    }
-  }, [categories, isSpinning, finalSelectedCategoryInfo]); 
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []);
 
   if (categories.length === 0) {
     return (
@@ -241,9 +245,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             </defs>
             <g 
               style={{ 
-                transform: `rotate(${currentRotation}deg)`, 
+                transform: `rotate(${rotation}deg)`, 
                 transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
-                transition: isSpinning ? 'transform 6s cubic-bezier(0.15, 0.8, 0.3, 1)' : 'none',
               }}
             >
               {segments.map((segment) => (

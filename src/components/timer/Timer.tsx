@@ -32,23 +32,27 @@ const playBeep = () => {
 const playTimerEndSound = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
-    const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
-    oscillator.type = 'sine'; // A clean tone
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime); // Make it noticeable
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-
-    oscillator.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
     gainNode.connect(audioContext.destination);
 
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.5);
-
-    oscillator.onended = () => {
-      audioContext.close().catch(console.error);
+    const playTone = (freq: number, time: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(freq, time);
+        oscillator.connect(gainNode);
+        oscillator.start(time);
+        oscillator.stop(time + duration);
     };
+
+    const now = audioContext.currentTime;
+    playTone(1000, now, 0.15);
+    playTone(800, now + 0.2, 0.25);
+
+    const totalDuration = 0.2 + 0.25;
+    setTimeout(() => {
+        audioContext.close().catch(console.error);
+    }, totalDuration * 1000 + 200);
   }
 };
 
