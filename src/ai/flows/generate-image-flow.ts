@@ -101,7 +101,7 @@ const generateQuickImageFlow = ai.defineFlow(
       return { imageDataUri: null, error: errorMsg };
     }
     
-    const prompt = `A simple icon of: '${input.word}'. Visual depiction only, no words.`;
+    const prompt = `A very simple, minimalist, black and white icon for a pictionary game. The icon should represent: '${input.word}'. CRITICAL: The image must contain NO text, letters, or numbers. Only the drawing.`;
     
     const { imageUrl, error } = await generateSingleImage(prompt, "QuickImage");
     

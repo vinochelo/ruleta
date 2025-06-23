@@ -157,16 +157,16 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     }
   }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
 
-  // Effect for automatic slideshow
+  // Effect for automatic slideshow, stops at the end
   useEffect(() => {
-    if (allImages.length > 1) {
-      const timer = setInterval(() => {
-        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % allImages.length);
+    if (allImages.length > 1 && currentImageIndex < allImages.length - 1) {
+      const timer = setTimeout(() => {
+        setCurrentImageIndex((prevIndex) => prevIndex + 1);
       }, 3000); // Change image every 3 seconds
 
-      return () => clearInterval(timer);
+      return () => clearTimeout(timer);
     }
-  }, [allImages.length]);
+  }, [allImages, currentImageIndex]);
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
