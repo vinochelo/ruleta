@@ -7,7 +7,7 @@
  * - PraiseWinnerOutput - The return type for the praiseWinner function.
  */
 
-import {ai, geminiFlash} from '@/ai/genkit';
+import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
 const PraiseWinnerInputSchema = z.object({
@@ -28,7 +28,7 @@ export async function praiseWinner(input: PraiseWinnerInput): Promise<PraiseWinn
 
 const prompt = ai.definePrompt({
   name: 'praiseWinnerPrompt',
-  model: geminiFlash,
+  model: 'googleai/gemini-1.5-pro-latest',
   input: {schema: PraiseWinnerInputSchema},
   output: {schema: PraiseWinnerOutputSchema},
   prompt: `Eres un presentador de concursos de televisión legendario y tremendamente entusiasta, famoso por tus elogios creativos e hilarantes. Tu programa es un juego al estilo Pictionary. {{#if isTeam}}Un equipo{{else}}Un jugador{{/if}} acaba de ganar. Tu trabajo es generar un mensaje de felicitación corto, impactante y exagerado para {{#if isTeam}}ellos{{else}}él/ella{{/if}}.
