@@ -117,12 +117,12 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
-  const timeClass = cn(
-    'text-7xl sm:text-9xl font-mono font-bold tabular-nums py-4 rounded-md transition-colors',
+  const timeContainerClass = cn(
+    'text-7xl sm:text-9xl font-mono font-bold tabular-nums py-4 rounded-md transition-colors flex justify-center items-center',
     {
       'text-primary': !isFinished && (timeLeft > 10 || !isRunning),
       'text-destructive timer-pulse-warning-animation': timeLeft <= 10 && timeLeft > 0 && isRunning,
-      'text-destructive timer-end-animation': isFinished,
+      'text-destructive': isFinished,
       'text-muted-foreground': timeLeft === 0 && !isFinished,
     }
   );
@@ -136,8 +136,20 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className={timeClass}>
-          {formatTime(timeLeft)}
+        <div className={timeContainerClass}>
+          {isFinished ? (
+            formatTime(timeLeft).split('').map((char, index) => (
+              <span
+                key={`${char}-${index}`}
+                className="timer-end-flip-animation"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {char}
+              </span>
+            ))
+          ) : (
+            <span>{formatTime(timeLeft)}</span>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Button onClick={handleStartPause} className="w-full text-md py-3 transition-transform hover:scale-105" size="lg">
