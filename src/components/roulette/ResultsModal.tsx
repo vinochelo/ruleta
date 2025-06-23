@@ -149,17 +149,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
 
   const renderContent = () => {
-    const wordStyle = { color: selectedCategoryColor || 'hsl(var(--primary))' };
-
-    const WordToDraw = () => (
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm p-2 px-6 rounded-xl shadow-lg z-10">
-        <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
-        <p className="text-5xl font-bold text-center" style={wordStyle}>
-          {selectedWord}
-        </p>
-      </div>
-    );
-    
     const ContentBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
       <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
         {children}
@@ -170,7 +159,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       case 'generating':
         return (
           <ContentBox>
-            <WordToDraw />
             <div className="flex flex-col items-center justify-center gap-4 text-primary">
               <Loader2 className="h-16 w-16 animate-spin" />
               <p className="text-xl font-medium">Generando inspiración...</p>
@@ -181,7 +169,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         const currentImageUrl = referenceImages[currentReferenceIndex];
         return (
           <ContentBox>
-            <WordToDraw />
             {currentImageUrl && <Image src={currentImageUrl} alt={`Referencia ${currentReferenceIndex + 1}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
               <p className="text-lg font-semibold text-foreground/80 bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full">Referencia {currentReferenceIndex + 1} de {referenceImages.length}</p>
@@ -191,12 +178,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       case 'final_reveal':
         return (
           <ContentBox>
-            <WordToDraw />
             {artisticImage ? (
               <Image src={artisticImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
             ) : (
               <div className="text-center">
-                 {/* Fallback if no artistic image is generated, the word is already visible in WordToDraw */}
                 <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
               </div>
             )}
@@ -246,6 +231,13 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
               </p>
             </div>
             
+            <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full">
+              <p className="text-md text-muted-foreground">Palabra a dibujar</p>
+              <p className="text-6xl font-bold text-foreground drop-shadow-md font-roulette">
+                {selectedWord}
+              </p>
+            </div>
+
             {activeTimerDuration && selectedWord ? (
               <div className="w-full space-y-4">
                 <Timer
