@@ -17,7 +17,7 @@ const PraiseWinnerInputSchema = z.object({
 export type PraiseWinnerInput = z.infer<typeof PraiseWinnerInputSchema>;
 
 const PraiseWinnerOutputSchema = z.object({
-  praiseMessage: z.string().describe('A short, funny, and over-the-top congratulatory message for the winning team. It should sound like an excited game show host. Mention the team name and their score.'),
+  praiseMessage: z.string().describe('A short, funny, and over-the-top congratulatory message for the winning team. It should sound like an excited game show host. Mention the team name.'),
 });
 export type PraiseWinnerOutput = z.infer<typeof PraiseWinnerOutputSchema>;
 
@@ -34,8 +34,8 @@ const prompt = ai.definePrompt({
       Rules:
       - The message must be in Spanish.
       - Keep it brief (2-3 sentences).
-      - Mention the team's name: {{{teamName}}}
-      - Mention their final score: {{{score}}}
+      - Mention the team's name: {{{teamName}}}.
+      - DO NOT mention their final score.
       - Be incredibly energetic and use lots of exclamation points.
       - Use funny comparisons, like "¡Son más rápidos que un cohete engrasado!" or "¡Dibujan mejor que Picasso en una montaña rusa!".
 
@@ -56,6 +56,6 @@ const praiseWinnerFlow = ai.defineFlow(
     if (output) {
         return output;
     }
-    return { praiseMessage: `¡Felicidades, ${input.teamName}! ¡Han ganado con ${input.score} puntos!` };
+    return { praiseMessage: `¡Felicidades, ${input.teamName}! ¡Han ganado!` };
   }
 );
