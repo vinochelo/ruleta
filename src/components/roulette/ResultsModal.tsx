@@ -199,23 +199,23 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
 
   const wordLength = selectedWord?.length || 0;
-  let wordFontSizeClass = 'text-6xl lg:text-7xl';
+  let wordFontSizeClass = 'text-4xl sm:text-6xl lg:text-7xl';
   if (wordLength > 8) {
-    wordFontSizeClass = 'text-5xl lg:text-6xl';
+    wordFontSizeClass = 'text-4xl sm:text-5xl lg:text-6xl';
   }
   if (wordLength > 15) {
-    wordFontSizeClass = 'text-4xl lg:text-5xl';
+    wordFontSizeClass = 'text-3xl sm:text-4xl lg:text-5xl';
   }
   if (wordLength > 20) {
-    wordFontSizeClass = 'text-3xl lg:text-4xl';
+    wordFontSizeClass = 'text-2xl sm:text-3xl lg:text-4xl';
   }
   if (wordLength > 24) {
-    wordFontSizeClass = 'text-2xl lg:text-3xl';
+    wordFontSizeClass = 'text-xl sm:text-2xl lg:text-3xl';
   }
 
   const renderContent = () => {
     const ContentContainer: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => (
-      <div className={cn("w-full aspect-square max-w-md lg:max-w-lg bg-transparent flex flex-col items-center justify-center p-0 relative gap-4", className)}>
+      <div className={cn("w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative", className)}>
         {children}
       </div>
     );
@@ -231,11 +231,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         <ContentContainer>
           <MainImageBox>
             <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-              <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-              <p className="text-xl text-muted-foreground">La ayuda de IA está desactivada.</p>
+              <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
+              <p className="text-lg text-muted-foreground">La ayuda de IA está desactivada.</p>
               <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
                 <Sparkles className="mr-2 h-5 w-5" />
-                Obtener Inspiración de IA
+                Obtener Inspiración
               </Button>
             </div>
           </MainImageBox>
@@ -262,7 +262,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <MainImageBox>
               <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
                 <AlertCircle className="h-24 w-24 text-destructive" />
-                <p className="text-lg text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
+                <p className="text-base text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
                 <Button onClick={handleRequestAiHelp} size="lg" variant="destructive" className="transition-transform hover:scale-105">
                   <Sparkles className="mr-2 h-5 w-5" />
                   Reintentar
@@ -307,7 +307,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
       <DialogContent 
         showCloseButton={false} 
-        className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto"
+        className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col p-4 overflow-hidden"
       >
         <DialogTitle className="sr-only">Resultado de la Ruleta</DialogTitle>
         <DialogDescription className="sr-only">
@@ -318,75 +318,74 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <Button
             variant="default"
             size="icon"
-            className="absolute top-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110 bg-red-600 hover:bg-red-700"
+            className="absolute top-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg transition-transform hover:scale-110 bg-red-600 hover:bg-red-700"
             aria-label="Cerrar"
           >
-            <X className="h-9 w-9 text-white" />
+            <X className="h-8 w-8 text-white" />
           </Button>
         </DialogClose>
 
-        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-8 h-full">
+        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-center gap-4 h-full">
           
-          <div className="flex-1 w-full lg:max-w-2xl flex flex-col items-center justify-center text-center gap-4">
+          <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center text-center min-h-0">
              {renderContent()}
           </div>
 
-          <div className="flex-1 w-full lg:max-w-md flex flex-col items-center justify-center gap-6">
-            <div className="text-center">
-              <p className="text-lg text-muted-foreground">Categoría</p>
-              <p className="text-3xl lg:text-4xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
-                {selectedCategoryName}
-              </p>
-            </div>
-            
-            <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full min-h-[190px] flex flex-col justify-center">
-              <p className="text-md text-muted-foreground">Palabra a dibujar</p>
-              <p 
-                className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette break-words leading-tight`} 
-                style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
-              >
-                {selectedWord}
-              </p>
-            </div>
+          <div className="flex flex-col justify-center items-center gap-4 lg:w-1/2">
+            <div className="w-full max-w-sm mx-auto space-y-4">
 
-            {activeTimerDuration && selectedWord ? (
-              <div className="w-full space-y-4">
-                <Timer
-                  key={timerKey}
-                  initialDuration={activeTimerDuration}
-                  onTimerEnd={handleTimerEndInternal}
-                  autoStart={isPictionaryRoundActive}
-                />
-              </div>
-            ) : (
-              <div className="w-full space-y-6">
-                <h3 className="text-xl font-medium text-center text-foreground/90">Selecciona el Tiempo:</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {TIMER_OPTIONS.map(({ duration, color, textColor }) => (
-                    <Button
-                      key={duration}
-                      onClick={() => handleTimeButtonClick(duration)}
-                      className={`text-xl sm:text-2xl font-bold py-6 sm:py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
-                      disabled={isPictionaryRoundActive}
+                <div className="text-center">
+                    <p className="text-base text-muted-foreground">Categoría</p>
+                    <p className="text-3xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+                        {selectedCategoryName}
+                    </p>
+                </div>
+                
+                <div className="text-center bg-card/50 backdrop-blur-sm p-3 rounded-xl shadow-lg border w-full min-h-[120px] flex flex-col justify-center">
+                    <p className="text-sm text-muted-foreground">Palabra a dibujar</p>
+                    <p 
+                        className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette break-words leading-tight`} 
+                        style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
                     >
-                      <TimerIcon className="mr-2 h-5 sm:h-6 w-5 sm:w-6" />
-                      {duration}s
-                    </Button>
-                  ))}
+                        {selectedWord}
+                    </p>
                 </div>
-              </div>
-            )}
 
-            {!isPictionaryRoundActive && activeTimerDuration && (
-              <div className="text-center space-y-4 p-6 mt-4 bg-card/80 backdrop-blur-sm rounded-2xl w-full max-w-md shadow-xl border border-border/20">
-                <p className="text-2xl sm:text-3xl font-bold text-destructive">¡Se acabó el tiempo!</p>
-                <div className="flex flex-col gap-4 pt-2">
-                  <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-6 sm:py-7 rounded-xl shadow-lg">
-                    <Play className="mr-3 h-6 w-6" /> Girar la Ruleta
-                  </Button>
+                {activeTimerDuration && selectedWord ? (
+                <Timer
+                    key={timerKey}
+                    initialDuration={activeTimerDuration}
+                    onTimerEnd={handleTimerEndInternal}
+                    autoStart={isPictionaryRoundActive}
+                />
+                ) : (
+                <div className="w-full space-y-4">
+                    <h3 className="text-lg font-medium text-center text-foreground/90">Selecciona el Tiempo:</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                    {TIMER_OPTIONS.map(({ duration, color, textColor }) => (
+                        <Button
+                        key={duration}
+                        onClick={() => handleTimeButtonClick(duration)}
+                        className={`text-xl font-bold py-6 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
+                        disabled={isPictionaryRoundActive}
+                        >
+                        <TimerIcon className="mr-2 h-5 w-5" />
+                        {duration}s
+                        </Button>
+                    ))}
+                    </div>
                 </div>
-              </div>
-            )}
+                )}
+
+                {!isPictionaryRoundActive && activeTimerDuration && (
+                    <div className="text-center space-y-3 p-4 bg-card/80 backdrop-blur-sm rounded-xl w-full max-w-sm shadow-lg border border-border/20">
+                        <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo!</p>
+                        <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-6 rounded-xl shadow-lg">
+                            <Play className="mr-3 h-6 w-6" /> Girar la Ruleta
+                        </Button>
+                    </div>
+                )}
+            </div>
           </div>
         </div>
       </DialogContent>
