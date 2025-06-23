@@ -124,7 +124,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         `Z`,
       ].join(' ');
       
-      const textPathStartRadiusFactor = 0.1;
+      const textPathStartRadiusFactor = 0.25;
       const textPathEndRadiusFactor = 0.8;
       
       const midAngle = startAngle + anglePerSegment / 2;
@@ -257,7 +257,26 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center p-4 sm:p-6">
-        <div className="relative" style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}>
+        <div 
+          className={cn(
+            "relative", 
+            (isSpinning || selectableCategories.length === 0)
+              ? "cursor-not-allowed opacity-70"
+              : "cursor-pointer"
+          )}
+          style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}
+          onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
+          role="button"
+          aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}
+          tabIndex={(isSpinning || selectableCategories.length === 0) ? -1 : 0}
+          onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                  if (!(isSpinning || selectableCategories.length === 0)) {
+                      spin();
+                  }
+              }
+          }}
+        >
           <svg 
             viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
             className="overflow-visible" 
@@ -284,8 +303,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                   >
                     <textPath 
                       href={`#${segment.textPathId}`} 
-                      startOffset="0%"
-                      textAnchor={segment.textAnchor}
+                      startOffset="50%"
+                      textAnchor="middle"
                     >
                       {segment.displayText}
                     </textPath>
@@ -309,31 +328,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                 transform="rotate(180, 12, 12)"
               />
               <path
-                d="M12 24L17.1962 15H6.80385L12 24Z"
+                d="M12 24L18.9282 12.75H5.0718L12 24Z"
                 fill="hsl(var(--primary))"
               />
               <circle cx="12" cy="12" r="2.5" fill="white" />
           </svg>
-          {/* Center spin button */}
+          {/* Center decorative element */}
           <div 
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center", 
-              "transition-transform duration-150",
-              (isSpinning || selectableCategories.length === 0)
-                ? "cursor-not-allowed opacity-70"
-                : "cursor-pointer hover:scale-110 active:scale-100"
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 bg-card border-[6px] border-primary rounded-full shadow-lg z-5 flex items-center justify-center pointer-events-none"
             )}
-            onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
-            role="button"
-            aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}
-            tabIndex={(isSpinning || selectableCategories.length === 0) ? -1 : 0}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    if (!(isSpinning || selectableCategories.length === 0)) {
-                        spin();
-                    }
-                }
-            }}
           >
              {isSpinning ? (
                 <Loader2 className="w-14 h-14 text-primary animate-spin" /> 
