@@ -33,12 +33,14 @@ const playTimerEndSound = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
     const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    // Increased gain for a louder sound
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
     gainNode.connect(audioContext.destination);
 
     const playTone = (freq: number, time: number, duration: number) => {
         const oscillator = audioContext.createOscillator();
-        oscillator.type = 'square';
+        // Sawtooth is a more "buzzy" and attention-grabbing sound
+        oscillator.type = 'sawtooth'; 
         oscillator.frequency.setValueAtTime(freq, time);
         oscillator.connect(gainNode);
         oscillator.start(time);
@@ -46,10 +48,11 @@ const playTimerEndSound = () => {
     };
 
     const now = audioContext.currentTime;
-    playTone(1000, now, 0.15);
-    playTone(800, now + 0.2, 0.25);
+    // Two quick, high-pitched beeps
+    playTone(1200, now, 0.1);
+    playTone(1200, now + 0.15, 0.2);
 
-    const totalDuration = 0.2 + 0.25;
+    const totalDuration = 0.15 + 0.2;
     setTimeout(() => {
         audioContext.close().catch(console.error);
     }, totalDuration * 1000 + 200);
