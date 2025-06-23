@@ -8,7 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const PraiseWinnerInputSchema = z.object({
   teamName: z.string().describe('The name of the winning team.'),

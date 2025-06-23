@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const SuggestWordsInputSchema = z.object({
   categoryName: z.string().describe('The name of the category for which to suggest words.'),

@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const GenerateImageInputSchema = z.object({
   word: z.string().describe('The word to generate an image for.'),
