@@ -78,9 +78,12 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
         <div className="flex flex-col items-center justify-center text-center p-6 z-20 space-y-8">
             <Trophy className="h-48 w-48 text-yellow-400 drop-shadow-[0_8px_8px_rgba(0,0,0,0.4)]" />
             <div className='space-y-4'>
-                <h1 className="text-7xl font-bold title-text">
-                    ¡Felicidades, <span style={winnerNameStyle}>{winner.name}</span>!
+                <h1 className="text-6xl font-bold title-text">
+                    ¡Felicidades!
                 </h1>
+                <p className="text-8xl font-bold break-words" style={winnerNameStyle}>
+                    {winner.name}
+                </p>
                 <p className="text-2xl text-foreground/80 max-w-3xl mx-auto">
                     {praiseMessage ? praiseMessage : `¡Han ganado la partida!`}
                 </p>
