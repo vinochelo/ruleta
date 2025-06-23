@@ -124,10 +124,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         `Z`,
       ].join(' ');
       
-      const midAngle = startAngle + anglePerSegment / 2;
-      const textPathStartRadiusFactor = 0.40;
-      const textPathEndRadiusFactor = 0.85;
+      const textPathStartRadiusFactor = 0.15;
+      const textPathEndRadiusFactor = 0.75;
       
+      const midAngle = startAngle + anglePerSegment / 2;
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
       const [lineEndX, lineEndY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathEndRadiusFactor);
       
