@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
@@ -58,6 +58,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [artisticText, setArtisticText] = useState<string | null>(null);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
+  // Slideshow state
+  const [allImages, setAllImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const { toast } = useToast();
   
   const resetAIState = useCallback(() => {
@@ -68,6 +72,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setReferenceImages([]);
     setArtisticText(null);
     setGenerationError(null);
+    setAllImages([]);
+    setCurrentImageIndex(0);
   }, []);
 
   const startImageGeneration = useCallback(async (word: string) => {
@@ -127,6 +133,12 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         setIsGeneratingQuick(false);
     }
   }, [toast, resetAIState]);
+
+  // Effect to combine all images into a single array for the slideshow
+  useEffect(() => {
+    const newImages = [quickImage, ...referenceImages, artisticText].filter((img): img is string => !!img);
+    setAllImages(newImages);
+  }, [quickImage, referenceImages, artisticText]);
   
   // Effect to manage state when modal opens
   useEffect(() => {
@@ -174,6 +186,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     }
   };
 
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % allImages.length);
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + allImages.length) % allImages.length);
+  };
+
   const wordLength = selectedWord?.length || 0;
   let wordFontSizeClass = 'text-6xl lg:text-7xl';
   if (wordLength > 8) {
@@ -219,17 +239,23 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       );
     }
     
-    if (isGeneratingQuick || (generationError && !quickImage)) {
+    if (isGeneratingQuick && allImages.length === 0) {
       return (
         <ContentContainer>
           <MainImageBox>
-            {isGeneratingQuick && (
               <div className="flex flex-col items-center justify-center gap-4 text-primary">
                 <Loader2 className="h-16 w-16 animate-spin" />
-                <p className="text-xl font-medium">Generando imagen de referencia...</p>
+                <p className="text-xl font-medium">Generando inspiración...</p>
               </div>
-            )}
-            {generationError && !quickImage && (
+          </MainImageBox>
+        </ContentContainer>
+      );
+    }
+
+    if (generationError && allImages.length === 0) {
+      return (
+        <ContentContainer>
+          <MainImageBox>
               <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
                 <AlertCircle className="h-24 w-24 text-destructive" />
                 <p className="text-lg text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
@@ -237,6 +263,51 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                   <Sparkles className="mr-2 h-5 w-5" />
                   Reintentar
                 </Button>
+              </div>
+          </MainImageBox>
+        </ContentContainer>
+      );
+    }
+
+    if (allImages.length > 0) {
+      return (
+        <ContentContainer>
+          <MainImageBox>
+            <Image src={allImages[currentImageIndex]} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
+
+            {allImages.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white transition-opacity opacity-50 hover:opacity-100"
+                  onClick={handlePrevImage}
+                  aria-label="Imagen Anterior"
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-black/30 hover:bg-black/50 text-white transition-opacity opacity-50 hover:opacity-100"
+                  onClick={handleNextImage}
+                  aria-label="Siguiente Imagen"
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </Button>
+              </>
+            )}
+            
+            {allImages.length > 1 && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 bg-black/50 text-white text-xs font-bold px-2 py-1 rounded-full">
+                {currentImageIndex + 1} / {allImages.length}
+              </div>
+            )}
+
+            {isGeneratingArtistic && (
+              <div className="absolute top-2 right-2 z-10 flex items-center gap-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Generando más...</span>
               </div>
             )}
           </MainImageBox>
@@ -246,28 +317,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
     return (
       <ContentContainer>
-        <MainImageBox>
-          {quickImage && <Image src={quickImage} alt={`Inspiración principal para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
-        </MainImageBox>
-
-        <div className="w-full h-24 flex-shrink-0">
-          {isGeneratingArtistic ? (
-            <div className="h-full flex items-center justify-center bg-card/50 rounded-lg p-4 animate-pulse">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="ml-4 text-muted-foreground">Generando más ideas...</p>
-            </div>
-          ) : (
-            (referenceImages.length > 0 || artisticText) && (
-              <div className="h-full grid grid-cols-4 gap-2 animate-in fade-in duration-500">
-                {[...referenceImages, artisticText].filter((img): img is string => !!img).map((img, index) => (
-                   <div key={index} className="relative w-full h-full bg-card rounded-lg overflow-hidden shadow-md border-2 border-transparent hover:border-primary transition-all">
-                     <Image src={img} alt={`Inspiración artística ${index + 1}`} layout="fill" objectFit="cover" unoptimized />
-                   </div>
-                ))}
+           <MainImageBox>
+              <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
               </div>
-            )
-          )}
-        </div>
+           </MainImageBox>
       </ContentContainer>
     );
   };
