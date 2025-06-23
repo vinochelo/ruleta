@@ -335,8 +335,8 @@ export default function HomePage() {
                           </Tooltip>
                           
                           {/* Team Info - Center */}
-                          <div className="flex flex-col items-center flex-grow text-center mx-2">
-                            <p className="text-base font-bold text-primary truncate max-w-[120px] sm:max-w-xs">{team.name}</p>
+                          <div className="flex-grow flex items-baseline justify-center gap-3 text-center mx-2 overflow-hidden">
+                            <p className="text-xl font-bold text-primary truncate" title={team.name}>{team.name}</p>
                             <p className="text-4xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
                           </div>
                           
