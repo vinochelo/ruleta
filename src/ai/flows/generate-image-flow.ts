@@ -22,6 +22,12 @@ async function generateSingleImage(prompt: string): Promise<string | null> {
             prompt: prompt,
             config: {
                 responseModalities: ['TEXT', 'IMAGE'],
+                safetySettings: [ // Added to potentially prevent blocking
+                    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                ]
             },
         });
 
@@ -66,7 +72,8 @@ const generateQuickImageFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting QUICK image generation for: "${input.word}"`);
-    const prompt = `A very simple, minimalist, black and white line drawing of '${input.word}'. For a Pictionary game. The background must be solid white. The image must only contain the drawing of the concept, with no text or letters.`;
+    // Tweaked prompt for clarity and better results
+    const prompt = `A very simple, minimalist, black and white Pictionary-style line drawing of the concept: '${input.word}'. The background must be solid white. The image must be a visual depiction of the concept, not the word itself.`;
     
     const imageUrl = await generateSingleImage(prompt);
     
@@ -107,13 +114,11 @@ const generateArtisticImagesFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting ARTISTIC (parallel) image generation for: "${input.word}"`);
-
+    // Tweaked prompts for clarity and better results
     const prompts = [
-      // Reference Images
-      `A colorful cartoon illustration of '${input.word}'. Bold, simple style for a game. Solid color background. The image should visually represent the concept without using any letters or text.`,
-      `A photorealistic image of '${input.word}'. The subject is centered and clear. The image should be a visual depiction, containing no letters or text.`,
-      `A simple pencil sketch of '${input.word}' on a plain white background. The drawing is clear and focused for a Pictionary game. The image should represent the subject visually, without any letters or text.`,
-      // Artistic Text Image (LAST)
+      `A colorful cartoon illustration of '${input.word}'. Bold, simple style for a game. The image should visually represent the concept, not write out the word.`,
+      `A photorealistic image of '${input.word}'. The subject is centered and clear. This is for a game, so the image must be a visual depiction of the concept, not the written word.`,
+      `A simple pencil sketch of '${input.word}' on a plain white background. The drawing must be clear and focused for a Pictionary game, visually representing the subject.`,
       `A stunning, artistic text design of the word: '${input.word}'. Use a creative, eye-catching font, like from a video game or movie poster, on a clean background.`,
     ];
 

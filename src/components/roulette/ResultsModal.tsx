@@ -208,14 +208,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
   const wordLength = selectedWord?.length || 0;
   let wordFontSizeClass = 'text-7xl lg:text-8xl';
-  if (wordLength > 12) {
+  if (wordLength > 10) {
     wordFontSizeClass = 'text-6xl lg:text-7xl';
   }
-  if (wordLength > 18) {
+  if (wordLength > 15) {
     wordFontSizeClass = 'text-5xl lg:text-6xl';
   }
-  if (wordLength > 24) {
+  if (wordLength > 20) {
     wordFontSizeClass = 'text-4xl lg:text-5xl';
+  }
+  if (wordLength > 25) {
+    wordFontSizeClass = 'text-3xl lg:text-4xl';
   }
 
   const renderContent = () => {
@@ -356,7 +359,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full min-h-[190px] flex flex-col justify-center">
               <p className="text-md text-muted-foreground">Palabra a dibujar</p>
               <p 
-                className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette break-words`} 
+                className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette`} 
                 style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
               >
                 {selectedWord}
