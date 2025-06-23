@@ -51,47 +51,44 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isOpen) {
+    // This effect runs whenever the modal is opened with a new word.
+    if (isOpen) {
+      // Reset state for the new round
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
+      setTimerKey(prev => prev + 1);
       setGeneratedImageUrl(null);
-      return;
-    }
-    // Reset state for new round
-    setActiveTimerDuration(null);
-    setIsPictionaryRoundActive(false);
-    setTimerKey(prev => prev + 1);
-    setGeneratedImageUrl(null);
-    setIsGeneratingImage(false);
+      setIsGeneratingImage(false);
 
-    if (selectedWord && useAIImages) {
-      setIsGeneratingImage(true);
-      
-      generateImageForWord({ word: selectedWord })
-        .then(result => {
-          if (result.imageDataUri) {
-            setGeneratedImageUrl(result.imageDataUri);
-          } else {
-              toast({
-                  title: "Error de Imagen",
-                  description: "No se pudo generar una imagen para esta palabra.",
-                  variant: "destructive"
-              });
-          }
-        })
-        .catch(error => {
-          console.error("AI image generation error:", error);
-          toast({
-            title: "Error de Imagen",
-            description: "No se pudo generar una imagen para la palabra.",
-            variant: "destructive"
+      if (selectedWord && useAIImages) {
+        setIsGeneratingImage(true);
+        generateImageForWord({ word: selectedWord })
+          .then(result => {
+            if (result.imageDataUri) {
+              setGeneratedImageUrl(result.imageDataUri);
+            } else {
+                toast({
+                    title: "Error de Imagen",
+                    description: "No se pudo generar una imagen para esta palabra.",
+                    variant: "destructive"
+                });
+            }
+          })
+          .catch(error => {
+            console.error("AI image generation error:", error);
+            toast({
+              title: "Error de Imagen",
+              description: "No se pudo generar una imagen para la palabra.",
+              variant: "destructive"
+            });
+          })
+          .finally(() => {
+            setIsGeneratingImage(false);
           });
-        })
-        .finally(() => {
-          setIsGeneratingImage(false);
-        });
+      }
     }
-  }, [isOpen, selectedWord, useAIImages, toast, speakFn]);
+  }, [isOpen, selectedWord, useAIImages, toast]);
+
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
