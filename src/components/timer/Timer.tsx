@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -152,12 +153,12 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={handleStartPause} className="w-full text-md py-3 transition-transform hover:scale-105" size="lg">
-            {isRunning ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5" />}
+          <Button onClick={handleStartPause} className="w-full text-xl py-5 transition-transform hover:scale-105" size="lg">
+            {isRunning ? <Pause className="mr-3 h-6 w-6" /> : <Play className="mr-3 h-6 w-6" />}
             {isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
-            <RotateCcw className="mr-2 h-5 w-5" />
+          <Button onClick={handleReset} variant="outline" className="w-full text-xl py-5 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
+            <RotateCcw className="mr-3 h-6 w-6" />
             Resetear
           </Button>
         </div>

@@ -15,6 +15,7 @@ import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResultsModalProps {
   isOpen: boolean;
@@ -50,6 +51,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [timerDuration, setTimerDuration] = useState<number>(60);
   const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const timerIsActive = isTimerRunning && !isTimerFinished;
 
   // AI Image Generation State
   const [aiHelpActive, setAiHelpActive] = useState(false);
@@ -58,6 +61,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [quickImage, setQuickImage] = useState<string | null>(null);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [artisticText, setArtisticText] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Slideshow state
   const [allImages, setAllImages] = useState<string[]>([]);
@@ -86,6 +90,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       const quickResult = await generateQuickImage({ word });
       
       if (quickResult.error) {
+        toast({
+            title: "Error de IA",
+            description: quickResult.error,
+            variant: "destructive",
+        });
         setAiHelpActive(false); // Go back to the "get inspiration" button
         setIsGeneratingQuick(false); // Stop loading state
         return; 
@@ -106,20 +115,35 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             }
         }).catch(err => {
             console.error("Artistic image generation failed:", err);
+             toast({
+                title: "Error de IA Artística",
+                description: "No se pudieron generar las imágenes adicionales.",
+                variant: "destructive",
+            });
         }).finally(() => {
             setIsGeneratingArtistic(false);
         });
 
       } else {
+        toast({
+            title: "Error de IA",
+            description: "No se pudo generar la imagen principal.",
+            variant: "destructive",
+        });
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
       }
     } catch (error: any) {
         console.error("Critical image generation flow error:", error);
+        toast({
+            title: "Error Crítico de IA",
+            description: "La solicitud de generación de imagen falló.",
+            variant: "destructive",
+        });
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
     }
-  }, [resetAIState]);
+  }, [resetAIState, toast]);
 
   // Effect to combine all images into a single array for the slideshow
   useEffect(() => {
@@ -133,6 +157,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       // Reset timer state
       setTimerDuration(60); // Default to 60s
       setIsTimerFinished(false);
+      setIsTimerRunning(false);
       setTimerKey(prev => prev + 1);
       // Reset AI state
       resetAIState();
@@ -155,14 +180,17 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   }, [allImages, currentImageIndex]);
 
   const handleTimeButtonClick = (duration: number) => {
+    if (timerIsActive) return;
     speakTimeSelection(duration);
     setTimerDuration(duration);
     setIsTimerFinished(false);
     setTimerKey(prevKey => prevKey + 1); // Remount timer with new duration
+    setIsTimerRunning(true);
   };
   
   const handleTimerEndInternal = useCallback(() => {
     setIsTimerFinished(true);
+    setIsTimerRunning(false);
     if (selectedWord) {
       setTimeout(() => {
         speakFn(`La palabra era ${selectedWord}.`);
@@ -172,6 +200,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
 
   const handleCloseDialog = () => {
+    setIsTimerRunning(false);
     onClose();
   };
   
@@ -347,7 +376,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             "text-white text-xl font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4",
                             timerDuration === duration ? 'border-white/80' : 'border-transparent',
                         )}
-                        disabled={isTimerFinished}
+                        disabled={timerIsActive}
                         >
                         {duration}s
                         </Button>
@@ -359,7 +388,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                   key={timerKey}
                   initialDuration={timerDuration}
                   onTimerEnd={handleTimerEndInternal}
-                  autoStart={false}
+                  autoStart={isTimerRunning}
                 />
                 
                 {isTimerFinished && (
