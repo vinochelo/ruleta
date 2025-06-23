@@ -203,17 +203,18 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             )}
 
             {!isPictionaryRoundActive && activeTimerDuration && (
-                <div className="text-center space-y-4 p-6 mt-4 bg-background/50 rounded-2xl w-full shadow-lg">
-                    <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo!</p>
-                    <div className="grid sm:grid-cols-2 gap-4 pt-4">
-                        <Button onClick={handleResetTimerSelection} className="w-full transition-transform hover:scale-105 text-lg py-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg">
-                            <RotateCcw className="mr-2 h-5 w-5" /> Intentar de Nuevo
-                        </Button>
-                        <Button onClick={handleCloseDialog} className="w-full transition-transform hover:scale-105 text-lg py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg">
-                            <Play className="mr-2 h-5 w-5" /> Girar Ruleta
-                        </Button>
-                    </div>
+              <div className="text-center space-y-4 p-6 mt-4 bg-card/80 backdrop-blur-sm rounded-2xl w-full max-w-md shadow-xl border border-border/20">
+                <p className="text-3xl font-bold text-destructive">¡Se acabó el tiempo!</p>
+                <p className="text-muted-foreground pb-2">¿Qué hacemos ahora?</p>
+                <div className="flex flex-col gap-4">
+                  <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-7 rounded-xl shadow-lg">
+                    <Play className="mr-3 h-6 w-6" /> Girar la Ruleta
+                  </Button>
+                  <Button onClick={handleResetTimerSelection} size="lg" variant="outline" className="w-full transition-transform hover:scale-105 text-md py-6 rounded-xl">
+                    <RotateCcw className="mr-2 h-5 w-5" /> Intentar de Nuevo
+                  </Button>
                 </div>
+              </div>
             )}
           </div>
         </div>
