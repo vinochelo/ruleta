@@ -26,6 +26,8 @@ interface ResultsModalProps {
   useAIImages: boolean;
 }
 
+type DisplayState = 'generating' | 'sequencing' | 'revealed';
+
 const TIMER_OPTIONS = [
   { duration: 30, color: "bg-sky-500 hover:bg-sky-600", textColor: "text-white" },
   { duration: 60, color: "bg-emerald-500 hover:bg-emerald-600", textColor: "text-white" },
@@ -46,8 +48,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [activeTimerDuration, setActiveTimerDuration] = useState<number | null>(null);
   const [isPictionaryRoundActive, setIsPictionaryRoundActive] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  
+  const [displayState, setDisplayState] = useState<DisplayState>('revealed');
+  const [generatedImageUrls, setGeneratedImageUrls] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,21 +62,24 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setActiveTimerDuration(null);
       setIsPictionaryRoundActive(false);
       setTimerKey(prev => prev + 1);
-      setGeneratedImageUrl(null);
-      setIsGeneratingImage(false);
+      
+      setGeneratedImageUrls([]);
+      setCurrentImageIndex(0);
 
       if (selectedWord && useAIImages) {
-        setIsGeneratingImage(true);
+        setDisplayState('generating');
         generateImageForWord({ word: selectedWord })
           .then(result => {
-            if (result.imageDataUri) {
-              setGeneratedImageUrl(result.imageDataUri);
+            if (result.imageDataUris && result.imageDataUris.length > 0) {
+              setGeneratedImageUrls(result.imageDataUris);
+              setDisplayState('sequencing');
             } else {
-                toast({
-                    title: "Error de Imagen",
-                    description: "No se pudo generar una imagen para esta palabra.",
-                    variant: "destructive"
-                });
+              toast({
+                  title: "Error de Imagen",
+                  description: "No se pudieron generar imágenes. Mostrando la palabra.",
+                  variant: "destructive"
+              });
+              setDisplayState('revealed');
             }
           })
           .catch(error => {
@@ -81,13 +89,27 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
               description: "No se pudo generar una imagen para la palabra.",
               variant: "destructive"
             });
-          })
-          .finally(() => {
-            setIsGeneratingImage(false);
+            setDisplayState('revealed');
           });
+      } else {
+        setDisplayState('revealed');
       }
     }
   }, [isOpen, selectedWord, useAIImages, toast]);
+
+  useEffect(() => {
+    if (displayState !== 'sequencing') return;
+
+    const timer = setTimeout(() => {
+      if (currentImageIndex < generatedImageUrls.length - 1) {
+        setCurrentImageIndex(prev => prev + 1);
+      } else {
+        setDisplayState('revealed');
+      }
+    }, 3000); // 3 seconds per image
+
+    return () => clearTimeout(timer);
+  }, [displayState, currentImageIndex, generatedImageUrls]);
 
 
   const handleTimeButtonClick = (duration: number) => {
@@ -120,6 +142,52 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setTimerKey(prevKey => prevKey + 1);
   };
 
+  const renderImageAndWordContent = () => {
+    const wordStyle = { color: selectedCategoryColor || 'hsl(var(--primary))' };
+    
+    switch (displayState) {
+      case 'generating':
+        return (
+          <div className="flex flex-col items-center justify-center gap-4 text-primary">
+            <Loader2 className="h-16 w-16 animate-spin" />
+            <p className="text-xl font-medium">Creando imágenes...</p>
+          </div>
+        );
+      case 'sequencing':
+        const currentImageUrl = generatedImageUrls[currentImageIndex];
+        return (
+          <>
+            {currentImageUrl ? (
+              <Image src={currentImageUrl} alt={`Generated image ${currentImageIndex + 1} for ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized/>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
+                <ImageIcon className="h-16 w-16" />
+                <p className="text-xl font-medium">Error al cargar imagen</p>
+              </div>
+            )}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center flex-col gap-2">
+                <p className="text-2xl font-bold text-foreground/80 animate-pulse">¡Adivina la palabra!</p>
+                <div className="flex gap-2">
+                    {generatedImageUrls.map((_, index) => (
+                        <div key={index} className={`h-3 w-3 rounded-full transition-all ${index === currentImageIndex ? 'bg-primary scale-125' : 'bg-muted'}`} />
+                    ))}
+                </div>
+            </div>
+          </>
+        );
+      case 'revealed':
+        return (
+          <div className="text-center">
+            <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
+            <p className="text-7xl lg:text-8xl font-bold break-words leading-tight" style={wordStyle}>
+              {selectedWord}
+            </p>
+          </div>
+        );
+    }
+  };
+
+
   if (!selectedCategoryName) return null;
 
   const wordStyle = { color: selectedCategoryColor || 'hsl(var(--primary))' };
@@ -150,34 +218,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           
           {/* Image and Word Section */}
           <div className="flex-1 w-full lg:max-w-2xl flex flex-col items-center justify-center text-center gap-4">
-            {useAIImages && (
-              <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
-                  {isGeneratingImage && (
-                      <div className="flex flex-col items-center justify-center gap-4 text-primary">
-                          <Loader2 className="h-16 w-16 animate-spin" />
-                          <p className="text-xl font-medium">Creando imagen...</p>
-                      </div>
-                  )}
-                  {!isGeneratingImage && generatedImageUrl && (
-                      <Image src={generatedImageUrl} alt={`Generated image for ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized/>
-                  )}
-                   {!isGeneratingImage && !generatedImageUrl && (
-                      <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
-                          <ImageIcon className="h-16 w-16" />
-                          <p className="text-xl font-medium">No se pudo generar la imagen</p>
-                      </div>
-                  )}
-              </div>
-            )}
-            
-            {selectedWord && (
-                <div className="mt-4">
-                    <p className="text-xl text-muted-foreground">{useAIImages ? "Palabra a dibujar" : "Palabra"}</p>
-                    <p className="text-7xl lg:text-8xl font-bold break-words leading-tight" style={wordStyle}>
-                    {selectedWord}
-                    </p>
-                </div>
-            )}
+            <div className="w-full aspect-square max-w-md lg:max-w-lg bg-card rounded-2xl shadow-2xl flex items-center justify-center p-4 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+                {renderImageAndWordContent()}
+            </div>
           </div>
 
           {/* Timer and Controls Section */}
@@ -207,6 +250,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={duration}
                       onClick={() => handleTimeButtonClick(duration)}
                       className={`text-2xl font-bold py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
+                      disabled={displayState !== 'revealed'}
                     >
                       <TimerIcon className="mr-2 h-6 w-6" />
                       {duration}s

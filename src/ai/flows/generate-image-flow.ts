@@ -16,10 +16,10 @@ const GenerateImageInputSchema = z.object({
 export type GenerateImageInput = z.infer<typeof GenerateImageInputSchema>;
 
 const GenerateImageOutputSchema = z.object({
-  imageDataUri: z
-    .string()
+  imageDataUris: z
+    .array(z.string())
     .describe(
-      "A data URI of the generated image. Format: 'data:<mimetype>;base64,<encoded_data>'. Can be an empty string if generation fails."
+      "A list of data URIs for the generated images. Format: 'data:<mimetype>;base64,<encoded_data>'. Can be an empty array if generation fails."
     ),
 });
 export type GenerateImageOutput = z.infer<typeof GenerateImageOutputSchema>;
@@ -37,23 +37,29 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    try {
-      const {media} = await ai.generate({
+    const generationPromises = Array.from({length: 3}).map((_, i) => {
+      return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen visualmente atractiva para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar, pero no fotorrealista. CRÍTICO: La imagen generada NO debe contener ningún texto, letra o número; solo la representación visual de la palabra.`,
+        prompt: `Crea una imagen visualmente atractiva para la palabra: '${input.word}'. Variación ${i + 1} de 3. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar, pero no fotorrealista. CRÍTICO: La imagen generada NO debe contener ningún texto, letra o número; solo la representación visual de la palabra.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
       });
+    });
 
-      if (media?.url) {
-        return {imageDataUri: media.url};
-      }
+    try {
+      const results = await Promise.allSettled(generationPromises);
+      const imageDataUris = results
+        .filter(
+          (result): result is PromiseFulfilledResult<{media?: {url: string}}> =>
+            result.status === 'fulfilled' && !!result.value.media?.url
+        )
+        .map((result) => result.value.media!.url);
+
+      return {imageDataUris};
     } catch (error) {
       console.error('Image generation failed:', error);
+      return {imageDataUris: []};
     }
-
-    // Fallback to empty string on failure
-    return {imageDataUri: ''};
   }
 );
