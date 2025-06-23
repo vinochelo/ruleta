@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, TimerIcon, XCircle, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { RotateCcw, TimerIcon, X, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateImageForWord } from '@/ai/flows/generate-image-flow';
@@ -134,10 +134,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           La categoría seleccionada es {selectedCategoryName} y la palabra a dibujar es {selectedWord}.
         </DialogDescription>
         
-        <DialogClose asChild className="absolute top-4 right-4 z-50">
-          <Button variant="ghost" className="transition-transform hover:scale-110 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30">
-            <XCircle className="h-8 w-8 text-white" />
-            <span className="sr-only">Cerrar</span>
+        <DialogClose asChild>
+          <Button
+            variant="destructive"
+            size="icon"
+            className="absolute top-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg transition-transform hover:scale-110"
+            aria-label="Cerrar"
+          >
+            <X className="h-8 w-8" />
           </Button>
         </DialogClose>
 

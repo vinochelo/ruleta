@@ -198,7 +198,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
       <audio
         ref={spinSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2022/08/14/audio_34199996d9.mp3?filename=spinning-wheel-115689.mp3"
+        src="https://assets.codepen.io/2002878/roulette-wheel-sound.mp3"
         loop
         preload="auto"
       />
@@ -220,7 +220,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               style={{ 
                 transform: `rotate(${currentRotation}deg)`, 
                 transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
-                transition: isSpinning ? 'transform 6000ms cubic-bezier(0.25, 0.1, 0.25, 1)' : 'none',
+                transition: isSpinning ? 'transform 6s cubic-bezier(0.15, 0.8, 0.3, 1)' : 'none',
               }}
             >
               {segments.map((segment) => (
@@ -245,18 +245,22 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             </g>
           </svg>
           {/* Pointer */}
-          <div 
-            className="absolute top-0 left-1/2 -translate-x-1/2 -mt-1" 
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: '15px solid transparent', 
-              borderRight: '15px solid transparent', 
-              borderTop: '30px solid hsl(var(--primary))', 
-              zIndex: 10,
-              filter: 'drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25))'
-            }}
-          />
+          <>
+            <div
+              className="absolute top-[-8px] left-1/2 -translate-x-1/2 z-10"
+              style={{
+                width: '0',
+                height: '0',
+                borderLeft: '14px solid transparent',
+                borderRight: '14px solid transparent',
+                borderTop: '28px solid hsl(var(--destructive))',
+                filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.4))'
+              }}
+            />
+            <div
+              className="absolute top-[18px] left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full z-10 border-2 border-destructive"
+            />
+          </>
           {/* Center spin button */}
           <div 
             className={cn(
