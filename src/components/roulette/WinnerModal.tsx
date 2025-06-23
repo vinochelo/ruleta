@@ -21,6 +21,7 @@ interface WinnerModalProps {
   winner: Team | null;
   onPlayAgain: () => void;
   praiseMessage: string | null;
+  gameMode: 'teams' | 'players';
 }
 
 const confettiColors = ['#F87171', '#60A5FA', '#34D399', '#FBBF24', '#A78BFA', '#F472B6'];
@@ -44,7 +45,7 @@ const Confetti = () => (
 );
 
 
-const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMessage }) => {
+const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMessage, gameMode }) => {
   const winnerSoundRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -82,7 +83,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
       <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/80 backdrop-blur-xl border-0 shadow-none flex items-center justify-center p-0">
         <DialogTitle className="sr-only">¡Ganador!</DialogTitle>
         <DialogDescription className="sr-only">
-          {`El equipo ${winner.name} ha ganado la partida. ${praiseMessage || '¡Felicidades!'}`}
+          {`El ${gameMode === 'teams' ? 'equipo' : 'jugador'} ${winner.name} ha ganado la partida. ${praiseMessage || '¡Felicidades!'}`}
         </DialogDescription>
         <Confetti />
         <audio
@@ -100,7 +101,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
                     {winner.name}
                 </p>
                 <p className="text-2xl text-foreground/80 max-w-3xl mx-auto">
-                    {praiseMessage ? praiseMessage : `¡Han ganado la partida!`}
+                    {praiseMessage ? praiseMessage : `¡${gameMode === 'teams' ? 'Han' : 'Has'} ganado la partida!`}
                 </p>
             </div>
             <Button onClick={onPlayAgain} className="w-full max-w-xs transition-transform hover:scale-105 text-2xl py-8 mt-8 rounded-full">

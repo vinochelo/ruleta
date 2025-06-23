@@ -14,9 +14,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus, Sparkles } from 'lucide-react';
+import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus, Sparkles, User, UserPlus } from 'lucide-react';
 import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Category {
   id: string;
@@ -64,6 +65,7 @@ export default function HomePage() {
   const [totalPointsScored, setTotalPointsScored] = useState(0);
   const [usedWords, setUsedWords] = useState<Record<string, string[]>>({});
   const [useAIImages, setUseAIImages] = useState(true);
+  const [gameMode, setGameMode] = useState<'teams' | 'players'>('teams');
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -164,18 +166,18 @@ export default function HomePage() {
     e.preventDefault();
     const trimmedName = newTeamName.trim();
     if (!trimmedName) {
-      toast({ title: "Error", description: "El nombre del equipo no puede estar vacío.", variant: "destructive" });
+      toast({ title: "Error", description: `El nombre del ${gameMode === 'teams' ? 'equipo' : 'jugador'} no puede estar vacío.`, variant: "destructive" });
       return;
     }
     if (teams.some(team => team.name.toLowerCase() === trimmedName.toLowerCase())) {
-      toast({ title: "Error", description: "Ya existe un equipo con este nombre.", variant: "destructive" });
+      toast({ title: "Error", description: `Ya existe un ${gameMode === 'teams' ? 'equipo' : 'jugador'} con este nombre.`, variant: "destructive" });
       return;
     }
     const newTeamColor = TEAM_COLORS[teams.length % TEAM_COLORS.length];
     const newTeam: Team = { id: crypto.randomUUID(), name: trimmedName, score: 0, color: newTeamColor };
     persistTeams([...teams, newTeam]);
     setNewTeamName('');
-    toast({ title: "Equipo Añadido", description: `¡El equipo "${trimmedName}" se ha unido!` });
+    toast({ title: `${gameMode === 'teams' ? 'Equipo' : 'Jugador'} Añadido`, description: `¡El ${gameMode === 'teams' ? 'equipo' : 'jugador'} "${trimmedName}" se ha unido!` });
   };
 
   const speakFn = useCallback((text: string) => {
@@ -201,7 +203,7 @@ export default function HomePage() {
     // Check for winner first
     if (winningScore > 0 && winningTeam.score >= winningScore) {
       setWinner(winningTeam);
-      praiseWinner({ teamName: winningTeam.name, score: winningTeam.score })
+      praiseWinner({ winnerName: winningTeam.name, score: winningTeam.score, isTeam: gameMode === 'teams' })
         .then(result => {
           const message = result.praiseMessage;
           setWinnerPraise(message);
@@ -236,21 +238,21 @@ export default function HomePage() {
         speakFn(announcement);
       }
     }
-  }, [teams, winningScore, isSpeaking, persistTeams, speakFn, praiseWinner, totalPointsScored]);
+  }, [teams, winningScore, isSpeaking, persistTeams, speakFn, praiseWinner, totalPointsScored, gameMode]);
 
   const handleRemoveTeam = useCallback((teamId: string) => {
     const teamToRemove = teams.find(t => t.id === teamId);
     persistTeams(teams.filter(team => team.id !== teamId));
     if (teamToRemove) {
-      toast({ title: "Equipo Eliminado", description: `El equipo "${teamToRemove.name}" ha sido eliminado.`, variant: "destructive" });
+      toast({ title: `${gameMode === 'teams' ? 'Equipo' : 'Jugador'} Eliminado`, description: `El ${gameMode === 'teams' ? 'equipo' : 'jugador'} "${teamToRemove.name}" ha sido eliminado.`, variant: "destructive" });
     }
-  }, [teams, persistTeams, toast]);
+  }, [teams, persistTeams, toast, gameMode]);
 
   const handleResetAllScores = useCallback(() => {
     persistTeams(teams.map(team => ({ ...team, score: 0 })));
     setTotalPointsScored(0);
     setUsedWords({});
-    toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones de los equipos se han reiniciado a 0." });
+    toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones se han reiniciado a 0." });
     if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
   }, [teams, persistTeams, toast, isSpeaking, speakFn]);
   
@@ -306,11 +308,18 @@ export default function HomePage() {
           <Card className="shadow-lg">
             <CardHeader className="p-3">
               <CardTitle className="title-text text-lg flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Equipos y Puntuaciones
+                {gameMode === 'teams' ? <Users className="h-5 w-5" /> : <User className="h-5 w-5" />}
+                {gameMode === 'teams' ? 'Equipos' : 'Jugadores'} y Puntuaciones
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-3 pt-0">
+               <Tabs defaultValue="teams" onValueChange={(value) => setGameMode(value as 'teams' | 'players')} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="teams">Equipos</TabsTrigger>
+                      <TabsTrigger value="players">Jugadores</TabsTrigger>
+                  </TabsList>
+              </Tabs>
+
               <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="winning-score" className="whitespace-nowrap font-medium text-sm">Puntos para Ganar:</Label>
                 <Select
@@ -329,18 +338,6 @@ export default function HomePage() {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
-                  <Label htmlFor="ai-images-switch" className="flex items-center gap-2 font-medium text-sm">
-                      <Sparkles className="h-5 w-5 text-primary" />
-                      Ayuda con Imágenes (IA)
-                  </Label>
-                  <Switch
-                      id="ai-images-switch"
-                      checked={useAIImages}
-                      onCheckedChange={setUseAIImages}
-                  />
-              </div>
-
               <Separator />
 
               <form onSubmit={handleAddTeam} className="flex gap-2 items-center">
@@ -348,17 +345,18 @@ export default function HomePage() {
                   type="text"
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="Nuevo equipo..."
+                  placeholder={gameMode === 'teams' ? "Nuevo equipo..." : "Nuevo jugador..."}
                   className="flex-grow h-9"
-                  aria-label="Nombre del nuevo equipo"
+                  aria-label={`Nombre del nuevo ${gameMode === 'teams' ? 'equipo' : 'jugador'}`}
                 />
                 <Button type="submit" size="sm" className="transition-transform hover:scale-105">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Añadir
+                  {gameMode === 'teams' ? <PlusCircle className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
+                   Añadir
                 </Button>
               </form>
 
               {teams.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4 text-sm">No hay equipos todavía.</p>
+                <p className="text-muted-foreground text-center py-4 text-sm">No hay {gameMode === 'teams' ? 'equipos' : 'jugadores'} todavía.</p>
               ) : (
                 <div className="space-y-2">
                   <TooltipProvider>
@@ -418,8 +416,21 @@ export default function HomePage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 flex flex-col gap-4">
           <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
+           <Card className="shadow-lg">
+                <CardContent className="p-3 flex items-center justify-between">
+                    <Label htmlFor="ai-images-switch" className="flex items-center gap-2 font-medium text-base cursor-pointer">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                        Ayuda con Imágenes (IA)
+                    </Label>
+                    <Switch
+                        id="ai-images-switch"
+                        checked={useAIImages}
+                        onCheckedChange={setUseAIImages}
+                    />
+                </CardContent>
+            </Card>
         </div>
       </div>
 
@@ -434,7 +445,7 @@ export default function HomePage() {
         useAIImages={useAIImages}
       />
       
-      <WinnerModal winner={winner} onPlayAgain={handlePlayAgain} praiseMessage={winnerPraise} />
+      <WinnerModal winner={winner} onPlayAgain={handlePlayAgain} praiseMessage={winnerPraise} gameMode={gameMode} />
 
       {!speechSupported && (
         <Card className="mt-8 bg-destructive/10 border-destructive/30">

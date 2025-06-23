@@ -11,8 +11,9 @@ import {ai, geminiFlash} from '@/ai/genkit';
 import {z} from 'zod';
 
 const PraiseWinnerInputSchema = z.object({
-  teamName: z.string().describe('The name of the winning team.'),
+  winnerName: z.string().describe('The name of the winning team or player.'),
   score: z.number().describe('The final score of the winning team.'),
+  isTeam: z.boolean().describe('True if the winner is a team, false if it is an individual player.'),
 });
 export type PraiseWinnerInput = z.infer<typeof PraiseWinnerInputSchema>;
 
@@ -30,13 +31,13 @@ const prompt = ai.definePrompt({
   model: geminiFlash,
   input: {schema: PraiseWinnerInputSchema},
   output: {schema: PraiseWinnerOutputSchema},
-  prompt: `Eres un presentador de concursos de televisión escandalosamente entusiasta y un poco ridículo. Un equipo acaba de ganar tu juego al estilo Pictionary. Tu tarea es generar un mensaje de felicitación corto, divertido y exagerado para ellos.
+  prompt: `Eres un presentador de concursos de televisión escandalosamente entusiasta y un poco ridículo. {{#if isTeam}}Un equipo{{else}}Un jugador{{/if}} acaba de ganar tu juego al estilo Pictionary. Tu tarea es generar un mensaje de felicitación corto, divertido y exagerado para {{#if isTeam}}ellos{{else}}él/ella{{/if}}.
 
       Reglas:
       - El mensaje DEBE ser en español.
       - CRÍTICO: Cada mensaje que generes debe ser único y original. Evita repetir los mismos chistes, comparaciones o frases que hayas usado antes.
       - Sé breve (2-3 frases).
-      - Menciona al equipo ganador por su nombre, que es {{{teamName}}}.
+      - Menciona al ganador por su nombre, que es {{{winnerName}}}.
       - CRÍTICO: Cuando menciones al ganador, usa su nombre directamente (p. ej., "¡Felicidades, Campeones!"). No digas "el equipo Campeones".
       - NO menciones su puntuación final.
       - Sé increíblemente enérgico y usa muchos signos de exclamación.
@@ -57,12 +58,12 @@ const praiseWinnerFlow = ai.defineFlow(
   async (input) => {
     if (!process.env.GOOGLE_API_KEY) {
       console.error("FATAL: La variable de entorno GOOGLE_API_KEY no está configurada.");
-      return { praiseMessage: `¡Felicidades, ${input.teamName}! ¡Han ganado!` };
+      return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡Han ganado!` };
     }
     const {output} = await prompt(input);
     if (output) {
         return output;
     }
-    return { praiseMessage: `¡Felicidades, ${input.teamName}! ¡Han ganado!` };
+    return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡Han ganado!` };
   }
 );
