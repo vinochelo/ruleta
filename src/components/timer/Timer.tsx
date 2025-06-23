@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const playBeep = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
@@ -67,6 +68,7 @@ export interface TimerProps {
 const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = false }) => {
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(autoStart);
+  const [isFinished, setIsFinished] = useState(false);
   
   // Effect to handle the countdown interval
   useEffect(() => {
@@ -85,6 +87,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
       playTimerEndSound();
       onTimerEnd();
       setIsRunning(false); // Stop the timer
+      setIsFinished(true);
     } else if (timeLeft > 0 && timeLeft <= 10 && isRunning) {
       playBeep();
     }
@@ -92,7 +95,9 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 
 
   const handleStartPause = useCallback(() => {
+    // If timer is over, this button acts as a restart
     if (timeLeft <= 0) { 
+        setIsFinished(false);
         setTimeLeft(initialDuration);
         setIsRunning(true); 
     } else {
@@ -103,6 +108,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   const handleReset = useCallback(() => {
     setIsRunning(false);
     setTimeLeft(initialDuration);
+    setIsFinished(false);
   }, [initialDuration]);
 
   const formatTime = (seconds: number): string => {
@@ -110,6 +116,16 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
     const remainingSeconds = seconds % 60;
     return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
+
+  const timeClass = cn(
+    'text-7xl sm:text-9xl font-mono font-bold tabular-nums py-4 rounded-md transition-colors',
+    {
+      'text-primary': !isFinished && (timeLeft > 10 || !isRunning),
+      'text-destructive timer-pulse-warning-animation': timeLeft <= 10 && timeLeft > 0 && isRunning,
+      'text-destructive timer-end-animation': isFinished,
+      'text-muted-foreground': timeLeft === 0 && !isFinished,
+    }
+  );
 
   return (
     <Card className="w-full max-w-sm mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
@@ -120,18 +136,15 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className={`text-7xl sm:text-9xl font-mono font-bold tabular-nums py-4 rounded-md
-          ${timeLeft <= 10 && timeLeft > 0 && isRunning ? 'text-destructive animate-pulse' : 'text-primary'}
-          ${timeLeft === 0 ? 'text-muted-foreground' : ''}
-        `}>
+        <div className={timeClass}>
           {formatTime(timeLeft)}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={handleStartPause} className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={timeLeft <=0 && !isRunning}>
+          <Button onClick={handleStartPause} className="w-full text-md py-3 transition-transform hover:scale-105" size="lg">
             {isRunning ? <Pause className="mr-2 h-5 w-5" /> : <Play className="mr-2 h-5 w-5" />}
-            {isRunning ? 'Pausar' : (timeLeft <= 0 ? 'Finalizado' : 'Iniciar')}
+            {isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={(timeLeft === initialDuration && !isRunning) || (timeLeft <= 0 && !isRunning)}>
+          <Button onClick={handleReset} variant="outline" className="w-full text-md py-3 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
             <RotateCcw className="mr-2 h-5 w-5" />
             Resetear
           </Button>
