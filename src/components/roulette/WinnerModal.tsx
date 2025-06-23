@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Trophy, Play } from 'lucide-react';
@@ -63,6 +65,10 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
   return (
     <Dialog open={!!winner} onOpenChange={(open) => { if (!open) onPlayAgain() }}>
       <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/80 backdrop-blur-xl border-0 shadow-none flex items-center justify-center p-0">
+        <DialogTitle className="sr-only">¡Ganador!</DialogTitle>
+        <DialogDescription className="sr-only">
+          {`El equipo ${winner.name} ha ganado la partida. ${praiseMessage || '¡Felicidades!'}`}
+        </DialogDescription>
         <Confetti />
         <audio
           ref={winnerSoundRef}
