@@ -54,6 +54,7 @@ export default function HomePage() {
   const [winningScore, setWinningScore] = useState<number>(10);
   const [winner, setWinner] = useState<Team | null>(null);
   const [winnerPraise, setWinnerPraise] = useState<string | null>(null);
+  const [totalPointsScored, setTotalPointsScored] = useState(0);
 
   const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
@@ -109,7 +110,10 @@ export default function HomePage() {
               uniqueTeamsMap.set(team.id, team as Team);
             }
           });
-          setTeams(Array.from(uniqueTeamsMap.values()));
+          const finalTeams = Array.from(uniqueTeamsMap.values());
+          setTeams(finalTeams);
+          const initialTotalScore = finalTeams.reduce((acc, team) => acc + team.score, 0);
+          setTotalPointsScored(initialTotalScore);
         }
       } catch (error) {
         console.error("Failed to parse teams from localStorage", error);
@@ -176,12 +180,15 @@ export default function HomePage() {
       team.id === teamId ? { ...team, score: team.score + 1 } : team
     );
 
+    persistTeams(updatedTeams);
+    const newTotalPoints = totalPointsScored + 1;
+    setTotalPointsScored(newTotalPoints);
+
     const winningTeam = updatedTeams.find(team => team.id === teamId);
     if (!winningTeam) return;
 
-    const newScore = winningTeam.score;
-
-    if (newScore >= winningScore) {
+    // Check for winner first
+    if (winningScore > 0 && winningTeam.score >= winningScore) {
       setWinner(winningTeam);
       praiseWinner({ teamName: winningTeam.name, score: winningTeam.score })
         .then(result => {
@@ -195,12 +202,30 @@ export default function HomePage() {
           setWinnerPraise(fallbackMessage);
           speakFn(fallbackMessage);
         });
-    } else if (newScore > 0 && newScore % 5 === 0 && !isSpeaking) {
-      speakFn(`${winningTeam.name} tiene ${newScore} puntos.`);
+      return; // Stop further announcements if there's a winner
     }
 
-    persistTeams(updatedTeams);
-  }, [teams, winningScore, isSpeaking, persistTeams, speakFn, winnerPraise]);
+    // Announce leader/tie every 5 total points
+    if (newTotalPoints > 0 && newTotalPoints % 5 === 0 && !isSpeaking) {
+      const highestScore = Math.max(...updatedTeams.map(t => t.score));
+      if (highestScore > 0) {
+        const leaders = updatedTeams.filter(t => t.score === highestScore);
+        let announcement = "";
+        if (leaders.length === 1) {
+          announcement = `${leaders[0].name} va a la cabeza con ${leaders[0].score} puntos.`;
+        } else {
+          const tiedTeamNames = leaders.map(t => t.name);
+          if (tiedTeamNames.length === 2) {
+            announcement = `${tiedTeamNames[0]} y ${tiedTeamNames[1]} están empatados con ${highestScore} puntos.`;
+          } else {
+            const lastTeam = tiedTeamNames.pop();
+            announcement = `${tiedTeamNames.join(', ')} y ${lastTeam} están empatados con ${highestScore} puntos.`;
+          }
+        }
+        speakFn(announcement);
+      }
+    }
+  }, [teams, winningScore, isSpeaking, persistTeams, speakFn, praiseWinner, totalPointsScored]);
 
   const handleRemoveTeam = useCallback((teamId: string) => {
     const teamToRemove = teams.find(t => t.id === teamId);
@@ -212,6 +237,7 @@ export default function HomePage() {
 
   const handleResetAllScores = useCallback(() => {
     persistTeams(teams.map(team => ({ ...team, score: 0 })));
+    setTotalPointsScored(0);
     toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones de los equipos se han reiniciado a 0." });
     if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
   }, [teams, persistTeams, toast, isSpeaking, speakFn]);
@@ -323,7 +349,7 @@ export default function HomePage() {
                               <TooltipTrigger asChild>
                                 <Button
                                   onClick={() => handleIncrementScore(team.id)}
-                                  className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-16 h-16 rounded-full flex flex-col items-center justify-center"
+                                  className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-20 h-20 rounded-full flex flex-col items-center justify-center"
                                   aria-label={`Sumar 1 punto a ${team.name}`}
                                 >
                                   <span className="text-2xl font-bold">+1</span>
