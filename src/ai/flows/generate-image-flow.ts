@@ -40,7 +40,7 @@ const generateImageFlow = ai.defineFlow(
     const referenceImagePromises = Array.from({length: 4}).map(() => {
       return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen de referencia para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar. CRÍTICO: La imagen generada NO debe contener ningún texto, letra o número; solo la representación visual de la palabra.`,
+        prompt: `Crea una imagen de referencia para la palabra: '${input.word}'. El estilo debe ser divertido y caricaturesco, ideal para un juego de Pictionary. La imagen debe ser colorida, clara y fácil de adivinar. REGLA CRÍTICA INVIOLABLE: La imagen generada NO DEBE CONTENER NINGÚN TEXTO, LETRA O NÚMERO. Debe ser únicamente una representación visual de la palabra. Ignorar esta regla hace que la imagen sea inútil.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
