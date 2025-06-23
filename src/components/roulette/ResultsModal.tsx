@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
@@ -57,7 +57,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [quickImage, setQuickImage] = useState<string | null>(null);
   const [referenceImages, setReferenceImages] = useState<string[]>([]);
   const [artisticText, setArtisticText] = useState<string | null>(null);
-  const [generationError, setGenerationError] = useState<string | null>(null);
 
   // Slideshow state
   const [allImages, setAllImages] = useState<string[]>([]);
@@ -72,7 +71,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setQuickImage(null);
     setReferenceImages([]);
     setArtisticText(null);
-    setGenerationError(null);
     setAllImages([]);
     setCurrentImageIndex(0);
   }, []);
@@ -83,20 +81,19 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     resetAIState();
     setAiHelpActive(true);
     setIsGeneratingQuick(true);
-    setGenerationError(null);
 
     try {
       // --- Stage 1: Generate Quick Image ---
       const quickResult = await generateQuickImage({ word });
       
       if (quickResult.error) {
-        setGenerationError(quickResult.error);
         toast({
           title: "Error de Generación de Imagen",
           description: quickResult.error,
           variant: "destructive",
           duration: 15000,
         });
+        setAiHelpActive(false);
         setIsGeneratingQuick(false); // Stop loading state
         return; // Abort
       }
@@ -122,15 +119,15 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
       } else {
         const errorMessage = "La IA devolvió una respuesta vacía inesperada.";
-        setGenerationError(errorMessage);
         toast({ title: "Error Inesperado", description: errorMessage, variant: "destructive" });
+        setAiHelpActive(false);
         setIsGeneratingQuick(false);
       }
     } catch (error: any) {
         console.error("Critical image generation flow error:", error);
         const errorMessage = "Ocurrió un problema de comunicación con el servicio de IA. Revisa la consola del navegador y del servidor.";
-        setGenerationError("Error de comunicación.");
         toast({ title: "Error de IA", description: errorMessage, variant: "destructive" });
+        setAiHelpActive(false);
         setIsGeneratingQuick(false);
     }
   }, [toast, resetAIState]);
@@ -256,16 +253,16 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       );
     }
 
-    if (generationError && allImages.length === 0) {
+    if (allImages.length === 0) {
       return (
         <ContentContainer>
           <MainImageBox>
               <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-                <AlertCircle className="h-24 w-24 text-destructive" />
-                <p className="text-base text-white bg-destructive p-2 rounded-md max-w-sm">{generationError}</p>
-                <Button onClick={handleRequestAiHelp} size="lg" variant="destructive" className="transition-transform hover:scale-105">
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Reintentar
+                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+                <p className="text-lg text-muted-foreground">No se pudo generar la imagen.</p>
+                 <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Reintentar
                 </Button>
               </div>
           </MainImageBox>
@@ -307,7 +304,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
       <DialogContent 
         showCloseButton={false} 
-        className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col p-4 overflow-hidden"
+        className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col p-4 sm:p-6 lg:p-8 overflow-y-auto"
       >
         <DialogTitle className="sr-only">Resultado de la Ruleta</DialogTitle>
         <DialogDescription className="sr-only">
@@ -325,9 +322,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           </Button>
         </DialogClose>
 
-        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-center gap-4 h-full">
+        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-center gap-6 h-full">
           
-          <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center text-center min-h-0">
+          <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center text-center min-h-[300px] lg:min-h-0">
              {renderContent()}
           </div>
 
