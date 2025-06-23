@@ -295,11 +295,11 @@ export default function HomePage() {
                               <TooltipTrigger asChild>
                                 <Button
                                   onClick={() => handleIncrementScore(team.id)}
-                                  className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-16 h-16 rounded-full flex flex-col items-center justify-center p-1 leading-none"
+                                  className="bg-green-500 hover:bg-green-600 text-white transition-transform hover:scale-105 w-16 h-16 rounded-full flex flex-col items-center justify-center"
                                   aria-label={`Sumar 1 punto a ${team.name}`}
                                 >
-                                  <span className="text-xl font-bold">+1</span>
-                                  <span className="text-xs font-normal mt-1">Punto</span>
+                                  <span className="text-2xl font-bold">+1</span>
+                                  <span className="text-sm font-normal">Punto</span>
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
