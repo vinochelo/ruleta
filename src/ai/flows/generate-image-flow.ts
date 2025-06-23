@@ -12,6 +12,12 @@
 import { ai, geminiImage } from '@/ai/genkit';
 import { z } from 'zod';
 
+// At module load, check if the API key is present. This helps diagnose configuration issues.
+if (!process.env.GOOGLE_API_KEY) {
+  console.error("FATAL: The GOOGLE_API_KEY environment variable is not set.");
+  console.error("Please create a .env file in the project's root directory and add: GOOGLE_API_KEY=your_key_here");
+}
+
 // --- Common Helper Function ---
 
 // A robust helper to generate a single image. It returns null on failure.

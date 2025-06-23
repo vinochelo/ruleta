@@ -109,23 +109,25 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         });
 
       } else {
-        // Handle failure gracefully without throwing an error to avoid Next.js overlay
-        const errorMessage = "Ocurrió un problema al generar la imagen. Inténtalo de nuevo.";
-        setGenerationError(errorMessage);
+        // Handle failure gracefully
+        const errorMessage = "La IA no pudo generar la imagen. Esto puede deberse a la configuración de la API, los filtros de seguridad o los límites de cuota.";
+        setGenerationError("No se pudo generar la imagen."); // shorter message for the UI element
         toast({
-          title: "Error de IA",
-          description: "La IA no pudo generar la imagen inicial.",
-          variant: "destructive"
+          title: "Error de Generación de Imagen",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 9000, // Make it stay longer
         });
       }
     } catch (error: any) {
         console.error("Quick image generation error:", error);
-        const errorMessage = "Ocurrió un problema al generar la imagen. Inténtalo de nuevo.";
-        setGenerationError(errorMessage);
+        const errorMessage = "Ocurrió un problema al generar la imagen. Revisa la configuración de la API.";
+        setGenerationError("No se pudo generar la imagen.");
         toast({
           title: "Error de IA",
           description: errorMessage,
-          variant: "destructive"
+          variant: "destructive",
+          duration: 9000,
         });
     } finally {
         setIsGeneratingQuick(false);
@@ -208,17 +210,20 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
   const wordLength = selectedWord?.length || 0;
   let wordFontSizeClass = 'text-7xl lg:text-8xl';
-  if (wordLength > 10) {
+  if (wordLength > 8) {
     wordFontSizeClass = 'text-6xl lg:text-7xl';
   }
-  if (wordLength > 15) {
+  if (wordLength > 12) {
     wordFontSizeClass = 'text-5xl lg:text-6xl';
   }
-  if (wordLength > 20) {
+  if (wordLength > 16) {
     wordFontSizeClass = 'text-4xl lg:text-5xl';
   }
-  if (wordLength > 25) {
+  if (wordLength > 20) {
     wordFontSizeClass = 'text-3xl lg:text-4xl';
+  }
+  if (wordLength > 24) {
+    wordFontSizeClass = 'text-2xl lg:text-3xl';
   }
 
   const renderContent = () => {
