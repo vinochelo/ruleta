@@ -109,7 +109,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         });
 
       } else {
-        throw new Error("La IA no pudo generar la imagen inicial.");
+        // Handle failure gracefully without throwing an error to avoid Next.js overlay
+        const errorMessage = "Ocurrió un problema al generar la imagen. Inténtalo de nuevo.";
+        setGenerationError(errorMessage);
+        toast({
+          title: "Error de IA",
+          description: "La IA no pudo generar la imagen inicial.",
+          variant: "destructive"
+        });
       }
     } catch (error: any) {
         console.error("Quick image generation error:", error);
@@ -341,7 +348,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <div className="flex-1 w-full lg:max-w-md flex flex-col items-center justify-center gap-6">
             <div className="text-center">
               <p className="text-lg text-muted-foreground">Categoría</p>
-              <p className="text-4xl lg:text-5xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+              <p className="text-3xl lg:text-4xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                 {selectedCategoryName}
               </p>
             </div>
