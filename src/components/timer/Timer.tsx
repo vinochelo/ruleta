@@ -37,54 +37,29 @@ export interface TimerProps {
 const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = false }) => {
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(autoStart);
-  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
   const timerEndSoundRef = useRef<HTMLAudioElement>(null);
 
-  // This effect resets the timer when the key/initialDuration/autoStart changes
-  useEffect(() => {
-    setTimeLeft(initialDuration);
-    setIsRunning(autoStart);
-    // Clean up any existing interval when props change
-    if (intervalIdRef.current) {
-      clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
-    }
-  }, [initialDuration, autoStart]);
-
-  // This effect handles the timer logic (the interval)
+  // Effect to handle the countdown interval
   useEffect(() => {
     if (!isRunning) {
       return;
     }
-
-    intervalIdRef.current = setInterval(() => {
-      setTimeLeft((prevTime) => {
-        const newTime = prevTime - 1;
-
-        if (newTime <= 0) {
-          clearInterval(intervalIdRef.current!);
-          intervalIdRef.current = null;
-          timerEndSoundRef.current?.play().catch(console.error); // Play sound first
-          onTimerEnd(); // Then update parent
-          return 0;
-        }
-
-        if (newTime <= 10) {
-          playBeep();
-        }
-
-        return newTime;
-      });
+    const intervalId = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
+    return () => clearInterval(intervalId);
+  }, [isRunning]);
 
-    // Cleanup function for when isRunning becomes false or component unmounts
-    return () => {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-    };
-  }, [isRunning, onTimerEnd]);
+  // Effect to handle side-effects of time changes (end of timer, beeps)
+  useEffect(() => {
+    if (timeLeft === 0 && isRunning) {
+      timerEndSoundRef.current?.play().catch(console.error);
+      onTimerEnd();
+      setIsRunning(false); // Stop the timer
+    } else if (timeLeft > 0 && timeLeft <= 10 && isRunning) {
+      playBeep();
+    }
+  }, [timeLeft, isRunning, onTimerEnd]);
 
 
   const handleStartPause = useCallback(() => {
@@ -97,10 +72,6 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   }, [timeLeft, initialDuration]);
 
   const handleReset = useCallback(() => {
-    if (intervalIdRef.current) {
-      clearInterval(intervalIdRef.current);
-      intervalIdRef.current = null;
-    }
     setIsRunning(false);
     setTimeLeft(initialDuration);
   }, [initialDuration]);
