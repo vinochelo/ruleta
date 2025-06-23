@@ -51,8 +51,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [timerDuration, setTimerDuration] = useState<number>(60);
   const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const timerIsActive = isTimerRunning && !isTimerFinished;
 
   // AI Image Generation State
   const [aiHelpActive, setAiHelpActive] = useState(false);
@@ -142,7 +140,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       // Reset timer state
       setTimerDuration(60); // Default to 60s
       setIsTimerFinished(false);
-      setIsTimerRunning(false);
       setTimerKey(prev => prev + 1);
       // Reset AI state
       resetAIState();
@@ -165,17 +162,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   }, [allImages, currentImageIndex]);
 
   const handleTimeButtonClick = (duration: number) => {
-    if (timerIsActive) return;
     speakTimeSelection(duration);
     setTimerDuration(duration);
     setIsTimerFinished(false);
-    setTimerKey(prevKey => prevKey + 1); // Remount timer with new duration
-    setIsTimerRunning(true);
+    setTimerKey(prevKey => prevKey + 1); // Remount timer with new duration and autoStart
   };
   
   const handleTimerEndInternal = useCallback(() => {
     setIsTimerFinished(true);
-    setIsTimerRunning(false);
     if (selectedWord) {
       setTimeout(() => {
         speakFn(`La palabra era ${selectedWord}.`);
@@ -185,7 +179,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
 
   const handleCloseDialog = () => {
-    setIsTimerRunning(false);
     onClose();
   };
   
@@ -358,10 +351,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
                         }}
                         className={cn(
-                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4",
-                            timerDuration === duration && isTimerRunning ? 'border-white/80' : 'border-transparent',
+                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4 border-transparent"
                         )}
-                        disabled={timerIsActive}
                         >
                         {duration}s
                         </Button>
@@ -372,7 +363,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={timerKey}
                       initialDuration={timerDuration}
                       onTimerEnd={handleTimerEndInternal}
-                      autoStart={false}
+                      autoStart={true}
                     />
                 </div>
             </div>

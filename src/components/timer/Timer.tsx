@@ -146,7 +146,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
           Tiempo Restante
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         <div className={timeContainerClass}>
           {isFinished ? (
             formatTime(timeLeft).split('').map((char, index) => (
@@ -162,17 +162,17 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
             <span>{formatTime(timeLeft)}</span>
           )}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={handleStartPause} className="w-full transition-transform hover:scale-105" size="lg">
+        <div className="grid grid-cols-2 gap-2">
+          <Button onClick={handleStartPause} className="w-full transition-transform hover:scale-105" size="sm">
             <div className="flex items-center justify-center">
-              {isRunning ? <Pause className="mr-2 h-6 w-6" /> : <Play className="mr-2 h-6 w-6" />}
-              <span className="text-xl">{isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
+              {isRunning ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+              <span className="text-sm">{isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
             </div>
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
+          <Button onClick={handleReset} variant="outline" className="w-full transition-transform hover:scale-105" size="sm" disabled={timeLeft === initialDuration && !isRunning}>
             <div className="flex items-center justify-center">
-              <RotateCcw className="mr-2 h-6 w-6" />
-              <span className="text-xl">Resetear</span>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              <span className="text-sm">Resetear</span>
             </div>
           </Button>
         </div>
