@@ -363,7 +363,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     </p>
                 </div>
 
-                <div className="w-full space-y-2">
+                <div className="w-full space-y-4">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {TIMER_OPTIONS.map(({ duration }, index) => (
                         <Button
@@ -382,23 +382,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         </Button>
                     ))}
                     </div>
+                
+                    <Timer
+                      key={timerKey}
+                      initialDuration={timerDuration}
+                      onTimerEnd={handleTimerEndInternal}
+                      autoStart={isTimerRunning}
+                    />
                 </div>
-                
-                <Timer
-                  key={timerKey}
-                  initialDuration={timerDuration}
-                  onTimerEnd={handleTimerEndInternal}
-                  autoStart={isTimerRunning}
-                />
-                
-                {isTimerFinished && (
-                    <div className="text-center space-y-3 p-4 bg-card/80 backdrop-blur-sm rounded-xl w-full max-w-sm shadow-lg border border-border/20">
-                        <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo!</p>
-                        <Button onClick={handleCloseDialog} size="lg" className="w-full transition-transform hover:scale-105 text-lg py-6 rounded-xl shadow-lg">
-                            <Play className="mr-3 h-6 w-6" /> Girar la Ruleta
-                        </Button>
-                    </div>
-                )}
             </div>
           </div>
         </div>

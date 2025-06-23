@@ -175,3 +175,13 @@
   animation-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
   animation-fill-mode: forwards;
 }
+
+@keyframes timer-tick-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.timer-tick-pulse-animation {
+  animation: timer-tick-pulse 0.4s ease-out;
+}

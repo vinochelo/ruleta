@@ -70,6 +70,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   const [timeLeft, setTimeLeft] = useState(initialDuration);
   const [isRunning, setIsRunning] = useState(autoStart);
   const [isFinished, setIsFinished] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
   
   // Effect to handle the countdown interval
   useEffect(() => {
@@ -82,16 +83,24 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
     return () => clearInterval(intervalId);
   }, [isRunning]);
 
-  // Effect to handle side-effects of time changes (end of timer, beeps)
+  // Effect to handle side-effects of time changes (end of timer, beeps, animations)
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
     if (timeLeft === 0 && isRunning) {
       playTimerEndSound();
       onTimerEnd();
       setIsRunning(false); // Stop the timer
       setIsFinished(true);
-    } else if (timeLeft > 0 && timeLeft <= 10 && isRunning) {
-      playBeep();
+    } else if (timeLeft > 0 && isRunning) {
+      if (timeLeft <= 10) {
+        playBeep();
+      }
+      if (timeLeft % 10 === 0) {
+        setIsPulsing(true);
+        timeoutId = setTimeout(() => setIsPulsing(false), 400); // Animation is 0.4s long
+      }
     }
+    return () => clearTimeout(timeoutId); // Cleanup timeout on effect re-run
   }, [timeLeft, isRunning, onTimerEnd]);
 
 
@@ -120,6 +129,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
 
   const timeContainerClass = cn(
     'text-7xl sm:text-9xl font-mono font-bold tabular-nums py-4 rounded-md transition-colors flex justify-center items-center',
+    isPulsing && 'timer-tick-pulse-animation',
     {
       'text-primary': !isFinished && (timeLeft > 10 || !isRunning),
       'text-destructive timer-pulse-warning-animation': timeLeft <= 10 && timeLeft > 0 && isRunning,
@@ -153,13 +163,17 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={handleStartPause} className="w-full text-xl py-5 transition-transform hover:scale-105" size="lg">
-            {isRunning ? <Pause className="mr-3 h-6 w-6" /> : <Play className="mr-3 h-6 w-6" />}
-            {isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}
+          <Button onClick={handleStartPause} className="w-full text-xl py-6 transition-transform hover:scale-105" size="lg">
+            <div className="flex items-center justify-center">
+              {isRunning ? <Pause className="mr-3 h-8 w-8" /> : <Play className="mr-3 h-8 w-8" />}
+              <span className="text-2xl">{isRunning ? 'Pausar' : (timeLeft > 0 ? 'Iniciar' : 'Reiniciar')}</span>
+            </div>
           </Button>
-          <Button onClick={handleReset} variant="outline" className="w-full text-xl py-5 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
-            <RotateCcw className="mr-3 h-6 w-6" />
-            Resetear
+          <Button onClick={handleReset} variant="outline" className="w-full text-xl py-6 transition-transform hover:scale-105" size="lg" disabled={timeLeft === initialDuration && !isRunning}>
+            <div className="flex items-center justify-center">
+              <RotateCcw className="mr-3 h-8 w-8" />
+              <span className="text-2xl">Resetear</span>
+            </div>
           </Button>
         </div>
       </CardContent>
