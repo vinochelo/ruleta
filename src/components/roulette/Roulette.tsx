@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -152,6 +151,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       setIsSpinning(false);
       setFinalSelectedCategoryInfo({ category: selectedCategory, color: selectedColor});
       onSpinEnd(selectedCategory, selectedColor);
+      if (spinSoundRef.current) {
+        spinSoundRef.current.pause();
+        spinSoundRef.current.currentTime = 0;
+      }
     }, 6000);
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments]);
 
@@ -196,6 +199,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       <audio
         ref={spinSoundRef}
         src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2db91a629f.mp3?filename=roulette-wheel-105953.mp3"
+        loop
         preload="auto"
       />
       <CardHeader>
@@ -288,4 +292,3 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 };
 
 export default Roulette;
-    

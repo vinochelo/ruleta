@@ -86,7 +86,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
     <Card className="w-full max-w-sm mx-auto text-center shadow-lg transform transition-all duration-300 hover:shadow-xl">
       <audio
         ref={timerEndSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2022/03/13/audio_2c8a3d671e.mp3?filename=game-over-arcade-6435.mp3"
+        src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_c33b5c039d.mp3?filename=wrong-buzzer-6268.mp3"
         preload="auto"
       />
       <CardHeader>
