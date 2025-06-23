@@ -38,37 +38,53 @@ const generateImageFlow = ai.defineFlow(
     outputSchema: GenerateImageOutputSchema,
   },
   async (input) => {
-    const referenceImagePromises = Array.from({length: 4}).map(() => {
-      return ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Genera una imagen para un juego de Pictionary que represente la palabra: '${input.word}'. REGLA IMPORTANTE: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números. El estilo debe ser claro y colorido, fácil de interpretar para adivinar la palabra. Hazlo divertido y comprensible.`,
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
-      });
-    });
-
-    const artisticTextPromise = ai.generate({
-        model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen de texto artística y muy llamativa para la palabra: '${input.word}'. El texto debe ser el foco central. Utiliza un estilo de fuente completamente diferente y creativo cada vez, como si fuera un título de un juego o una película. ¡Sorpréndeme con un diseño nuevo!`,
-        config: {
-          responseModalities: ['TEXT', 'IMAGE'],
-        },
-    });
+    const imageDataUris: string[] = [];
 
     try {
-      const results = await Promise.allSettled([...referenceImagePromises, artisticTextPromise]);
-      const imageDataUris = results
-        .filter(
-          (result): result is PromiseFulfilledResult<{media?: {url: string}}> =>
-            result.status === 'fulfilled' && !!result.value.media?.url
-        )
-        .map((result) => result.value.media!.url);
-        
-      // Returns [ref1, ref2, ref3, ref4, artistic]
+      // 1. Generate Reference Images in parallel
+      const referenceImagePromises = Array.from({length: 4}).map(() => {
+        return ai.generate({
+          model: 'googleai/gemini-2.0-flash-preview-image-generation',
+          prompt: `Imagen para un juego de Pictionary de la palabra: '${input.word}'. Estilo: caricatura sencilla, colorida y muy fácil de adivinar. REGLA CRÍTICA Y OBLIGATORIA: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números.`,
+          config: {
+            responseModalities: ['TEXT', 'IMAGE'],
+          },
+        });
+      });
+
+      const referenceResults = await Promise.allSettled(referenceImagePromises);
+
+      referenceResults.forEach(result => {
+        if (result.status === 'fulfilled' && result.value.media?.url) {
+          imageDataUris.push(result.value.media.url);
+        } else if (result.status === 'rejected') {
+          console.error("Reference image generation promise failed:", result.reason);
+        }
+      });
+
+      // 2. Generate Artistic Text Image separately for robustness
+      try {
+        const artisticTextResult = await ai.generate({
+            model: 'googleai/gemini-2.0-flash-preview-image-generation',
+            prompt: `Crea una imagen que sea solamente el texto artístico de la palabra: '${input.word}'. Usa una tipografía muy creativa y llamativa, como de un videojuego o película. Sorpréndeme con un diseño diferente cada vez.`,
+            config: {
+              responseModalities: ['TEXT', 'IMAGE'],
+            },
+        });
+        if (artisticTextResult.media?.url) {
+          // It's important to push this one last, as the UI expects it at the end.
+          imageDataUris.push(artisticTextResult.media.url);
+        }
+      } catch(error) {
+         console.error("Artistic text image generation failed:", error);
+      }
+
+      // The calling component expects reference images first, then the artistic one.
+      // The current order of pushing to the array ensures this.
       return {imageDataUris};
+
     } catch (error) {
-      console.error('Image generation failed:', error);
+      console.error('Image generation flow failed:', error);
       return {imageDataUris: []};
     }
   }
