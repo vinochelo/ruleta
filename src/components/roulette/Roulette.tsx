@@ -199,7 +199,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
       <audio
         ref={spinSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2022/03/12/audio_1e59897c23.mp3?filename=prize-wheel-1-36423.mp3"
+        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_21d15214af.mp3?filename=roulette-wheel-143039.mp3"
         loop
         preload="auto"
       />
