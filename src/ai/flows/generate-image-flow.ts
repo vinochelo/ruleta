@@ -66,7 +66,7 @@ const generateQuickImageFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Starting QUICK image generation for: "${input.word}"`);
-    const prompt = `Generate an image that visually represents the concept of '${input.word}'. The image must be a simple, minimalist, black and white line drawing, perfect for a Pictionary game. The background must be solid white. It is absolutely forbidden to include any text, letters, or numbers in the image. The image should ONLY contain the drawing of the concept, nothing else.`;
+    const prompt = `A very simple, minimalist, black and white line drawing of '${input.word}'. For a Pictionary game. The background must be solid white. The image must only contain the drawing of the concept, with no text or letters.`;
     
     const imageUrl = await generateSingleImage(prompt);
     
@@ -110,11 +110,11 @@ const generateArtisticImagesFlow = ai.defineFlow(
 
     const prompts = [
       // Reference Images
-      `Generate a colorful cartoon illustration representing '${input.word}'. The style must be bold, simple, and easily recognizable for a game. The background should be a single, solid color. DO NOT include any text, letters, or numbers in the image. The output should be a drawing of the object or concept, not the word itself.`,
-      `Generate a photorealistic image showing '${input.word}'. The main subject must be clearly centered and visible. The image must not contain any text, words, letters, or numbers. Create a visual depiction of the idea, not the text.`,
-      `Generate a simple pencil sketch of '${input.word}' on a plain white background. The drawing needs to be clear and focused, suitable for a Pictionary game. Under no circumstances should any text, letters, or numbers appear in the image. Visually represent the subject.`,
+      `A colorful cartoon illustration of '${input.word}'. Bold, simple style for a game. Solid color background. The image should visually represent the concept without using any letters or text.`,
+      `A photorealistic image of '${input.word}'. The subject is centered and clear. The image should be a visual depiction, containing no letters or text.`,
+      `A simple pencil sketch of '${input.word}' on a plain white background. The drawing is clear and focused for a Pictionary game. The image should represent the subject visually, without any letters or text.`,
       // Artistic Text Image (LAST)
-      `Create a visually stunning, artistic text design of the word: '${input.word}'. Use a creative, eye-catching font like one from a video game or movie poster. Surprise me with a unique design. The background should be clean.`,
+      `A stunning, artistic text design of the word: '${input.word}'. Use a creative, eye-catching font, like from a video game or movie poster, on a clean background.`,
     ];
 
     const imagePromises = prompts.map(prompt => generateSingleImage(prompt));
