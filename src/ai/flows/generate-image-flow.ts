@@ -9,7 +9,7 @@
  * - generateArtisticImages - Generates a variety of artistic images in parallel.
  */
 
-import { ai } from '@/ai/genkit';
+import { ai, geminiImage } from '@/ai/genkit';
 import { z } from 'zod';
 
 // --- Common Helper Function ---
@@ -18,7 +18,7 @@ import { z } from 'zod';
 async function generateSingleImage(prompt: string): Promise<string | null> {
   try {
     const result = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
+      model: geminiImage,
       prompt,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],

@@ -8,7 +8,7 @@
  * - SuggestWordsOutput - The return type for the suggestWordsForCategory function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, geminiFlash} from '@/ai/genkit';
 import {z} from 'zod';
 
 const SuggestWordsInputSchema = z.object({
@@ -27,6 +27,7 @@ export async function suggestWordsForCategory(input: SuggestWordsInput): Promise
 
 const prompt = ai.definePrompt({
   name: 'suggestPictionaryWordsPrompt',
+  model: geminiFlash,
   input: {schema: SuggestWordsInputSchema},
   output: {schema: SuggestWordsOutputSchema},
   prompt: `Eres un asistente experto en juegos de Pictionary, especializado en crear listas de palabras temáticas. Para la categoría proporcionada, genera una lista de palabras o frases cortas que sean excelentes para dibujar.
