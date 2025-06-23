@@ -6,6 +6,8 @@ import {
   Dialog,
   DialogContent,
   DialogClose,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { RotateCcw, TimerIcon, XCircle, Play, Image as ImageIcon, Loader2 } from 'lucide-react';
@@ -127,6 +129,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         showCloseButton={false} 
         className="w-screen h-screen max-w-full max-h-full bg-card/90 backdrop-blur-lg border-0 shadow-none flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto"
       >
+        <DialogTitle className="sr-only">Resultado de la Ruleta</DialogTitle>
+        <DialogDescription className="sr-only">
+          La categoría seleccionada es {selectedCategoryName} y la palabra a dibujar es {selectedWord}.
+        </DialogDescription>
         
         <DialogClose asChild className="absolute top-4 right-4 z-50">
           <Button variant="ghost" className="transition-transform hover:scale-110 h-12 w-12 rounded-full bg-black/20 hover:bg-black/30">
