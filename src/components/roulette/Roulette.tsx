@@ -108,7 +108,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const segments = useMemo(() => {
     if (numSegments === 0) return [];
 
-    const FONT_SIZE_CATEGORY = Math.min(18, Math.max(12, 250 / numSegments));
+    const FONT_SIZE_CATEGORY = Math.min(20, Math.max(14, 300 / numSegments));
     
     return displayCategories.map((category, i) => {
       const startAngle = i * anglePerSegment;
@@ -126,7 +126,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         `Z`,
       ].join(' ');
       
-      const textPathStartRadiusFactor = 0.15;
+      const textPathStartRadiusFactor = 0.25;
       const textPathEndRadiusFactor = 0.9;
       
       const midAngle = startAngle + anglePerSegment / 2;
@@ -317,24 +317,22 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           </svg>
           {/* Pointer */}
           <svg
-              width="52"
-              height="52"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              className="absolute top-[-12px] left-1/2 -translate-x-1/2 z-10"
-              style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
+              width="36"
+              height="48"
+              viewBox="0 0 36 48"
+              className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-10"
+              style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))" }}
           >
-             <path 
-                d="M12 0C11.1716 0 10.5 0.671573 10.5 1.5V11.2547C10.5 11.6689 10.8358 12 11.25 12H12.75C13.1642 12 13.5 11.6689 13.5 11.2547V1.5C13.5 0.671573 12.8284 0 12 0Z"
-                fill="hsl(var(--primary))"
-                transform="rotate(180, 12, 12)"
-              />
               <path
-                d="M12 24L18.9282 12.75H5.0718L12 24Z"
-                fill="hsl(var(--primary))"
+                  d="M18 48 C18 48 0 24 0 18 A18 18 0 1 1 36 18 C36 24 18 48 18 48 Z"
+                  fill="hsl(var(--primary))"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
               />
-              <circle cx="12" cy="12" r="2.5" fill="white" />
+              <circle cx="18" cy="18" r="6" fill="white" />
           </svg>
+
           {/* Center decorative element */}
           <div 
             className={cn(
