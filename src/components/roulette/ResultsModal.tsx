@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
-import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +33,8 @@ const TIMER_OPTIONS = [
   { duration: 90 },
   { duration: 120 },
 ];
+
+const TIMER_BUTTON_COLORS = ['#34D399', '#60A5FA', '#FBBF24', '#F87171'];
 
 const ResultsModal: React.FC<ResultsModalProps> = ({
   isOpen,
@@ -61,8 +62,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   // Slideshow state
   const [allImages, setAllImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const { toast } = useToast();
   
   const resetAIState = useCallback(() => {
     setAiHelpActive(false);
@@ -87,12 +86,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       const quickResult = await generateQuickImage({ word });
       
       if (quickResult.error) {
-        toast({
-          title: "Error de Generación de Imagen",
-          description: quickResult.error,
-          variant: "destructive",
-          duration: 15000,
-        });
         setAiHelpActive(false); // Go back to the "get inspiration" button
         setIsGeneratingQuick(false); // Stop loading state
         return; 
@@ -118,19 +111,15 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         });
 
       } else {
-        const errorMessage = "La IA devolvió una respuesta vacía inesperada.";
-        toast({ title: "Error Inesperado", description: errorMessage, variant: "destructive" });
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
       }
     } catch (error: any) {
         console.error("Critical image generation flow error:", error);
-        const errorMessage = "Ocurrió un problema de comunicación con el servicio de IA. Revisa la consola del navegador y del servidor.";
-        toast({ title: "Error de IA", description: errorMessage, variant: "destructive" });
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
     }
-  }, [toast, resetAIState]);
+  }, [resetAIState]);
 
   // Effect to combine all images into a single array for the slideshow
   useEffect(() => {
@@ -170,7 +159,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     setTimerDuration(duration);
     setIsTimerFinished(false);
     setTimerKey(prevKey => prevKey + 1); // Remount timer with new duration
-    toast({ title: "Tiempo Seleccionado", description: `El temporizador está listo con ${duration} segundos.` });
   };
   
   const handleTimerEndInternal = useCallback(() => {
@@ -345,24 +333,19 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         {selectedWord}
                     </p>
                 </div>
-                
-                <Timer
-                  key={timerKey}
-                  initialDuration={timerDuration}
-                  onTimerEnd={handleTimerEndInternal}
-                  autoStart={false}
-                />
-                
+
                 <div className="w-full space-y-2">
-                    <h3 className="text-base font-medium text-center text-foreground/80">O cambiar el tiempo:</h3>
-                    <div className="grid grid-cols-4 gap-2">
-                    {TIMER_OPTIONS.map(({ duration }) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {TIMER_OPTIONS.map(({ duration }, index) => (
                         <Button
                         key={duration}
                         onClick={() => handleTimeButtonClick(duration)}
-                        variant={timerDuration === duration ? 'default' : 'outline'}
+                        style={{ 
+                            backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
+                        }}
                         className={cn(
-                            "text-sm sm:text-base font-bold py-2 sm:py-3 transition-transform hover:scale-105 active:scale-95 w-full rounded-lg shadow-md",
+                            "text-white text-xl font-bold py-4 rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4",
+                            timerDuration === duration ? 'border-white/80' : 'border-transparent',
                         )}
                         disabled={isTimerFinished}
                         >
@@ -371,7 +354,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     ))}
                     </div>
                 </div>
-
+                
+                <Timer
+                  key={timerKey}
+                  initialDuration={timerDuration}
+                  onTimerEnd={handleTimerEndInternal}
+                  autoStart={false}
+                />
+                
                 {isTimerFinished && (
                     <div className="text-center space-y-3 p-4 bg-card/80 backdrop-blur-sm rounded-xl w-full max-w-sm shadow-lg border border-border/20">
                         <p className="text-2xl font-bold text-destructive">¡Se acabó el tiempo!</p>
@@ -389,5 +379,3 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
-
-    
