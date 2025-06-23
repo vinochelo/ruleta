@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, Image as ImageIcon, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
@@ -214,21 +213,21 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
 
   const wordLength = selectedWord?.length || 0;
-  let wordFontSizeClass = 'text-7xl lg:text-8xl';
+  let wordFontSizeClass = 'text-6xl lg:text-7xl';
   if (wordLength > 8) {
-    wordFontSizeClass = 'text-6xl lg:text-7xl';
-  }
-  if (wordLength > 12) {
     wordFontSizeClass = 'text-5xl lg:text-6xl';
   }
-  if (wordLength > 16) {
+  if (wordLength > 12) {
     wordFontSizeClass = 'text-4xl lg:text-5xl';
   }
-  if (wordLength > 20) {
+  if (wordLength > 16) {
     wordFontSizeClass = 'text-3xl lg:text-4xl';
   }
-  if (wordLength > 24) {
+  if (wordLength > 20) {
     wordFontSizeClass = 'text-2xl lg:text-3xl';
+  }
+  if (wordLength > 24) {
+    wordFontSizeClass = 'text-xl lg:text-2xl';
   }
 
   const renderContent = () => {
@@ -287,7 +286,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       const currentImageUrl = slideshowImages[currentSlideshowIndex];
       return (
         <ContentBox>
-          {currentImageUrl && <Image src={currentImageUrl} alt={`Referencia ${currentSlideshowIndex + 1}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
+          {currentImageUrl && <Image src={currentImageUrl} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />}
           {isGeneratingArtistic && <Loader2 className="absolute top-4 right-4 h-6 w-6 text-primary animate-spin" />}
         </ContentBox>
       );
@@ -366,7 +365,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             <div className="text-center bg-card/50 backdrop-blur-sm p-4 rounded-xl shadow-lg border w-full min-h-[190px] flex flex-col justify-center">
               <p className="text-md text-muted-foreground">Palabra a dibujar</p>
               <p 
-                className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette`} 
+                className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette break-words leading-tight`} 
                 style={{ color: selectedCategoryColor || 'hsl(var(--foreground))' }}
               >
                 {selectedWord}
