@@ -185,3 +185,13 @@
 .timer-tick-pulse-animation {
   animation: timer-tick-pulse 0.4s ease-out;
 }
+
+@keyframes button-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.animate-button-press {
+  animation: button-press 0.3s ease-out;
+}

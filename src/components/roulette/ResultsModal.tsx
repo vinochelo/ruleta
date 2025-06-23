@@ -51,6 +51,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [timerDuration, setTimerDuration] = useState<number>(60);
   const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
+  const [timerShouldAutoStart, setTimerShouldAutoStart] = useState(false); // Bug fix: control auto-start
+  const [animatingButton, setAnimatingButton] = useState<number | null>(null); // For button animation
 
   // AI Image Generation State
   const [aiHelpActive, setAiHelpActive] = useState(false);
@@ -126,7 +128,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         setAiHelpActive(false);
         setIsGeneratingQuick(false);
     }
-  }, [resetAIState, toast]);
+  }, [resetAIState]);
 
   // Effect to combine all images into a single array for the slideshow
   useEffect(() => {
@@ -141,6 +143,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       setTimerDuration(60); // Default to 60s
       setIsTimerFinished(false);
       setTimerKey(prev => prev + 1);
+      setTimerShouldAutoStart(false); // Bug fix: Don't start on open
       // Reset AI state
       resetAIState();
 
@@ -165,11 +168,19 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     speakTimeSelection(duration);
     setTimerDuration(duration);
     setIsTimerFinished(false);
-    setTimerKey(prevKey => prevKey + 1); // Remount timer with new duration and autoStart
+    setTimerShouldAutoStart(true); // This will trigger the timer to start on remount
+    setTimerKey(prevKey => prevKey + 1);
+
+    // Button animation logic
+    setAnimatingButton(duration);
+    setTimeout(() => {
+      setAnimatingButton(null);
+    }, 300); // Duration of the animation
   };
   
   const handleTimerEndInternal = useCallback(() => {
     setIsTimerFinished(true);
+    setTimerShouldAutoStart(false); // Stop trying to autostart on future renders
     if (selectedWord) {
       setTimeout(() => {
         speakFn(`La palabra era ${selectedWord}.`);
@@ -351,7 +362,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
                         }}
                         className={cn(
-                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 border-4 border-transparent"
+                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg transition-transform hover:scale-105 border-4 border-transparent",
+                            animatingButton === duration && "animate-button-press"
                         )}
                         >
                         {duration}s
@@ -363,7 +375,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={timerKey}
                       initialDuration={timerDuration}
                       onTimerEnd={handleTimerEndInternal}
-                      autoStart={true}
+                      autoStart={timerShouldAutoStart}
                     />
                 </div>
             </div>
