@@ -41,7 +41,7 @@ const generateImageFlow = ai.defineFlow(
     const referenceImagePromises = Array.from({length: 4}).map(() => {
       return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Tu tarea principal es crear una imagen 100% visual para un juego de Pictionary. La imagen debe representar la palabra clave: '${input.word}'. REGLA CRÍTICA Y OBLIGATORIA: La imagen NO DEBE contener NINGÚN texto, letra, número o símbolo escrito. Cero texto. El objetivo es que alguien adivine la palabra solo con el dibujo. El estilo debe ser simple, como un icono o pictograma, con colores claros y fácil de entender rápidamente. Genera solo la imagen.`,
+        prompt: `Genera una imagen para un juego de Pictionary que represente la palabra: '${input.word}'. REGLA IMPORTANTE: La imagen debe ser 100% visual y no debe contener NINGÚN tipo de texto, letras o números. El estilo debe ser claro y colorido, fácil de interpretar para adivinar la palabra. Hazlo divertido y comprensible.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
@@ -50,7 +50,7 @@ const generateImageFlow = ai.defineFlow(
 
     const artisticTextPromise = ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen de texto artística y llamativa para la palabra: '${input.word}'. Usa un estilo de tipografía completamente diferente, creativo y divertido cada vez, como si fuera el título de un juego. ¡No repitas estilos! La palabra debe ser el foco central, claramente legible y el diseño debe ser rápido de generar.`,
+        prompt: `Crea una imagen de texto artística y muy llamativa para la palabra: '${input.word}'. El texto debe ser el foco central. Utiliza un estilo de fuente completamente diferente y creativo cada vez, como si fuera un título de un juego o una película. ¡Sorpréndeme con un diseño nuevo!`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },

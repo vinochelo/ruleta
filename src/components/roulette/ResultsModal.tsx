@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -253,7 +254,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                       key={duration}
                       onClick={() => handleTimeButtonClick(duration)}
                       className={`text-2xl font-bold py-8 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
-                      disabled={displayState === 'generating'}
                     >
                       <TimerIcon className="mr-2 h-6 w-6" />
                       {duration}s
