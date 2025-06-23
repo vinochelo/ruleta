@@ -60,16 +60,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sawtooth';
-    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.06);
+    oscillator.type = 'sine'; // Softer wave
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // Lower, less sharp frequency
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.08);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.06);
+    oscillator.stop(audioContext.currentTime + 0.08);
 
     oscillator.onended = () => {
       audioContext.close().catch(console.error);
@@ -295,22 +295,24 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             </g>
           </svg>
           {/* Pointer */}
-          <>
-            <div
-              className="absolute top-[-8px] left-1/2 -translate-x-1/2 z-10"
-              style={{
-                width: '0',
-                height: '0',
-                borderLeft: '14px solid transparent',
-                borderRight: '14px solid transparent',
-                borderTop: '28px solid hsl(var(--destructive))',
-                filter: 'drop-shadow(0 4px 3px rgba(0, 0, 0, 0.4))'
-              }}
-            />
-            <div
-              className="absolute top-[18px] left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full z-10 border-2 border-destructive"
-            />
-          </>
+          <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              className="absolute top-[-10px] left-1/2 -translate-x-1/2 z-10"
+              style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
+          >
+              <g transform="rotate(180 12 12)">
+                  <path
+                      fill="hsl(var(--destructive))"
+                      stroke="#FFFFFF"
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                      d="M20.66,11.37,18,8.71V6A1,1,0,0,0,17,5H13a1,1,0,0,0,0,2h3V9.59l-1.1-1.1a1,1,0,0,0-1.41,0L12,9.9,9.51,7.41a1,1,0,0,0-1.41,0L7,8.51V7h3a1,1,0,0,0,0-2H6A1,1,0,0,0,5,6V8.71L2.34,11.37a1,1,0,0,0,0,1.41L8,18.45V21a1,1,0,0,0,1,1h6a1,1,0,0,0,1-1V18.45l5.66-5.67A1,1,0,0,0,20.66,11.37Z"
+                  />
+              </g>
+          </svg>
           {/* Center spin button */}
           <div 
             className={cn(

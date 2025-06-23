@@ -40,7 +40,7 @@ const generateImageFlow = ai.defineFlow(
     try {
       const {media} = await ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Crea una imagen de pictionary para la palabra: '${input.word}'. El estilo debe ser extremadamente simple, como un icono o un dibujo de líneas claras, muy fácil de adivinar. Usa colores planos y un fondo blanco liso. Evita los detalles complejos, las sombras o los fondos elaborados. La imagen debe ser divertida y centrarse en un único objeto o concepto.`,
+        prompt: `Crea una imagen de estilo pictionary para la palabra: '${input.word}'. La imagen debe ser clara, colorida y fácil de adivinar. El estilo debe ser divertido y caricaturesco, con un toque artístico, pero no fotorrealista. Usa colores vibrantes y contornos definidos sobre un fondo blanco liso. La imagen debe ser visualmente atractiva pero lo suficientemente simple como para generarse rápidamente y ser adivinada en un juego.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
