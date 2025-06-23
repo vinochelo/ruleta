@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,7 +11,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
+import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles, ArrowLeft, ArrowRight } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
 import { useToast } from '@/hooks/use-toast';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
@@ -362,7 +363,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                         <Button
                         key={duration}
                         onClick={() => handleTimeButtonClick(duration)}
-                        className={`text-xl font-bold py-4 sm:py-6 transition-transform hover:scale-105 w-full rounded-lg shadow-lg ${color} ${textColor}`}
+                        className={`text-xl font-bold py-4 sm:py-6 transition-transform hover:scale-105 active:scale-95 w-full rounded-lg shadow-lg ${color} ${textColor}`}
                         disabled={isPictionaryRoundActive}
                         >
                         <TimerIcon className="mr-2 h-5 w-5" />
