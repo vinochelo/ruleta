@@ -41,7 +41,7 @@ const generateImageFlow = ai.defineFlow(
     const referenceImagePromises = Array.from({length: 4}).map(() => {
       return ai.generate({
         model: 'googleai/gemini-2.0-flash-preview-image-generation',
-        prompt: `Genera una imagen para un juego de adivinanzas (Pictionary) que represente visualmente la palabra: '${input.word}'. El estilo debe ser extremadamente simple, claro y fácil de dibujar, como un icono o un pictograma. La imagen debe ser colorida pero con un diseño limpio. REGLA ABSOLUTA Y NO NEGOCIABLE: Está terminantemente prohibido incluir cualquier tipo de texto, letra, caracter o número en la imagen. La imagen debe ser 100% visual y no contener la palabra escrita de ninguna forma. La velocidad es esencial.`,
+        prompt: `Tu tarea principal es crear una imagen 100% visual para un juego de Pictionary. La imagen debe representar la palabra clave: '${input.word}'. REGLA CRÍTICA Y OBLIGATORIA: La imagen NO DEBE contener NINGÚN texto, letra, número o símbolo escrito. Cero texto. El objetivo es que alguien adivine la palabra solo con el dibujo. El estilo debe ser simple, como un icono o pictograma, con colores claros y fácil de entender rápidamente. Genera solo la imagen.`,
         config: {
           responseModalities: ['TEXT', 'IMAGE'],
         },
