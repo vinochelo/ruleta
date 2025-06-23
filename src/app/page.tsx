@@ -272,14 +272,14 @@ export default function HomePage() {
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2">
-          <Card className="shadow-lg transform transition-all duration-300 hover:shadow-xl">
-            <CardHeader>
-              <CardTitle className="title-text text-2xl flex items-center gap-2">
-                <Users className="h-6 w-6" />
+          <Card className="shadow-lg">
+            <CardHeader className="p-4">
+              <CardTitle className="title-text text-xl flex items-center gap-2">
+                <Users className="h-5 w-5" />
                 Equipos y Puntuaciones
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 p-4 pt-0">
               <div className="space-y-2">
                 <Label htmlFor="winning-score">Puntos para Ganar</Label>
                 <Select
@@ -317,16 +317,16 @@ export default function HomePage() {
               {teams.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">No hay equipos todavía. ¡Añade algunos para empezar!</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <TooltipProvider>
                     {teams.map(team => (
                       <Card key={team.id} className="bg-card/50 shadow-inner overflow-hidden">
-                        <CardContent className="p-4 flex items-center justify-between gap-4">
+                        <CardContent className="p-3 flex items-center justify-between gap-2">
                           {/* Delete Button - Left */}
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button onClick={() => handleRemoveTeam(team.id)} variant="ghost" size="icon" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10 rounded-full transition-all hover:scale-110">
-                                <Trash2 className="h-5 w-5" />
+                                <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">Eliminar {team.name}</span>
                               </Button>
                             </TooltipTrigger>
@@ -337,8 +337,8 @@ export default function HomePage() {
                           
                           {/* Team Info - Center */}
                           <div className="flex flex-col items-center flex-grow text-center">
-                            <p className="text-2xl font-bold text-primary truncate max-w-[200px] sm:max-w-xs">{team.name}</p>
-                            <p className="text-7xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
+                            <p className="text-xl font-bold text-primary truncate max-w-[150px] sm:max-w-xs">{team.name}</p>
+                            <p className="text-6xl font-bold text-foreground tabular-nums drop-shadow-sm">{team.score}</p>
                           </div>
                           
                           {/* Add Point Button - Right */}
@@ -346,11 +346,11 @@ export default function HomePage() {
                             <TooltipTrigger asChild>
                               <Button
                                 onClick={() => handleIncrementScore(team.id)}
-                                className="w-24 h-24 rounded-2xl bg-green-500 hover:bg-green-600 text-white shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center"
+                                className="w-20 h-20 rounded-2xl bg-green-500 hover:bg-green-600 text-white shadow-lg transition-transform hover:scale-105 flex flex-col items-center justify-center"
                                 aria-label={`Sumar 1 punto a ${team.name}`}
                               >
-                                <Plus className="h-8 w-8" />
-                                <span className="text-lg font-semibold">Punto</span>
+                                <Plus className="h-6 w-6" />
+                                <span className="text-base font-semibold">Punto</span>
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent side="left">
@@ -365,7 +365,7 @@ export default function HomePage() {
               )}
             </CardContent>
             {teams.length > 0 && (
-              <CardFooter>
+              <CardFooter className="p-4 pt-0">
                 <Button onClick={handleResetAllScores} variant="outline" className="w-full transition-transform hover:scale-105">
                   <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Todas las Puntuaciones
                 </Button>
