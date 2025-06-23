@@ -62,6 +62,21 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
     color: winner.color || 'hsl(var(--primary))',
   };
 
+  const winnerNameLength = winner.name.length || 0;
+  let winnerNameFontSizeClass = 'text-8xl';
+  if (winnerNameLength > 8) {
+    winnerNameFontSizeClass = 'text-7xl';
+  }
+  if (winnerNameLength > 12) {
+    winnerNameFontSizeClass = 'text-6xl';
+  }
+  if (winnerNameLength > 16) {
+    winnerNameFontSizeClass = 'text-5xl';
+  }
+  if (winnerNameLength > 20) {
+    winnerNameFontSizeClass = 'text-4xl';
+  }
+
   return (
     <Dialog open={!!winner} onOpenChange={(open) => { if (!open) onPlayAgain() }}>
       <DialogContent className="w-screen h-screen max-w-full max-h-full bg-card/80 backdrop-blur-xl border-0 shadow-none flex items-center justify-center p-0">
@@ -81,7 +96,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
                 <h1 className="text-6xl font-bold title-text">
                     ¡Felicidades!
                 </h1>
-                <p className="text-8xl font-bold break-words" style={winnerNameStyle}>
+                <p className={`${winnerNameFontSizeClass} font-bold break-words`} style={winnerNameStyle}>
                     {winner.name}
                 </p>
                 <p className="text-2xl text-foreground/80 max-w-3xl mx-auto">
