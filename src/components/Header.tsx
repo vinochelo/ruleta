@@ -10,27 +10,27 @@ export default function Header() {
           <div className="flex items-center gap-4 invisible" aria-hidden="true">
             <Link href="/" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
               <Gamepad2 className="h-4 w-4" />
-              Jugar
+              <span className="hidden sm:inline">Jugar</span>
             </Link>
             <Link href="/manage-categories" className="text-sm font-medium text-muted-foreground flex items-center gap-1">
               <ListChecks className="h-4 w-4" />
-              Categorías
+              <span className="hidden sm:inline">Categorías</span>
             </Link>
           </div>
 
           <Link href="/" className="flex items-center gap-2">
-            <Gamepad2 className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold text-primary">Ruleta Rupestre</h1>
+            <Gamepad2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">Ruleta Rupestre</h1>
           </Link>
           
           <nav className="flex items-center gap-4">
             <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
               <Gamepad2 className="h-4 w-4" />
-              Jugar
+              <span className="hidden sm:inline">Jugar</span>
             </Link>
             <Link href="/manage-categories" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
               <ListChecks className="h-4 w-4" />
-              Categorías
+              <span className="hidden sm:inline">Categorías</span>
             </Link>
           </nav>
         </div>
