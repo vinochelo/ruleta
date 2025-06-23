@@ -55,6 +55,10 @@ const praiseWinnerFlow = ai.defineFlow(
     outputSchema: PraiseWinnerOutputSchema,
   },
   async (input) => {
+    if (!process.env.GOOGLE_API_KEY) {
+      console.error("FATAL: La variable de entorno GOOGLE_API_KEY no está configurada.");
+      return { praiseMessage: `¡Felicidades, ${input.teamName}! ¡Han ganado!` };
+    }
     const {output} = await prompt(input);
     if (output) {
         return output;
