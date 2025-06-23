@@ -124,8 +124,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         `Z`,
       ].join(' ');
       
-      const textPathStartRadiusFactor = 0.15;
-      const textPathEndRadiusFactor = 0.75;
+      const textPathStartRadiusFactor = 0.1;
+      const textPathEndRadiusFactor = 0.8;
       
       const midAngle = startAngle + anglePerSegment / 2;
       const [lineStartX, lineStartY] = getCoordinatesForAngle(midAngle, WHEEL_RADIUS * textPathStartRadiusFactor);
@@ -151,7 +151,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         textColor: textColor,
         textPathId: radialLinePathId,
         textArcPathData: radialLinePathData,
-        textAnchor: "middle", 
+        textAnchor: "start",
         fontSize: FONT_SIZE_CATEGORY, 
       };
     });
@@ -284,7 +284,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
                   >
                     <textPath 
                       href={`#${segment.textPathId}`} 
-                      startOffset="50%" 
+                      startOffset="0%"
                       textAnchor={segment.textAnchor}
                     >
                       {segment.displayText}
@@ -304,16 +304,15 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
               style={{ filter: "drop-shadow(0 4px 3px rgba(0,0,0,0.4))" }}
           >
              <path 
-                d="M12 2C12 2 15 6.5 15 11C15 15.5 12 22 12 22C12 22 9 15.5 9 11C9 6.5 12 2 12 2Z" 
+                d="M12 0C11.1716 0 10.5 0.671573 10.5 1.5V11.2547C10.5 11.6689 10.8358 12 11.25 12H12.75C13.1642 12 13.5 11.6689 13.5 11.2547V1.5C13.5 0.671573 12.8284 0 12 0Z"
                 fill="hsl(var(--primary))"
-                stroke="#FFFFFF"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-             />
-             <path
-                d="M12 11a2 2 0 100-4 2 2 0 000 4z"
-                fill="white"
-             />
+                transform="rotate(180, 12, 12)"
+              />
+              <path
+                d="M12 24L17.1962 15H6.80385L12 24Z"
+                fill="hsl(var(--primary))"
+              />
+              <circle cx="12" cy="12" r="2.5" fill="white" />
           </svg>
           {/* Center spin button */}
           <div 
