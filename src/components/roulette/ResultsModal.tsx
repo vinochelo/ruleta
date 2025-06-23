@@ -170,6 +170,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       case 'generating':
         return (
           <ContentBox>
+            <WordToDraw />
             <div className="flex flex-col items-center justify-center gap-4 text-primary">
               <Loader2 className="h-16 w-16 animate-spin" />
               <p className="text-xl font-medium">Generando inspiración...</p>
@@ -190,14 +191,13 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       case 'final_reveal':
         return (
           <ContentBox>
+            <WordToDraw />
             {artisticImage ? (
               <Image src={artisticImage} alt={`Palabra: ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
             ) : (
               <div className="text-center">
-                <p className="text-xl text-muted-foreground">Palabra a dibujar</p>
-                <p className="text-7xl lg:text-8xl font-bold break-words leading-tight" style={wordStyle}>
-                  {selectedWord}
-                </p>
+                 {/* Fallback if no artistic image is generated, the word is already visible in WordToDraw */}
+                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
               </div>
             )}
           </ContentBox>
@@ -207,8 +207,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
 
   if (!selectedCategoryName) return null;
-
-  const wordStyle = { color: selectedCategoryColor || 'hsl(var(--primary))' };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseDialog(); }}>
@@ -243,7 +241,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <div className="flex-1 w-full lg:max-w-md flex flex-col items-center justify-center gap-6">
             <div className="text-center">
               <p className="text-lg text-muted-foreground">Categoría</p>
-              <p className="text-5xl lg:text-6xl font-bold font-roulette" style={wordStyle}>
+              <p className="text-5xl lg:text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                 {selectedCategoryName}
               </p>
             </div>
