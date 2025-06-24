@@ -14,13 +14,13 @@ import { Card, CardContent } from '@/components/ui/card';
 
 // --- PASO 2: REEMPLAZA LOS VALORES DE EJEMPLO ---
 // Este es tu ID de editor global. Reemplázalo también en `src/app/layout.tsx`.
-const ADSENSE_CLIENT_ID = "ca-pub-XXXXXXXXXXXXXXXX"; 
+const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751"; 
 
 // Reemplaza estos IDs de bloque de anuncios con los tuyos.
 const AD_SLOT_IDS = {
-  main: "YYYYYYYYY1",     // Para el banner en la página principal
-  results: "YYYYYYYYY2",   // Para el banner en el modal de resultados/timer
-  winner: "YYYYYYYYY3",    // Para el banner en el modal de ganador
+  main: 7120343438,     // Para el banner en la página principal
+  results: 9519276066,   // Para el banner en el modal de resultados/timer
+  winner: 9519276066,    // Para el banner en el modal de ganador
 };
 
 interface AdBannerProps {
@@ -35,7 +35,7 @@ const AdBanner = ({ slot }: AdBannerProps) => {
 
   useEffect(() => {
     // Solo intenta cargar el anuncio si las credenciales parecen válidas (no son placeholders)
-    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && !isPlaceholder(adSlotId)) {
+    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && !isPlaceholder(adSlotId.toString())) {
         try {
             // @ts-ignore
             (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -46,7 +46,7 @@ const AdBanner = ({ slot }: AdBannerProps) => {
   }, [adSlotId]);
 
   // Muestra un mensaje de configuración si los IDs no están configurados correctamente
-  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || isPlaceholder(adSlotId)) {
+  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || isPlaceholder(adSlotId.toString())) {
       return (
         <Card className="bg-muted/50 border-dashed w-full my-4">
             <CardContent className="p-4 text-center">

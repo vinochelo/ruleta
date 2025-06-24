@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 // IMPORTANTE: Reemplaza este valor con tu propio ID de cliente de AdSense
-const ADSENSE_CLIENT_ID = "ca-pub-XXXXXXXXXXXXXXXX";
+const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751";
 
 export default function RootLayout({
   children,

@@ -400,6 +400,9 @@ const CategoryManagement: React.FC = () => {
     }
   };
 
+  const sortedCategories = [...categories].sort((a, b) => 
+    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
+  );
 
   return (
     <div className="space-y-8">
@@ -462,7 +465,7 @@ const CategoryManagement: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {categories.map((category) => (
+                  {sortedCategories.map((category) => (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium align-top py-4">{category.name}</TableCell>
                       <TableCell className="align-top py-4">
