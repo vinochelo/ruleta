@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,7 +20,12 @@ export function useSpeechSynthesis(): UseSpeechSynthesisReturn {
   }, []);
 
   const speak = useCallback((text: string) => {
-    if (!isSupported || isSpeaking) return;
+    if (!isSupported) return;
+
+    // Interrupt any ongoing speech to prioritize the new request.
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'es-ES'; // Set language to Spanish
@@ -27,10 +33,14 @@ export function useSpeechSynthesis(): UseSpeechSynthesisReturn {
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
-    window.speechSynthesis.speak(utterance);
-  }, [isSupported, isSpeaking]);
+    // Use a small timeout to allow the browser to process the cancel() command
+    // before the new speech synthesis begins. This prevents race conditions.
+    setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+    }, 50);
+  }, [isSupported]);
 
-  // Cancel speech synthesis on component unmount or if isSpeaking becomes true elsewhere
+  // Cancel speech synthesis on component unmount
   useEffect(() => {
     return () => {
       if (isSupported && window.speechSynthesis.speaking) {

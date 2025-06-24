@@ -70,7 +70,7 @@ export default function HomePage() {
   const [gameMode, setGameMode] = useState<'teams' | 'players'>('teams');
   const [animatingScoreTeamId, setAnimatingScoreTeamId] = useState<string | null>(null);
 
-  const { speak, isSpeaking, isSupported: speechSupported } = useSpeechSynthesis();
+  const { speak, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
 
   // Load Categories
@@ -196,10 +196,10 @@ export default function HomePage() {
   };
 
   const speakFn = useCallback((text: string) => {
-      if (speechSupported && !isSpeaking) {
+      if (speechSupported) {
           speak(text);
       }
-  }, [speechSupported, isSpeaking, speak]);
+  }, [speechSupported, speak]);
 
   const handleIncrementScore = useCallback((teamId: string) => {
     playPointSound();
@@ -235,7 +235,7 @@ export default function HomePage() {
     }
 
     // Announce leader/tie every 5 total points
-    if (newTotalPoints > 0 && newTotalPoints % 5 === 0 && !isSpeaking) {
+    if (newTotalPoints > 0 && newTotalPoints % 5 === 0) {
       const highestScore = Math.max(...updatedTeams.map(t => t.score));
       if (highestScore > 0) {
         const leaders = updatedTeams.filter(t => t.score === highestScore);
@@ -254,7 +254,7 @@ export default function HomePage() {
         speakFn(announcement);
       }
     }
-  }, [teams, winningScore, isSpeaking, persistTeams, speakFn, praiseWinner, totalPointsScored, gameMode]);
+  }, [teams, winningScore, persistTeams, speakFn, praiseWinner, totalPointsScored, gameMode]);
 
   const handleRemoveTeam = useCallback((teamId: string) => {
     const teamToRemove = teams.find(t => t.id === teamId);
@@ -269,8 +269,8 @@ export default function HomePage() {
     setTotalPointsScored(0);
     setUsedWords({});
     toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones se han reiniciado a 0." });
-    if (!isSpeaking) speakFn("Puntuaciones reiniciadas.");
-  }, [teams, persistTeams, toast, isSpeaking, speakFn]);
+    speakFn("Puntuaciones reiniciadas.");
+  }, [teams, persistTeams, toast, speakFn]);
   
   const handlePlayAgain = useCallback(() => {
     handleResetAllScores();
@@ -309,12 +309,12 @@ export default function HomePage() {
     setIsModalOpen(true);
 
     const announcement = `Categoría: ${category.name}.`;
-     if (!isSpeaking) speakFn(announcement);
-  }, [speakFn, isSpeaking, usedWords, toast]);
+    speakFn(announcement);
+  }, [speakFn, usedWords, toast]);
 
   const speakTimeSelectionCallback = useCallback((duration: number) => {
-    if (!isSpeaking) speakFn(`${duration} segundos.`);
-  }, [speakFn, isSpeaking]);
+    speakFn(`${duration} segundos.`);
+  }, [speakFn]);
 
 
   return (
