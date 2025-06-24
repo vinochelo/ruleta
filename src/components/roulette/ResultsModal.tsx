@@ -15,6 +15,7 @@ import Timer from '@/components/timer/Timer';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import AdBanner from '../ads/AdBanner';
 
 interface ResultsModalProps {
   isOpen: boolean;
@@ -346,7 +347,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           </Button>
         </DialogClose>
 
-        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-evenly gap-6 h-full">
+        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch justify-evenly gap-6 flex-grow h-full">
           
           <div className="flex-1 lg:w-1/2 flex flex-col items-center justify-center text-center min-h-[300px] lg:min-h-0">
              {renderContent()}
@@ -400,6 +401,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     />
                 </div>
             </div>
+          </div>
+        </div>
+        <div className="w-full flex justify-center">
+          <div className="w-full max-w-2xl">
+            <AdBanner slot="results" />
           </div>
         </div>
       </DialogContent>

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Trophy, Play } from 'lucide-react';
+import AdBanner from '../ads/AdBanner';
 
 interface Team {
   id: string;
@@ -108,6 +109,9 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
                 <Play className="mr-4 h-8 w-8" />
                 Jugar de Nuevo
             </Button>
+            <div className="w-full max-w-md">
+              <AdBanner slot="winner" />
+            </div>
         </div>
       </DialogContent>
     </Dialog>

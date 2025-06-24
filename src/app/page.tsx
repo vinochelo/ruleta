@@ -460,7 +460,7 @@ export default function HomePage() {
                     />
                 </CardContent>
             </Card>
-            <AdBanner />
+            <AdBanner slot="main" />
         </div>
       </div>
 
