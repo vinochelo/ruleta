@@ -40,14 +40,19 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
 }) => {
   const [editableWords, setEditableWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState('');
+  const [manualDuplicates, setManualDuplicates] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const lowerCaseDuplicates = useMemo(() => new Set(duplicateWords.map(w => w.toLowerCase())), [duplicateWords]);
 
   useEffect(() => {
-    if (isOpen && !isLoading) {
-      setEditableWords([...suggestedWords]);
-      setNewWord('');
+    if (isOpen) {
+      if (!isLoading) {
+        setEditableWords([...suggestedWords]);
+        setNewWord('');
+      }
+      // Reset manual duplicate highlights whenever the dialog is opened or re-evaluated
+      setManualDuplicates(new Set());
     }
   }, [suggestedWords, isOpen, isLoading]);
 
@@ -55,10 +60,17 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
     const updatedWords = [...editableWords];
     updatedWords[index] = value;
     setEditableWords(updatedWords);
+    // Clear highlights when user starts editing, as they might be fixing it
+    if (manualDuplicates.size > 0) {
+      setManualDuplicates(new Set());
+    }
   };
 
   const handleDeleteWord = (index: number) => {
     setEditableWords(editableWords.filter((_, i) => i !== index));
+    if (manualDuplicates.size > 0) {
+      setManualDuplicates(new Set());
+    }
   };
 
   const handleAddManualWord = (e: FormEvent) => {
@@ -72,31 +84,65 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
       toast({ title: "Palabra Duplicada", description: "Esta palabra ya está en la lista.", variant: "default" });
       return;
     }
+    if (manualDuplicates.size > 0) {
+      setManualDuplicates(new Set());
+    }
     setEditableWords([wordToAdd, ...editableWords]); // Add to the top for visibility
     setNewWord('');
   };
 
   const handleSubmit = () => {
-    const finalWords = editableWords
-      .map(w => w.trim())
-      .filter(w => w !== '' && !lowerCaseDuplicates.has(w.toLowerCase()));
+    // 1. Check for duplicates within the editable list
+    const seenWords = new Map<string, number>();
+    const wordsWithDuplicates = new Set<string>();
 
-    const uniqueWords = [...new Set(finalWords.map(w => w.toLowerCase()))];
-    if (finalWords.length !== uniqueWords.length) {
-      toast({ title: "Palabras Duplicadas", description: "La lista final contiene palabras duplicadas que has introducido manualmente. Por favor, revísala.", variant: "destructive" });
-      return;
-    }
+    editableWords.forEach((word) => {
+      const lowerCaseWord = word.trim().toLowerCase();
+      if (lowerCaseWord) {
+        seenWords.set(lowerCaseWord, (seenWords.get(lowerCaseWord) || 0) + 1);
+      }
+    });
 
-    if (finalWords.length === 0) {
-      toast({ title: "Sin Palabras Nuevas", description: "No hay palabras nuevas para añadir.", variant: "destructive"});
+    seenWords.forEach((count, word) => {
+      if (count > 1) {
+        wordsWithDuplicates.add(word);
+      }
+    });
+
+    if (wordsWithDuplicates.size > 0) {
+      const duplicateNames = [...wordsWithDuplicates].map(w => `"${w}"`).join(', ');
+      toast({
+        title: "Palabras Repetidas",
+        description: `Se encontraron repeticiones para: ${duplicateNames}. Por favor, elimina las copias.`,
+        variant: "destructive",
+      });
+      setManualDuplicates(wordsWithDuplicates); // Highlight them
       return;
     }
     
-    onAddWords(finalWords);
+    setManualDuplicates(new Set()); // Clear any previous highlights
+
+    // 2. Prepare final list, filtering out original duplicates and empty strings
+    const finalWords = editableWords
+      .map(w => w.trim())
+      .filter(w => w !== '' && !lowerCaseDuplicates.has(w.toLowerCase()));
+    
+    // Create a final unique set to be safe
+    const uniqueFinalWords = [...new Set(finalWords)];
+
+    if (uniqueFinalWords.length === 0) {
+      toast({ title: "Sin Palabras Nuevas", description: "No hay palabras nuevas para añadir.", variant: "default" });
+      return;
+    }
+    
+    onAddWords(uniqueFinalWords);
   };
   
   const wordsToAddCount = useMemo(() => {
-    return editableWords.filter(w => w.trim() !== '' && !lowerCaseDuplicates.has(w.toLowerCase())).length;
+    return editableWords.filter(w => {
+      const lowerCaseWord = w.trim().toLowerCase();
+      return lowerCaseWord !== '' && !lowerCaseDuplicates.has(lowerCaseWord);
+    }).length;
   }, [editableWords, lowerCaseDuplicates]);
 
 
@@ -141,7 +187,9 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
                     <p className="text-sm text-muted-foreground text-center py-10">No se sugirieron palabras. Añade algunas manualmente.</p>
                 )}
                 {editableWords.map((word, index) => {
-                  const isDuplicate = lowerCaseDuplicates.has(word.toLowerCase());
+                  const lowerCaseWord = word.trim().toLowerCase();
+                  const isOriginalDuplicate = lowerCaseDuplicates.has(lowerCaseWord);
+                  const isManualDuplicate = manualDuplicates.has(lowerCaseWord);
                   return (
                     <div key={index} className="flex items-center gap-2 animate-in fade-in duration-300">
                       <Input
@@ -149,13 +197,17 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
                         onChange={(e) => handleWordChange(index, e.target.value)}
                         className={cn(
                             "flex-grow bg-input/50",
-                            isDuplicate && "border-amber-500/50 text-muted-foreground line-through focus-visible:ring-amber-500"
+                            isOriginalDuplicate && "border-amber-500/50 text-muted-foreground line-through focus-visible:ring-amber-500",
+                            isManualDuplicate && !isOriginalDuplicate && "border-destructive/80 focus-visible:ring-destructive"
                         )}
                         aria-label={`Palabra editable ${index + 1}`}
-                        readOnly={isDuplicate}
+                        readOnly={isOriginalDuplicate}
                       />
-                      {isDuplicate && (
+                      {isOriginalDuplicate && (
                         <Badge variant="outline" className="border-amber-500 text-amber-600 shrink-0">Duplicada</Badge>
+                      )}
+                       {isManualDuplicate && !isOriginalDuplicate && (
+                        <Badge variant="destructive" className="shrink-0">Repetida</Badge>
                       )}
                       <Button
                         variant="ghost"
@@ -183,7 +235,7 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
           <Button 
             onClick={handleSubmit} 
             className="transition-transform hover:scale-105" 
-            disabled={isLoading || wordsToAddCount === 0}
+            disabled={isLoading || (wordsToAddCount === 0 && editableWords.length > 0)}
           >
             Añadir Palabras Nuevas ({wordsToAddCount})
           </Button>
