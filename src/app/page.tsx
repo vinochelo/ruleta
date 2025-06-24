@@ -19,6 +19,7 @@ import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
+import AdBanner from '@/components/ads/AdBanner';
 
 interface Category {
   id: string;
@@ -332,7 +333,7 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
           <Card className="shadow-lg">
             <CardHeader className="p-3">
               <CardTitle className="title-text text-lg flex items-center gap-2">
@@ -449,6 +450,7 @@ export default function HomePage() {
               </CardFooter>
             )}
           </Card>
+          <AdBanner />
         </div>
 
         <div className="lg:col-span-3 flex flex-col gap-4">
