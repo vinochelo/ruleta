@@ -12,6 +12,12 @@
 import { ai, geminiImage } from '@/ai/genkit';
 import { z } from 'zod';
 
+function ensureApiKey() {
+  if (!process.env.GOOGLE_API_KEY) {
+    throw new Error("La clave API de Google no está configurada. Obtén una en https://aistudio.google.com/app/apikey y añádela como GOOGLE_API_KEY a tu archivo .env");
+  }
+}
+
 // --- Common Helper Function ---
 
 // A robust helper to generate a single image. Returns an object with the URL or an error.
@@ -113,20 +119,20 @@ const generateQuickImageFlow = ai.defineFlow(
     outputSchema: QuickImageOutputSchema,
   },
   async (input) => {
-    if (!process.env.GOOGLE_API_KEY) {
-      const errorMsg = "La variable de entorno GOOGLE_API_KEY no está configurada. Por favor, añádela a un archivo .env en la raíz de tu proyecto.";
-      return { imageDataUri: null, error: errorMsg };
-    }
-    
-    const prompt = `A very simple, minimalist, black and white icon for a pictionary game. The icon should represent: '${input.word}'. CRITICAL: The image must contain NO text, letters, or numbers. Only the drawing.`;
-    
-    const { imageUrl, error } = await generateSingleImage(prompt);
-    
-    if (imageUrl) {
-        return { imageDataUri: imageUrl, error: null };
-    } else {
-        const finalError = error || "Ocurrió un error inesperado en la generación de la imagen.";
-        return { imageDataUri: null, error: finalError };
+    try {
+      ensureApiKey();
+      const prompt = `A very simple, minimalist, black and white icon for a pictionary game. The icon should represent: '${input.word}'. CRITICAL: The image must contain NO text, letters, or numbers. Only the drawing.`;
+      
+      const { imageUrl, error } = await generateSingleImage(prompt);
+      
+      if (imageUrl) {
+          return { imageDataUri: imageUrl, error: null };
+      } else {
+          const finalError = error || "Ocurrió un error inesperado en la generación de la imagen.";
+          return { imageDataUri: null, error: finalError };
+      }
+    } catch (e: any) {
+      return { imageDataUri: null, error: e.message };
     }
   }
 );
@@ -164,15 +170,20 @@ const generateArtisticImagesFlow = ai.defineFlow(
     outputSchema: ArtisticImagesOutputSchema,
   },
   async (input) => {
-    const prompt = `A highly detailed, photorealistic, and artistic image representing '${input.word}'. The image should be visually stunning and suitable for a game. CRITICAL: The image must not contain any text, letters, or numbers whatsoever. Focus solely on the visual representation of the concept.`;
+    try {
+      ensureApiKey();
+      const prompt = `A highly detailed, photorealistic, and artistic image representing '${input.word}'. The image should be visually stunning and suitable for a game. CRITICAL: The image must not contain any text, letters, or numbers whatsoever. Focus solely on the visual representation of the concept.`;
 
-    const { imageUrl, error } = await generateSingleImage(prompt);
-    
-    if (imageUrl) {
-        return { imageDataUri: imageUrl, error: null };
-    } else {
-        const finalError = error || "Ocurrió un error inesperado en la generación de la imagen elaborada.";
-        return { imageDataUri: null, error: finalError };
+      const { imageUrl, error } = await generateSingleImage(prompt);
+      
+      if (imageUrl) {
+          return { imageDataUri: imageUrl, error: null };
+      } else {
+          const finalError = error || "Ocurrió un error inesperado en la generación de la imagen elaborada.";
+          return { imageDataUri: null, error: finalError };
+      }
+    } catch (e: any) {
+      return { imageDataUri: null, error: e.message };
     }
   }
 );

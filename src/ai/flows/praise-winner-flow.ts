@@ -69,12 +69,13 @@ const praiseWinnerFlow = ai.defineFlow(
   },
   async (input) => {
     if (!process.env.GOOGLE_API_KEY) {
-      return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡Han ganado!` };
+      throw new Error("La clave API de Google no está configurada. Obtén una en https://aistudio.google.com/app/apikey y añádela como GOOGLE_API_KEY a tu archivo .env");
     }
     const {output} = await prompt(input);
     if (output) {
         return output;
     }
-    return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡Han ganado!` };
+    // Fallback in case AI returns a non-compliant or empty response
+    return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡Han ganado de una forma espectacular!` };
   }
 );

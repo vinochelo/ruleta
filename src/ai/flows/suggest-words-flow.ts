@@ -55,7 +55,7 @@ const suggestWordsFlow = ai.defineFlow(
   },
   async (input) => {
     if (!process.env.GOOGLE_API_KEY) {
-      return { suggestedWords: [] };
+      throw new Error("La clave API de Google no está configurada. Obtén una en https://aistudio.google.com/app/apikey y añádela como GOOGLE_API_KEY a tu archivo .env");
     }
     const {output} = await prompt(input);
     // Ensure output is not null and conforms to the schema, otherwise return empty array.
