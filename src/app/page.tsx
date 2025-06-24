@@ -40,21 +40,21 @@ interface Team {
 }
 
 const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
-  { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine"] },
-  { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa"] },
-  { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso"] },
-  { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar"] },
-  { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante"] },
-  { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo"] },
-  { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] },
-  { id: "default-profesiones-uuid", name: "Profesiones", words: ["Médico", "Profesor", "Bombero", "Policía", "Cocinero", "Astronauta", "Pintor", "Músico", "Actor", "Científico"] },
-  { id: "default-deportes-uuid", name: "Deportes", words: ["Fútbol", "Baloncesto", "Tenis", "Natación", "Béisbol", "Golf", "Boxeo", "Ciclismo", "Atletismo", "Esquí"] },
-  { id: "default-transporte-uuid", name: "Transporte", words: ["Coche", "Avión", "Barco", "Bicicleta", "Tren", "Autobús", "Motocicleta", "Helicóptero", "Submarino", "Cohete"] },
-  { id: "default-naturaleza-uuid", name: "Naturaleza", words: ["Árbol", "Flor", "Río", "Sol", "Luna", "Estrella", "Nube", "Volcán", "Arcoíris", "Catarata"] },
-  { id: "default-hogar-uuid", name: "Cosas de Casa", words: ["Sofá", "Cama", "Ducha", "Nevera", "Horno", "Ventana", "Puerta", "Espejo", "Alfombra", "Televisión"] },
-  { id: "default-ropa-uuid", name: "Ropa", words: ["Camisa", "Pantalón", "Zapato", "Sombrero", "Vestido", "Falda", "Chaqueta", "Calcetines", "Bufanda", "Guantes"] },
-  { id: "default-cuerpo-uuid", name: "Partes del Cuerpo", words: ["Ojo", "Nariz", "Boca", "Mano", "Pie", "Cabeza", "Brazo", "Pierna", "Oreja", "Pelo"] },
-  { id: "default-instrumentos-uuid", name: "Instrumentos Musicales", words: ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Saxofón", "Arpa", "Tambor", "Bajo"] }
+    { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine"] },
+    { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa"] },
+    { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso"] },
+    { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar"] },
+    { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante"] },
+    { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo"] },
+    { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca"] },
+    { id: "default-profesiones-uuid", name: "Profesiones", words: ["Médico", "Profesor", "Bombero", "Policía", "Cocinero", "Astronauta", "Pintor", "Músico", "Actor", "Científico"] },
+    { id: "default-deportes-uuid", name: "Deportes", words: ["Fútbol", "Baloncesto", "Tenis", "Natación", "Béisbol", "Golf", "Boxeo", "Ciclismo", "Atletismo", "Esquí"] },
+    { id: "default-transporte-uuid", name: "Transporte", words: ["Coche", "Avión", "Barco", "Bicicleta", "Tren", "Autobús", "Motocicleta", "Helicóptero", "Submarino", "Cohete"] },
+    { id: "default-naturaleza-uuid", name: "Naturaleza", words: ["Árbol", "Flor", "Río", "Sol", "Luna", "Estrella", "Nube", "Volcán", "Arcoíris", "Catarata"] },
+    { id: "default-hogar-uuid", name: "Cosas de Casa", words: ["Sofá", "Cama", "Ducha", "Nevera", "Horno", "Ventana", "Puerta", "Espejo", "Alfombra", "Televisión"] },
+    { id: "default-ropa-uuid", name: "Ropa", words: ["Camisa", "Pantalón", "Zapato", "Sombrero", "Vestido", "Falda", "Chaqueta", "Calcetines", "Bufanda", "Guantes"] },
+    { id: "default-cuerpo-uuid", name: "Partes del Cuerpo", words: ["Ojo", "Nariz", "Boca", "Mano", "Pie", "Cabeza", "Brazo", "Pierna", "Oreja", "Pelo"] },
+    { id: "default-instrumentos-uuid", name: "Instrumentos Musicales", words: ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Saxofón", "Arpa", "Tambor", "Bajo"] }
 ];
 
 const CATEGORIES_STORAGE_KEY = 'ruletaRupestreCategories';
@@ -355,42 +355,6 @@ export default function HomePage() {
                   </TabsList>
               </Tabs>
 
-              <div className="space-y-1.5 text-center">
-                <Label htmlFor="winning-score" className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Puntos para Ganar</Label>
-                <Select
-                  value={String(winningScore)}
-                  onValueChange={(value) => setWinningScore(Number(value))}
-                >
-                  <SelectTrigger id="winning-score" className="w-full h-11 text-base font-bold">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5" className="font-bold text-green-600 focus:text-green-700">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2.5 w-2.5 rounded-full bg-green-500"/> 5 Puntos (Fácil)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="10" className="font-bold text-blue-600 focus:text-blue-700">
-                       <div className="flex items-center gap-2">
-                        <div className="h-2.5 w-2.5 rounded-full bg-blue-500"/> 10 Puntos (Normal)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="15" className="font-bold text-orange-500 focus:text-orange-600">
-                       <div className="flex items-center gap-2">
-                        <div className="h-2.5 w-2.5 rounded-full bg-orange-500"/> 15 Puntos (Difícil)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="20" className="font-bold text-red-600 focus:text-red-700">
-                       <div className="flex items-center gap-2">
-                        <div className="h-2.5 w-2.5 rounded-full bg-red-600"/> 20 Puntos (Experto)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
               <form onSubmit={handleAddTeam} className="flex gap-2 items-center">
                 <Input
                   type="text"
@@ -463,6 +427,45 @@ export default function HomePage() {
                   </TooltipProvider>
                 </div>
               )}
+              
+              {teams.length > 0 && (
+                <>
+                <Separator />
+                <div className="flex items-center justify-between gap-4 pt-2">
+                  <Label htmlFor="winning-score" className="font-semibold text-muted-foreground">Puntos para Ganar:</Label>
+                  <Select
+                    value={String(winningScore)}
+                    onValueChange={(value) => setWinningScore(Number(value))}
+                  >
+                    <SelectTrigger id="winning-score" className="w-[180px] h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5" className="text-green-600 focus:text-green-700">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full bg-green-500"/> 5 (Fácil)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="10" className="text-blue-600 focus:text-blue-700">
+                         <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full bg-blue-500"/> 10 (Normal)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="15" className="text-orange-500 focus:text-orange-600">
+                         <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full bg-orange-500"/> 15 (Difícil)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="20" className="text-red-600 focus:text-red-700">
+                         <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full bg-red-600"/> 20 (Experto)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                </>
+              )}
             </CardContent>
             {teams.length > 0 && (
               <CardFooter className="p-4 pt-0">
@@ -519,5 +522,7 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
 
     
