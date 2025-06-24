@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect } from 'react';
@@ -14,23 +13,32 @@ const AdBanner = ({ slot }: AdBannerProps) => {
 
   useEffect(() => {
     if (isConfigured) {
-        try {
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (err) {
-            // Silently fail in production
-        }
+      try {
+        // @ts-ignore
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (err) {
+        // Silently fail in production
+      }
     }
   }, [isConfigured, slot]);
 
   if (!isConfigured) {
-      return null;
+    if (process.env.NODE_ENV === 'development') {
+      return (
+        <div className="w-full min-h-[100px] flex items-center justify-center my-4 bg-muted/50 border-2 border-dashed rounded-lg text-center p-4">
+          <p className="text-muted-foreground text-sm">
+            <strong>Ad Slot: '{slot}'</strong><br/>
+            To enable ads, edit <code>src/lib/ads.ts</code> with your AdSense codes.
+          </p>
+        </div>
+      );
+    }
+    return null;
   }
 
   return (
-    <div className="w-full min-h-[100px] flex items-center justify-center my-4">
+    <div className="w-full min-h-[100px] flex items-center justify-center my-4" key={slot}>
       <ins
-        key={slot}
         className="adsbygoogle"
         style={{ display: 'block' }}
         data-ad-client={ADSENSE_CLIENT_ID}
