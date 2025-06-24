@@ -337,34 +337,54 @@ export default function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2 space-y-4">
           <Card className="shadow-lg">
-            <CardHeader className="p-3">
-              <CardTitle className="title-text text-lg flex items-center gap-2">
-                {gameMode === 'teams' ? <Users className="h-5 w-5" /> : <User className="h-5 w-5" />}
-                {gameMode === 'teams' ? 'Equipos' : 'Jugadores'} y Puntuaciones
+            <CardHeader className="p-4">
+              <CardTitle className="title-text text-xl flex items-center gap-2">
+                <Users className="h-6 w-6" />
+                Configuración de la Partida
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 p-3 pt-0">
+            <CardContent className="space-y-4 p-4 pt-0">
                <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as 'teams' | 'players')} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="teams">Equipos</TabsTrigger>
-                      <TabsTrigger value="players">Jugadores</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-11 rounded-lg">
+                      <TabsTrigger value="teams" className="text-base rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2">
+                         <Users className="h-5 w-5"/> Equipos
+                      </TabsTrigger>
+                      <TabsTrigger value="players" className="text-base rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2">
+                         <User className="h-5 w-5"/> Jugadores
+                      </TabsTrigger>
                   </TabsList>
               </Tabs>
 
-              <div className="flex items-center justify-between gap-2">
-                <Label htmlFor="winning-score" className="whitespace-nowrap font-medium text-sm">Puntos para Ganar:</Label>
+              <div className="space-y-1.5 text-center">
+                <Label htmlFor="winning-score" className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Puntos para Ganar</Label>
                 <Select
                   value={String(winningScore)}
                   onValueChange={(value) => setWinningScore(Number(value))}
                 >
-                  <SelectTrigger id="winning-score" className="w-[120px] h-9">
+                  <SelectTrigger id="winning-score" className="w-full h-11 text-base font-bold">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">5 Puntos</SelectItem>
-                    <SelectItem value="10">10 Puntos</SelectItem>
-                    <SelectItem value="15">15 Puntos</SelectItem>
-                    <SelectItem value="20">20 Puntos</SelectItem>
+                    <SelectItem value="5" className="font-bold text-green-600 focus:text-green-700">
+                      <div className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5 rounded-full bg-green-500"/> 5 Puntos (Fácil)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="10" className="font-bold text-blue-600 focus:text-blue-700">
+                       <div className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5 rounded-full bg-blue-500"/> 10 Puntos (Normal)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="15" className="font-bold text-orange-500 focus:text-orange-600">
+                       <div className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5 rounded-full bg-orange-500"/> 15 Puntos (Difícil)
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="20" className="font-bold text-red-600 focus:text-red-700">
+                       <div className="flex items-center gap-2">
+                        <div className="h-2.5 w-2.5 rounded-full bg-red-600"/> 20 Puntos (Experto)
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -445,7 +465,7 @@ export default function HomePage() {
               )}
             </CardContent>
             {teams.length > 0 && (
-              <CardFooter className="p-3 pt-0">
+              <CardFooter className="p-4 pt-0">
                 <Button onClick={handleResetAllScores} variant="outline" size="sm" className="w-full transition-transform hover:scale-105">
                   <RotateCcw className="mr-2 h-4 w-4" /> Reiniciar Puntuaciones
                 </Button>
@@ -499,3 +519,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    
