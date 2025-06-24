@@ -140,7 +140,6 @@ export default function HomePage() {
           setTotalPointsScored(initialTotalScore);
         }
       } catch (error) {
-        console.error("Failed to parse teams from localStorage", error);
         setTeams([]);
       }
     }
@@ -176,7 +175,7 @@ export default function HomePage() {
       oscillator.stop(audioContext.currentTime + 0.2);
 
       oscillator.onended = () => {
-        audioContext.close().catch(console.error);
+        audioContext.close().catch(() => {});
       };
     }
   };
@@ -232,8 +231,7 @@ export default function HomePage() {
           setWinnerPraise(message);
           speakFn(message);
         })
-        .catch(error => {
-          console.error("AI praise error:", error);
+        .catch(() => {
           const fallbackMessage = `¡Felicidades, ${winningTeam.name}! ¡Han ganado!`;
           setWinnerPraise(fallbackMessage);
           speakFn(fallbackMessage);
@@ -346,11 +344,11 @@ export default function HomePage() {
             <CardContent className="space-y-4 p-4 pt-0">
                <Tabs value={gameMode} onValueChange={(value) => setGameMode(value as 'teams' | 'players')} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 bg-primary/10 p-1 h-11 rounded-lg">
-                      <TabsTrigger value="teams" className="text-base rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2">
-                         <Users className="h-5 w-5"/> Equipos
-                      </TabsTrigger>
                       <TabsTrigger value="players" className="text-base rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2">
                          <User className="h-5 w-5"/> Jugadores
+                      </TabsTrigger>
+                       <TabsTrigger value="teams" className="text-base rounded-md data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2">
+                         <Users className="h-5 w-5"/> Equipos
                       </TabsTrigger>
                   </TabsList>
               </Tabs>
@@ -522,7 +520,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
-
-    

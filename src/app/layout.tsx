@@ -1,16 +1,15 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
 import Script from 'next/script';
+import { ADSENSE_CLIENT_ID } from '@/lib/ads';
 
 export const metadata: Metadata = {
   title: 'Ruleta Rupestre',
   description: 'A fun Pictionary-style roulette game',
 };
-
-// IMPORTANTE: Reemplaza este valor con tu propio ID de cliente de AdSense
-const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751";
 
 export default function RootLayout({
   children,

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,7 +25,7 @@ const playBeep = () => {
     oscillator.stop(audioContext.currentTime + 0.1);
 
     oscillator.onended = () => {
-      audioContext.close().catch(console.error);
+      audioContext.close().catch(() => {});
     };
   }
 };
@@ -33,13 +34,11 @@ const playTimerEndSound = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
     const gainNode = audioContext.createGain();
-    // Increased gain for a louder sound
     gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
     gainNode.connect(audioContext.destination);
 
     const playTone = (freq: number, time: number, duration: number) => {
         const oscillator = audioContext.createOscillator();
-        // Sawtooth is a more "buzzy" and attention-grabbing sound
         oscillator.type = 'sawtooth'; 
         oscillator.frequency.setValueAtTime(freq, time);
         oscillator.connect(gainNode);
@@ -48,13 +47,12 @@ const playTimerEndSound = () => {
     };
 
     const now = audioContext.currentTime;
-    // Two quick, high-pitched beeps
     playTone(1200, now, 0.1);
     playTone(1200, now + 0.15, 0.2);
 
     const totalDuration = 0.15 + 0.2;
     setTimeout(() => {
-        audioContext.close().catch(console.error);
+        audioContext.close().catch(() => {});
     }, totalDuration * 1000 + 200);
   }
 };
@@ -72,7 +70,6 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
   const [isFinished, setIsFinished] = useState(false);
   const [isPulsing, setIsPulsing] = useState(false);
   
-  // Effect to handle the countdown interval
   useEffect(() => {
     if (!isRunning) {
       return;
@@ -83,13 +80,12 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
     return () => clearInterval(intervalId);
   }, [isRunning]);
 
-  // Effect to handle side-effects of time changes (end of timer, beeps, animations)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     if (timeLeft === 0 && isRunning) {
       playTimerEndSound();
       onTimerEnd();
-      setIsRunning(false); // Stop the timer
+      setIsRunning(false);
       setIsFinished(true);
     } else if (timeLeft > 0 && isRunning) {
       if (timeLeft <= 10) {
@@ -97,15 +93,14 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
       }
       if (timeLeft % 10 === 0) {
         setIsPulsing(true);
-        timeoutId = setTimeout(() => setIsPulsing(false), 400); // Animation is 0.4s long
+        timeoutId = setTimeout(() => setIsPulsing(false), 400);
       }
     }
-    return () => clearTimeout(timeoutId); // Cleanup timeout on effect re-run
+    return () => clearTimeout(timeoutId);
   }, [timeLeft, isRunning, onTimerEnd]);
 
 
   const handleStartPause = useCallback(() => {
-    // If timer is over, this button acts as a restart
     if (timeLeft <= 0) { 
         setIsFinished(false);
         setTimeLeft(initialDuration);

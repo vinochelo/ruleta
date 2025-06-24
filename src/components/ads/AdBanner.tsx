@@ -1,71 +1,36 @@
+
 "use client";
 
 import { useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-
-// --- PASO 1: OBTÉN TUS CÓDIGOS DE ADSENSE ---
-// 1. Ve a tu cuenta de Google AdSense.
-// 2. Obtén tu ID de editor (empieza con "ca-pub-").
-// 3. Crea BLOQUES DE ANUNCIOS de display para cada lugar donde quieras mostrar publicidad.
-//    - Uno para el banner principal (slot "main").
-//    - Uno para el modal de resultados (slot "results").
-//    - Uno para el modal de ganador (slot "winner").
-// 4. Cada bloque de anuncios te dará su propio ID numérico.
-
-// --- PASO 2: REEMPLAZA LOS VALORES DE EJEMPLO ---
-// Este es tu ID de editor global. Reemplázalo también en `src/app/layout.tsx`.
-const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751"; 
-
-// Reemplaza estos IDs de bloque de anuncios con los tuyos.
-const AD_SLOT_IDS = {
-  main: 7120343438,     // Para el banner en la página principal
-  results: 9519276066,   // Para el banner en el modal de resultados/timer
-  winner: 9519276066,    // Para el banner en el modal de ganador
-};
+import { ADSENSE_CLIENT_ID, AD_SLOT_IDS } from '@/lib/ads';
 
 interface AdBannerProps {
   slot: keyof typeof AD_SLOT_IDS;
 }
 
-// Función para verificar si un ID es un placeholder (contiene letras o no es un número)
-const isPlaceholder = (id: string) => !/^\d+$/.test(id);
-
 const AdBanner = ({ slot }: AdBannerProps) => {
   const adSlotId = AD_SLOT_IDS[slot];
+  const isConfigured = ADSENSE_CLIENT_ID.startsWith('ca-pub-') && adSlotId !== "0000000000";
 
   useEffect(() => {
-    // Solo intenta cargar el anuncio si las credenciales parecen válidas (no son placeholders)
-    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && !isPlaceholder(adSlotId.toString())) {
+    if (isConfigured) {
         try {
             // @ts-ignore
             (window.adsbygoogle = window.adsbygoogle || []).push({});
         } catch (err) {
-            console.error("AdSense error:", err);
+            // Silently fail in production
         }
     }
-  }, [adSlotId]);
+  }, [isConfigured, slot]);
 
-  // Muestra un mensaje de configuración si los IDs no están configurados correctamente
-  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || isPlaceholder(adSlotId.toString())) {
-      return (
-        <Card className="bg-muted/50 border-dashed w-full my-4">
-            <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground space-y-1">
-                    <span className="font-bold text-base text-primary">Configura tus Anuncios</span>
-                    <span>Para mostrar publicidad aquí, reemplaza los IDs de ejemplo con los tuyos de AdSense:</span>
-                    <span className="block font-mono text-xs mt-2">1. En <b>src/app/layout.tsx</b>, actualiza <code>ADSENSE_CLIENT_ID</code>.</span>
-                    <span className="block font-mono text-xs">2. En <b>src/components/ads/AdBanner.tsx</b>, actualiza <code>ADSENSE_CLIENT_ID</code> y los <code>AD_SLOT_IDS</code>.</span>
-                    <span className="block text-xs text-muted-foreground/80 mt-2">El script principal de AdSense que te indicaron ya está incluido en <b>src/app/layout.tsx</b>.</span>
-                </p>
-            </CardContent>
-        </Card>
-      )
+  if (!isConfigured) {
+      return null;
   }
 
-  // Renderiza el bloque de anuncios si los IDs están configurados
   return (
-    <div className="w-full min-h-[100px] flex items-center justify-center bg-muted/30 rounded-md my-4">
+    <div className="w-full min-h-[100px] flex items-center justify-center my-4">
       <ins
+        key={slot}
         className="adsbygoogle"
         style={{ display: 'block' }}
         data-ad-client={ADSENSE_CLIENT_ID}

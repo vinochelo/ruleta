@@ -97,11 +97,9 @@ const CategoryManagement: React.FC = () => {
             setCategories([...DEFAULT_CATEGORIES]);
           }
         } else { 
-          console.warn("Malformed categories in localStorage (not an array), resetting to default.");
           resetToDefaultCategories();
         }
       } catch (error) {
-        console.error("Failed to parse categories from localStorage", error);
         resetToDefaultCategories();
       }
     } else {
@@ -134,7 +132,6 @@ const CategoryManagement: React.FC = () => {
                       toast({ title: "Sin sugerencias", description: "La IA no generó palabras. Puedes añadirlas manually." });
                   }
               } catch (error) {
-                  console.error("AI suggestion error:", error);
                   toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
                   advanceQueue(); // Skip to next on error
               } finally {
@@ -316,14 +313,13 @@ const CategoryManagement: React.FC = () => {
           const existingWordsSet = new Set(category.words.map(w => w.toLowerCase()));
           const duplicateSuggestions: string[] = [];
           
-          // Use a set to handle duplicates within the AI suggestions list itself, preserving order
           const uniqueAISuggestionsList: string[] = [];
           const seenAISuggestions = new Set<string>();
 
           allSuggestions.forEach(suggestedWord => {
             const lowerCaseWord = suggestedWord.toLowerCase().trim();
             if (!lowerCaseWord || seenAISuggestions.has(lowerCaseWord)) {
-                return; // Duplicate within the AI's own list or empty, skip
+                return;
             }
             seenAISuggestions.add(lowerCaseWord);
             uniqueAISuggestionsList.push(suggestedWord);
@@ -345,7 +341,6 @@ const CategoryManagement: React.FC = () => {
           setAiDuplicateWords(duplicateSuggestions);
         }
     } catch (error) {
-        console.error("AI suggestion error:", error);
         toast({ title: "Error de IA", description: "No se pudieron sugerir palabras.", variant: "destructive" });
         setAiSuggestedWords([]);
         setAiDuplicateWords([]);

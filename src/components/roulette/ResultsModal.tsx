@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -117,10 +118,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     description: artisticResult.error,
                     variant: "destructive",
                 });
-                console.warn("Elaborate image generation failed in background:", artisticResult.error);
             }
         }).catch(err => {
-            console.error("Artistic image generation failed:", err);
             toast({
                 title: "Error Inesperado",
                 description: `La generación de la imagen artística falló: ${err.message || 'Error desconocido'}.`,
@@ -140,7 +139,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         setIsGeneratingQuick(false);
       }
     } catch (error: any) {
-        console.error("Critical image generation flow error:", error);
         toast({
             title: "Error Crítico de Conexión",
             description: error.message || "Ocurrió un error irrecuperable al contactar el servicio de IA. Revisa tu conexión o la configuración de la API.",
@@ -358,7 +356,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
                 <div className="text-center">
                     <p className="text-base text-muted-foreground">Categoría</p>
-                    <p className="text-4xl lg:text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+                    <p className="text-2xl sm:text-4xl lg:text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                         {selectedCategoryName}
                     </p>
                 </div>
@@ -383,7 +381,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
                         }}
                         className={cn(
-                            "text-white text-2xl sm:text-3xl font-bold py-4 sm:py-6 rounded-lg sm:rounded-2xl shadow-lg border-2 sm:border-4 border-transparent",
+                            "text-white text-xl sm:text-3xl font-bold py-3 sm:py-6 rounded-lg sm:rounded-2xl shadow-lg border-2 sm:border-4 border-transparent",
                             animatingButton === duration ? "animate-button-press" : "transition-transform hover:scale-105"
                         )}
                         disabled={timerShouldAutoStart && !isTimerFinished}

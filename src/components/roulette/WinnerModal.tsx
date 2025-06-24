@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef } from 'react';
@@ -52,7 +53,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
   useEffect(() => {
     if (winner && winnerSoundRef.current) {
       winnerSoundRef.current.volume = 0.5;
-      winnerSoundRef.current.play().catch(console.error);
+      winnerSoundRef.current.play().catch(() => {});
     }
   }, [winner]);
 

@@ -15,8 +15,7 @@ import { z } from 'zod';
 // --- Common Helper Function ---
 
 // A robust helper to generate a single image. Returns an object with the URL or an error.
-async function generateSingleImage(prompt: string, context: string): Promise<{ imageUrl: string | null; error: string | null }> {
-  console.log(`[${context}] Generating image with prompt: "${prompt.substring(0, 50)}..."`);
+async function generateSingleImage(prompt: string): Promise<{ imageUrl: string | null; error: string | null }> {
   try {
     const result = await ai.generate({
       model: geminiImage,
@@ -45,17 +44,12 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
       },
     });
 
-    console.log(`[${context}] Raw generation result:`, JSON.stringify(result, null, 2));
-
-    const { media, finishReason, usage } = result;
-    console.log(`[${context}] Image Generation Usage:`, usage);
+    const { media, finishReason } = result;
 
     if (media?.url) {
-      console.log(`[${context}] Successfully generated image. Finish reason: ${finishReason}`);
       return { imageUrl: media.url, error: null };
     }
     
-    // If we are here, media.url is null.
     let reasonText = `La IA no devolvió una imagen. Razón del final: ${finishReason || 'desconocida'}.`;
     if (finishReason === 'safety') {
       reasonText = "La imagen no se generó porque la solicitud fue bloqueada por los filtros de seguridad de la IA.";
@@ -64,13 +58,10 @@ async function generateSingleImage(prompt: string, context: string): Promise<{ i
     } else if (finishReason === 'quota') {
       reasonText = "Has superado la cuota de uso gratuito de la API. Por favor, espera a que se reinicie o habilita la facturación en tu proyecto de Google Cloud.";
     }
-
-    console.warn(`[${context}] Image generation finished but returned no media URL. ${reasonText}`);
+    
     return { imageUrl: null, error: reasonText };
 
   } catch (error: any) {
-    console.error(`[${context}] Image generation request FAILED.`, JSON.stringify(error, null, 2));
-    
     let detailedErrorMessage = "Error desconocido al contactar el servicio de IA.";
     if (error?.message) {
         const lowerCaseMessage = error.message.toLowerCase();
@@ -124,20 +115,17 @@ const generateQuickImageFlow = ai.defineFlow(
   async (input) => {
     if (!process.env.GOOGLE_API_KEY) {
       const errorMsg = "La variable de entorno GOOGLE_API_KEY no está configurada. Por favor, añádela a un archivo .env en la raíz de tu proyecto.";
-      console.error(`FATAL: ${errorMsg}`);
       return { imageDataUri: null, error: errorMsg };
     }
     
     const prompt = `A very simple, minimalist, black and white icon for a pictionary game. The icon should represent: '${input.word}'. CRITICAL: The image must contain NO text, letters, or numbers. Only the drawing.`;
     
-    const { imageUrl, error } = await generateSingleImage(prompt, "QuickImage");
+    const { imageUrl, error } = await generateSingleImage(prompt);
     
     if (imageUrl) {
-        console.log(`Quick image flow finished for: "${input.word}". Success: true`);
         return { imageDataUri: imageUrl, error: null };
     } else {
         const finalError = error || "Ocurrió un error inesperado en la generación de la imagen.";
-        console.log(`Quick image flow finished for: "${input.word}". Success: false. Error: ${finalError}`);
         return { imageDataUri: null, error: finalError };
     }
   }
@@ -176,18 +164,14 @@ const generateArtisticImagesFlow = ai.defineFlow(
     outputSchema: ArtisticImagesOutputSchema,
   },
   async (input) => {
-    console.log(`Starting ELABORATE image generation for: "${input.word}"`);
-    
     const prompt = `A highly detailed, photorealistic, and artistic image representing '${input.word}'. The image should be visually stunning and suitable for a game. CRITICAL: The image must not contain any text, letters, or numbers whatsoever. Focus solely on the visual representation of the concept.`;
 
-    const { imageUrl, error } = await generateSingleImage(prompt, "ElaborateImage");
+    const { imageUrl, error } = await generateSingleImage(prompt);
     
     if (imageUrl) {
-        console.log(`Elaborate image flow finished for: "${input.word}". Success: true`);
         return { imageDataUri: imageUrl, error: null };
     } else {
         const finalError = error || "Ocurrió un error inesperado en la generación de la imagen elaborada.";
-        console.log(`Elaborate image flow finished for: "${input.word}". Success: false. Error: ${finalError}`);
         return { imageDataUri: null, error: finalError };
     }
   }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -71,7 +72,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     oscillator.stop(audioContext.currentTime + 0.08);
 
     oscillator.onended = () => {
-      audioContext.close().catch(console.error);
+      audioContext.close().catch(() => {});
     };
   }, []);
 
@@ -93,7 +94,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     oscillator.stop(audioContext.currentTime + 0.4);
 
     oscillator.onended = () => {
-        audioContext.close().catch(console.error);
+        audioContext.close().catch(() => {});
     };
   }, []);
 

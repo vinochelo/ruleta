@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate a funny congratulatory message for the game winner.
@@ -68,7 +69,6 @@ const praiseWinnerFlow = ai.defineFlow(
   },
   async (input) => {
     if (!process.env.GOOGLE_API_KEY) {
-      console.error("FATAL: La variable de entorno GOOGLE_API_KEY no está configurada.");
       return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡Han ganado!` };
     }
     const {output} = await prompt(input);

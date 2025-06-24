@@ -55,7 +55,6 @@ const suggestWordsFlow = ai.defineFlow(
   },
   async (input) => {
     if (!process.env.GOOGLE_API_KEY) {
-      console.error("FATAL: La variable de entorno GOOGLE_API_KEY no está configurada.");
       return { suggestedWords: [] };
     }
     const {output} = await prompt(input);
