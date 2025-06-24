@@ -51,9 +51,11 @@ const AdBanner = ({ slot }: AdBannerProps) => {
         <Card className="bg-muted/50 border-dashed w-full my-4">
             <CardContent className="p-4 text-center">
                 <p className="text-sm text-muted-foreground space-y-1">
-                    <span>Para mostrar publicidad aquí, configura tus IDs de AdSense.</span>
-                    <span className="block font-mono text-xs">Tu ID de Editor: <b>src/app/layout.tsx</b></span>
-                    <span className="block font-mono text-xs">ID del bloque '{slot}': <b>src/components/ads/AdBanner.tsx</b></span>
+                    <span className="font-bold text-base text-primary">Configura tus Anuncios</span>
+                    <span>Para mostrar publicidad aquí, reemplaza los IDs de ejemplo con los tuyos de AdSense:</span>
+                    <span className="block font-mono text-xs mt-2">1. En <b>src/app/layout.tsx</b>, actualiza <code>ADSENSE_CLIENT_ID</code>.</span>
+                    <span className="block font-mono text-xs">2. En <b>src/components/ads/AdBanner.tsx</b>, actualiza <code>ADSENSE_CLIENT_ID</code> y los <code>AD_SLOT_IDS</code>.</span>
+                    <span className="block text-xs text-muted-foreground/80 mt-2">El script principal de AdSense que te indicaron ya está incluido en <b>src/app/layout.tsx</b>.</span>
                 </p>
             </CardContent>
         </Card>
