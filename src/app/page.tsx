@@ -287,21 +287,33 @@ export default function HomePage() {
     const usedInCat = usedWords[category.id] || [];
     let availableWords = wordsInCat.filter(word => !usedInCat.includes(word));
 
+    let wordToDraw = category.name;
+    let newUsedListForCategory: string[] | undefined;
+
     if (availableWords.length === 0 && wordsInCat.length > 0) {
       toast({
         title: '¡Vuelta a empezar!',
         description: `Se han usado todas las palabras de "${category.name}". Se reinicia la lista.`,
       });
+      // All words are available again
       availableWords = wordsInCat;
-      setUsedWords(prev => ({ ...prev, [category.id]: [] }));
-    }
+      const randomIndex = Math.floor(Math.random() * availableWords.length);
+      wordToDraw = availableWords[randomIndex];
+      // The new list of used words for this category will start with the word we're about to pick.
+      newUsedListForCategory = [wordToDraw];
 
-    let wordToDraw = category.name; 
-    if (availableWords.length > 0) {
-      wordToDraw = availableWords[Math.floor(Math.random() * availableWords.length)];
+    } else if (availableWords.length > 0) {
+      const randomIndex = Math.floor(Math.random() * availableWords.length);
+      wordToDraw = availableWords[randomIndex];
+      // Add the new word to the existing list of used words.
+      newUsedListForCategory = [...usedInCat, wordToDraw];
+    }
+    
+    // If a new word was drawn, update the used words list for the category
+    if (newUsedListForCategory) {
       setUsedWords(prev => ({
         ...prev,
-        [category.id]: [...(prev[category.id] || []), wordToDraw]
+        [category.id]: newUsedListForCategory
       }));
     }
     
