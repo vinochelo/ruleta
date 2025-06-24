@@ -358,7 +358,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
                 <div className="text-center">
                     <p className="text-base text-muted-foreground">Categoría</p>
-                    <p className="text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
+                    <p className="text-4xl lg:text-6xl font-bold font-roulette" style={{ color: selectedCategoryColor || 'hsl(var(--primary))' }}>
                         {selectedCategoryName}
                     </p>
                 </div>
@@ -374,7 +374,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                 </div>
 
                 <div className="w-full space-y-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
                     {TIMER_OPTIONS.map(({ duration }, index) => (
                         <Button
                         key={duration}
@@ -383,7 +383,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                             backgroundColor: TIMER_BUTTON_COLORS[index % TIMER_BUTTON_COLORS.length],
                         }}
                         className={cn(
-                            "text-white text-3xl font-bold py-6 rounded-2xl shadow-lg border-4 border-transparent",
+                            "text-white text-2xl sm:text-3xl font-bold py-4 sm:py-6 rounded-lg sm:rounded-2xl shadow-lg border-2 sm:border-4 border-transparent",
                             animatingButton === duration ? "animate-button-press" : "transition-transform hover:scale-105"
                         )}
                         disabled={timerShouldAutoStart && !isTimerFinished}
