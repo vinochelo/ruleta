@@ -3,14 +3,20 @@
 import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
-// IMPORTANTE: Reemplaza estos valores con tus propios IDs de AdSense
-const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751";
-const AD_SLOT_ID = "YYYYYYYYYY";
+// --- PASO 1: OBTÉN TUS CÓDIGOS DE ADSENSE ---
+// 1. Ve a tu cuenta de Google AdSense.
+// 2. Obtén tu ID de editor (empieza con "ca-pub-").
+// 3. Crea un bloque de anuncios de display y obtén su ID de bloque (es un número).
+
+// --- PASO 2: REEMPLAZA LOS VALORES DE EJEMPLO ---
+// Reemplaza los siguientes valores con tus propios códigos.
+const ADSENSE_CLIENT_ID = "ca-pub-XXXXXXXXXXXXXXXX"; // <-- REEMPLAZA ESTO
+const AD_SLOT_ID = "0123456789"; // <-- REEMPLAZA ESTO
 
 const AdBanner = () => {
   useEffect(() => {
-    // Solo intenta cargar el anuncio si las credenciales son válidas
-    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && AD_SLOT_ID.length > 5) {
+    // Solo intenta cargar el anuncio si las credenciales parecen válidas
+    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && AD_SLOT_ID !== "0123456789") {
         try {
             // @ts-ignore
             (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -20,14 +26,15 @@ const AdBanner = () => {
     }
   }, []);
 
-  // Muestra un mensaje de configuración si los IDs no están configurados
-  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || AD_SLOT_ID === 'YYYYYYYYYY') {
+  // Muestra un mensaje de configuración si los IDs no están configurados correctamente
+  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || AD_SLOT_ID === '0123456789') {
       return (
         <Card className="bg-muted/50 border-dashed">
             <CardContent className="p-4 text-center">
-                <p className="text-sm text-muted-foreground">
-                    Anuncio: Para mostrar publicidad, configura tu ID de cliente y de bloque de anuncios en el archivo: <br/>
-                    <strong className="font-mono text-xs">src/components/ads/AdBanner.tsx</strong>
+                <p className="text-sm text-muted-foreground space-y-1">
+                    <span>Para mostrar publicidad, configura tus IDs de AdSense en estos archivos:</span>
+                    <span className="block font-mono text-xs">1. src/app/layout.tsx</span>
+                    <span className="block font-mono text-xs">2. src/components/ads/AdBanner.tsx</span>
                 </p>
             </CardContent>
         </Card>
