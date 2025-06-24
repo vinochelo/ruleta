@@ -11,12 +11,12 @@ import { Card, CardContent } from '@/components/ui/card';
 // --- PASO 2: REEMPLAZA LOS VALORES DE EJEMPLO ---
 // Reemplaza los siguientes valores con tus propios códigos.
 const ADSENSE_CLIENT_ID = "ca-pub-XXXXXXXXXXXXXXXX"; // <-- REEMPLAZA ESTO
-const AD_SLOT_ID = "0123456789"; // <-- REEMPLAZA ESTO
+const AD_SLOT_ID = "YYYYYYYYYY"; // <-- REEMPLAZA ESTO (es solo un número)
 
 const AdBanner = () => {
   useEffect(() => {
     // Solo intenta cargar el anuncio si las credenciales parecen válidas
-    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && AD_SLOT_ID !== "0123456789") {
+    if (ADSENSE_CLIENT_ID.startsWith('ca-pub-') && AD_SLOT_ID !== "YYYYYYYYYY") {
         try {
             // @ts-ignore
             (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -27,14 +27,14 @@ const AdBanner = () => {
   }, []);
 
   // Muestra un mensaje de configuración si los IDs no están configurados correctamente
-  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || AD_SLOT_ID === '0123456789') {
+  if (!ADSENSE_CLIENT_ID.startsWith('ca-pub-') || AD_SLOT_ID === 'YYYYYYYYYY') {
       return (
         <Card className="bg-muted/50 border-dashed">
             <CardContent className="p-4 text-center">
                 <p className="text-sm text-muted-foreground space-y-1">
                     <span>Para mostrar publicidad, configura tus IDs de AdSense en estos archivos:</span>
-                    <span className="block font-mono text-xs">1. src/app/layout.tsx</span>
-                    <span className="block font-mono text-xs">2. src/components/ads/AdBanner.tsx</span>
+                    <span className="block font-mono text-xs">1. src/app/layout.tsx (tu ID de editor)</span>
+                    <span className="block font-mono text-xs">2. src/components/ads/AdBanner.tsx (ID de editor y ID de bloque)</span>
                 </p>
             </CardContent>
         </Card>
