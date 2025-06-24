@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,10 +16,13 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { X, PlusCircle, Brain, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface SuggestWordsDialogProps {
   categoryName: string;
   suggestedWords: string[];
+  duplicateWords?: string[];
   isOpen: boolean;
   onClose: () => void;
   onAddWords: (wordsToAdd: string[]) => void;
@@ -29,6 +32,7 @@ interface SuggestWordsDialogProps {
 const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
   categoryName,
   suggestedWords,
+  duplicateWords = [],
   isOpen,
   onClose,
   onAddWords,
@@ -37,6 +41,8 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
   const [editableWords, setEditableWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState('');
   const { toast } = useToast();
+
+  const lowerCaseDuplicates = useMemo(() => new Set(duplicateWords.map(w => w.toLowerCase())), [duplicateWords]);
 
   useEffect(() => {
     if (isOpen && !isLoading) {
@@ -71,20 +77,28 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
   };
 
   const handleSubmit = () => {
-    const finalWords = editableWords.filter(word => word.trim() !== '');
+    const finalWords = editableWords
+      .map(w => w.trim())
+      .filter(w => w !== '' && !lowerCaseDuplicates.has(w.toLowerCase()));
+
     const uniqueWords = [...new Set(finalWords.map(w => w.toLowerCase()))];
     if (finalWords.length !== uniqueWords.length) {
-      toast({ title: "Palabras Duplicadas", description: "La lista final contiene palabras duplicadas. Por favor, revísala.", variant: "destructive" });
+      toast({ title: "Palabras Duplicadas", description: "La lista final contiene palabras duplicadas que has introducido manualmente. Por favor, revísala.", variant: "destructive" });
       return;
     }
 
     if (finalWords.length === 0) {
-      toast({ title: "Sin Palabras", description: "No hay palabras para añadir.", variant: "destructive"});
+      toast({ title: "Sin Palabras Nuevas", description: "No hay palabras nuevas para añadir.", variant: "destructive"});
       return;
     }
     
     onAddWords(finalWords);
   };
+  
+  const wordsToAddCount = useMemo(() => {
+    return editableWords.filter(w => w.trim() !== '' && !lowerCaseDuplicates.has(w.toLowerCase())).length;
+  }, [editableWords, lowerCaseDuplicates]);
+
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!isLoading) onClose(); }}>
@@ -95,7 +109,7 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
             Sugerencias para "{categoryName}"
           </DialogTitle>
           <DialogDescription className="text-muted-foreground pt-1">
-            Edita, elimina o añade palabras. Cuando termines, agrégalas a la categoría.
+            Edita, elimina o añade palabras. Las duplicadas están marcadas y no se añadirán.
           </DialogDescription>
         </DialogHeader>
         
@@ -124,27 +138,37 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
             <ScrollArea className="h-72 px-6 py-4">
               <div className="space-y-3">
                 {editableWords.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-10">No se sugirieron palabras nuevas. Añade algunas manualmente.</p>
+                    <p className="text-sm text-muted-foreground text-center py-10">No se sugirieron palabras. Añade algunas manualmente.</p>
                 )}
-                {editableWords.map((word, index) => (
-                  <div key={index} className="flex items-center gap-2 animate-in fade-in duration-300">
-                    <Input
-                      value={word}
-                      onChange={(e) => handleWordChange(index, e.target.value)}
-                      className="flex-grow bg-input/50"
-                      aria-label={`Palabra editable ${index + 1}`}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteWord(index)}
-                      className="text-destructive/70 hover:text-destructive hover:bg-destructive/10 shrink-0"
-                      aria-label={`Eliminar palabra ${word}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                {editableWords.map((word, index) => {
+                  const isDuplicate = lowerCaseDuplicates.has(word.toLowerCase());
+                  return (
+                    <div key={index} className="flex items-center gap-2 animate-in fade-in duration-300">
+                      <Input
+                        value={word}
+                        onChange={(e) => handleWordChange(index, e.target.value)}
+                        className={cn(
+                            "flex-grow bg-input/50",
+                            isDuplicate && "border-amber-500/50 text-muted-foreground line-through focus-visible:ring-amber-500"
+                        )}
+                        aria-label={`Palabra editable ${index + 1}`}
+                        readOnly={isDuplicate}
+                      />
+                      {isDuplicate && (
+                        <Badge variant="outline" className="border-amber-500 text-amber-600 shrink-0">Duplicada</Badge>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteWord(index)}
+                        className="text-destructive/70 hover:text-destructive hover:bg-destructive/10 shrink-0"
+                        aria-label={`Eliminar palabra ${word}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
               </div>
             </ScrollArea>
           </>
@@ -159,9 +183,9 @@ const SuggestWordsDialog: React.FC<SuggestWordsDialogProps> = ({
           <Button 
             onClick={handleSubmit} 
             className="transition-transform hover:scale-105" 
-            disabled={isLoading || (editableWords.filter(w => w.trim() !== '').length === 0)}
+            disabled={isLoading || wordsToAddCount === 0}
           >
-            Añadir Palabras ({editableWords.filter(w => w.trim() !== '').length})
+            Añadir Palabras Nuevas ({wordsToAddCount})
           </Button>
         </DialogFooter>
       </DialogContent>

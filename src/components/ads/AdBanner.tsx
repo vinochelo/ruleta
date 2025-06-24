@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 // IMPORTANTE: Reemplaza estos valores con tus propios IDs de AdSense
-const ADSENSE_CLIENT_ID = "ca-pub-XXXXXXXXXXXXXXXX";
+const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751";
 const AD_SLOT_ID = "YYYYYYYYYY";
 
 const AdBanner = () => {
