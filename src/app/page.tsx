@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
@@ -197,10 +196,8 @@ export default function HomePage() {
   };
 
   const speakFn = useCallback((text: string) => {
-      if (speechSupported) {
-          speak(text);
-      }
-  }, [speechSupported, speak]);
+      speak(text);
+  }, [speak]);
 
   const handleIncrementScore = useCallback((teamId: string) => {
     playPointSound();
@@ -296,21 +293,17 @@ export default function HomePage() {
         title: '¡Vuelta a empezar!',
         description: `Se han usado todas las palabras de "${category.name}". Se reinicia la lista.`,
       });
-      // All words are available again
       availableWords = wordsInCat;
       const randomIndex = Math.floor(Math.random() * availableWords.length);
       wordToDraw = availableWords[randomIndex];
-      // The new list of used words for this category will start with the word we're about to pick.
       newUsedListForCategory = [wordToDraw];
 
     } else if (availableWords.length > 0) {
       const randomIndex = Math.floor(Math.random() * availableWords.length);
       wordToDraw = availableWords[randomIndex];
-      // Add the new word to the existing list of used words.
       newUsedListForCategory = [...usedInCat, wordToDraw];
     }
     
-    // If a new word was drawn, update the used words list for the category
     if (newUsedListForCategory) {
       setUsedWords(prev => ({
         ...prev,
@@ -450,7 +443,6 @@ export default function HomePage() {
               </CardFooter>
             )}
           </Card>
-          <AdBanner />
         </div>
 
         <div className="lg:col-span-3 flex flex-col gap-4">
@@ -468,6 +460,7 @@ export default function HomePage() {
                     />
                 </CardContent>
             </Card>
+            <AdBanner />
         </div>
       </div>
 

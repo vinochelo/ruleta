@@ -287,7 +287,7 @@ const CategoryManagement: React.FC = () => {
     }
   
     setCategoryForAISuggestion(category.name);
-    setTargetCategoryIdForAIWords(category.id); // This signals we are editing an existing one
+    setTargetCategoryIdForAIWords(category.id);
     setIsSuggestWordsDialogOpen(true);
     setIsAISuggesting(true);
     setAiSuggestedWords([]);
@@ -295,15 +295,49 @@ const CategoryManagement: React.FC = () => {
     try {
         const result: SuggestWordsOutput = await suggestWordsForCategory({ categoryName: category.name });
         const allSuggestions = result.suggestedWords || [];
-        const newUniqueSuggestions = allSuggestions.filter(suggestedWord =>
-          !category.words.some(existingWord => existingWord.toLowerCase() === suggestedWord.toLowerCase())
-        );
-        setAiSuggestedWords(newUniqueSuggestions);
-  
+        
         if (allSuggestions.length === 0) {
           toast({ title: "Sugerencias IA", description: "La IA no generó ninguna palabra para esta categoría."});
-        } else if (newUniqueSuggestions.length === 0 && allSuggestions.length > 0) { 
-          toast({ title: "Sugerencias IA", description: "Todas las palabras sugeridas por la IA ya existen en esta categoría."});
+          setAiSuggestedWords([]);
+        } else {
+          const existingWordsSet = new Set(category.words.map(w => w.toLowerCase()));
+          const newUniqueSuggestions: string[] = [];
+          const duplicateSuggestions: string[] = [];
+
+          // Use a set to handle duplicates within the AI suggestions list itself
+          const suggestionSet = new Set<string>();
+
+          allSuggestions.forEach(suggestedWord => {
+            const lowerCaseWord = suggestedWord.toLowerCase().trim();
+            if (!lowerCaseWord || suggestionSet.has(lowerCaseWord)) {
+                return; // Duplicate within the AI's own list or empty, skip
+            }
+            suggestionSet.add(lowerCaseWord);
+
+            if (existingWordsSet.has(lowerCaseWord)) {
+              duplicateSuggestions.push(suggestedWord);
+            } else {
+              newUniqueSuggestions.push(suggestedWord);
+            }
+          });
+
+          if (duplicateSuggestions.length > 0) {
+            toast({
+              title: "Palabras Duplicadas Omitidas",
+              description: `Sugerencias que ya existen: ${duplicateSuggestions.join(', ')}.`,
+              variant: 'default',
+            });
+          }
+
+          setAiSuggestedWords(newUniqueSuggestions);
+
+          if (newUniqueSuggestions.length === 0 && allSuggestions.length > 0) {
+            toast({
+              title: "Sin Palabras Nuevas",
+              description: "Todas las palabras sugeridas por la IA ya existen en esta categoría.",
+              variant: 'default'
+            });
+          }
         }
     } catch (error) {
         console.error("AI suggestion error:", error);
