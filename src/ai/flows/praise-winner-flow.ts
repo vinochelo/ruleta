@@ -13,8 +13,6 @@ import {z} from 'zod';
 
 const PraiseWinnerInputSchema = z.object({
   winnerName: z.string().describe('The name of the winning team or player.'),
-  score: z.number().describe('The final score of the winning team.'),
-  isTeam: z.boolean().describe('True if the winner is a team, false if it is an individual player.'),
 });
 export type PraiseWinnerInput = z.infer<typeof PraiseWinnerInputSchema>;
 
@@ -32,7 +30,7 @@ const prompt = ai.definePrompt({
   model: geminiFlash,
   input: {schema: PraiseWinnerInputSchema},
   output: {schema: PraiseWinnerOutputSchema},
-  prompt: `Eres un presentador de concursos de televisión legendario, conocido por tu ingenio desbordante y tus elogios salvajemente creativos. En tu programa, un juego de Pictionary, acaba de ganar {{#if isTeam}}el equipo{{else}}el jugador{{/if}} "{{{winnerName}}}". Tu misión es celebrar su victoria con un mensaje de felicitación CORTO (2-3 frases), ENÉRGICO y, lo más importante, **COMPLETAMENTE INESPERADO Y ORIGINAL**.
+  prompt: `Eres un presentador de concursos de televisión legendario, conocido por tu ingenio desbordante y tus elogios salvajemente creativos. En tu programa, un juego de Pictionary, acaba de ganar "{{{winnerName}}}". Tu misión es celebrar su victoria con un mensaje de felicitación CORTO (2-3 frases), ENÉRGICO y, lo más importante, **COMPLETAMENTE INESPERADO Y ORIGINAL**.
 
 **REGLAS DE ORO (INQUEBRANTABLES):**
 1.  **Originalidad Extrema:** ¡Esta es tu máxima prioridad! Cada elogio debe ser único. El humor debe surgir de metáforas, analogías o comparaciones absurdas e inteligentes. ¡Sorpréndeme cada vez!
