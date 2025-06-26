@@ -111,7 +111,7 @@ const WinnerModal: React.FC<WinnerModalProps> = ({ winner, onPlayAgain, praiseMe
                 Jugar de Nuevo
             </Button>
             <div className="w-full max-w-md">
-              <AdBanner slot="winner" />
+              {!!winner && <AdBanner slot="winner" />}
             </div>
         </div>
       </DialogContent>

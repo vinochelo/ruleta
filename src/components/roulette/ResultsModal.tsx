@@ -403,7 +403,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         </div>
         <div className="w-full flex justify-center">
           <div className="w-full max-w-2xl">
-            <AdBanner slot="results" />
+            {isOpen && <AdBanner slot="results" />}
           </div>
         </div>
       </DialogContent>
