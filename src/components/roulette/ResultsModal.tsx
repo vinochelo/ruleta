@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -67,6 +66,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   // Slideshow state
   const [allImages, setAllImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Ad state
+  const [canShowAd, setCanShowAd] = useState(false);
   
   const resetAIState = useCallback(() => {
     setAiHelpActive(false);
@@ -171,6 +173,25 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       }
     }
   }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
+
+  // Effect to manage when the Ad is shown
+  useEffect(() => {
+    let adTimer: NodeJS.Timeout;
+    if (isOpen) {
+      // Wait for modal animations to complete before trying to mount and show the ad.
+      adTimer = setTimeout(() => {
+        setCanShowAd(true);
+      }, 500); // 500ms delay should be a safe buffer for animations.
+    } else {
+      // Reset when the modal is closed so it can be triggered again.
+      setCanShowAd(false);
+    }
+    
+    // Cleanup timer on unmount or if isOpen changes.
+    return () => {
+      clearTimeout(adTimer);
+    };
+  }, [isOpen]);
 
   // Effect for automatic slideshow, stops at the end
   useEffect(() => {
@@ -403,7 +424,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         </div>
         <div className="w-full flex justify-center">
           <div className="w-full max-w-2xl">
-            {isOpen && <AdBanner slot="results" />}
+            {canShowAd && <AdBanner slot="results" />}
           </div>
         </div>
       </DialogContent>
