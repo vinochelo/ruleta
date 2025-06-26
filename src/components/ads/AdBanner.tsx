@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { ADSENSE_CLIENT_ID, AD_SLOT_IDS } from '@/lib/ads';
 
 interface AdBannerProps {
@@ -13,30 +13,60 @@ const AdBanner = ({ slot }: AdBannerProps) => {
   const isConfigured = ADSENSE_CLIENT_ID.startsWith('ca-pub-') && adSlotId !== "0000000000";
   const adContainerRef = useRef<HTMLDivElement>(null);
   const adPushedRef = useRef(false);
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (!isConfigured || adPushedRef.current) {
+      return;
+    }
 
-  useEffect(() => {
-    if (!isMounted || !isConfigured || adPushedRef.current) {
+    const adContainer = adContainerRef.current;
+    if (!adContainer) {
+      return;
+    }
+
+    // This function will attempt to push the ad.
+    const tryPushAd = () => {
+      // Check if the container is actually visible and has a width.
+      if (adContainer.offsetWidth > 0) {
+        if (!adPushedRef.current) {
+          try {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            adPushedRef.current = true; // Mark as pushed to prevent duplicates.
+          } catch (err) {
+            if (process.env.NODE_ENV === 'development') {
+              console.error(`AdSense push error for slot '${slot}':`, err);
+            }
+          }
+        }
+        return true; // Ad was pushed or already pushed.
+      }
+      return false; // Container not ready.
+    };
+
+    // Attempt to push immediately. This works for non-modal ads.
+    if (tryPushAd()) {
       return;
     }
     
-    // Check if the container is visible and has a width
-    if (adContainerRef.current && adContainerRef.current.offsetWidth > 0) {
-      try {
-        // @ts-ignore
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        adPushedRef.current = true;
-      } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error(`AdSense push error for slot '${slot}':`, err);
-        }
+    // If it fails (likely in a modal), set up a persistent check.
+    const interval = setInterval(() => {
+      if (tryPushAd()) {
+        clearInterval(interval); // Stop checking once successful.
       }
-    }
-  }, [isMounted, isConfigured, slot]);
+    }, 200); // Check every 200ms.
+
+    // Failsafe: stop checking after 5 seconds to avoid infinite loops.
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+    }, 5000);
+
+    // Cleanup on component unmount.
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [isConfigured, slot]);
 
   if (!isConfigured) {
     if (process.env.NODE_ENV === 'development') {
