@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -52,38 +51,19 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spinSoundRef = useRef<HTMLAudioElement | null>(null);
   const endSoundRef = useRef<HTMLAudioElement | null>(null);
 
+  // --- NEW SOUND SYSTEM: Initialize audio objects ONCE on component mount ---
   useEffect(() => {
-    // Initialize audio objects ONCE on component mount
-    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_165e3b5e4f.mp3');
+    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_120271b4a5.mp3?filename=roulette-wheel-spin-102043.mp3');
     spinSoundRef.current.loop = true;
     
-    endSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74434.mp3');
+    endSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_165e38167c.mp3?filename=slot-machine-ding-1-193498.mp3');
 
     // Cleanup function to pause audio when the component unmounts
     return () => {
         spinSoundRef.current?.pause();
         endSoundRef.current?.pause();
     };
-  }, []);
-
-  useEffect(() => {
-    // This effect controls audio playback based on the isSpinning state
-    if (isSpinning) {
-        if (spinSoundRef.current) {
-            spinSoundRef.current.currentTime = 0;
-            spinSoundRef.current.play().catch(() => {}); // Catch potential errors silently
-        }
-    } else {
-        // Only trigger stop logic if the sound actually played to prevent noise on initial load
-        if (spinSoundRef.current && !spinSoundRef.current.paused) {
-            spinSoundRef.current.pause();
-            if (endSoundRef.current) {
-                endSoundRef.current.currentTime = 0;
-                endSoundRef.current.play().catch(() => {});
-            }
-        }
-    }
-  }, [isSpinning]);
+  }, []); // Empty dependency array means this effect runs only once
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -156,6 +136,12 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
     
+    // --- NEW SOUND SYSTEM: Direct control on spin start ---
+    if (spinSoundRef.current) {
+        spinSoundRef.current.currentTime = 0;
+        spinSoundRef.current.play().catch(e => console.error("Error al reproducir sonido de giro:", e));
+    }
+
     setIsSpinning(true);
 
     const selectedCategory = selectableCategories[Math.floor(Math.random() * selectableCategories.length)];
@@ -189,6 +175,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         } else {
             setRotation(finalRotationValue);
             setIsSpinning(false);
+            
+            // --- NEW SOUND SYSTEM: Direct control on spin end ---
+            if (spinSoundRef.current) {
+                spinSoundRef.current.pause();
+            }
+            if (endSoundRef.current) {
+                endSoundRef.current.currentTime = 0;
+                endSoundRef.current.play().catch(e => console.error("Error al reproducir sonido final:", e));
+            }
+
             onSpinEnd(selectedCategory, selectedColor);
         }
     };
