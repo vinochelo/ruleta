@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ADSENSE_CLIENT_ID, AD_SLOT_IDS } from '@/lib/ads';
 
 interface AdBannerProps {
@@ -10,31 +11,43 @@ interface AdBannerProps {
 const AdBanner = ({ slot }: AdBannerProps) => {
   const adSlotId = AD_SLOT_IDS[slot];
   const isConfigured = ADSENSE_CLIENT_ID.startsWith('ca-pub-') && adSlotId !== "0000000000";
+  const adContainerRef = useRef<HTMLDivElement>(null);
   const adPushedRef = useRef(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // When this component mounts, if ads are configured and we haven't pushed an ad yet,
-    // we push one. This assumes the parent component has waited for the container to be visible.
-    if (isConfigured && !adPushedRef.current) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || !isConfigured || adPushedRef.current) {
+      return;
+    }
+    
+    // Check if the container is visible and has a width
+    if (adContainerRef.current && adContainerRef.current.offsetWidth > 0) {
       try {
         // @ts-ignore
         (window.adsbygoogle = window.adsbygoogle || []).push({});
-        adPushedRef.current = true; // Mark as pushed to prevent re-pushing on this mount
+        adPushedRef.current = true;
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
           console.error(`AdSense push error for slot '${slot}':`, err);
         }
       }
     }
-  }, [isConfigured, slot]);
+  }, [isMounted, isConfigured, slot]);
 
   if (!isConfigured) {
     if (process.env.NODE_ENV === 'development') {
       return (
-        <div className="w-full min-h-[100px] flex items-center justify-center my-4 bg-muted/50 border-2 border-dashed rounded-lg text-center p-4">
-          <p className="text-muted-foreground text-sm">
-            <strong>Ad Slot: '{slot}'</strong><br/>
-            To enable ads, edit <code>src/lib/ads.ts</code> with your AdSense codes.
+        <div className="w-full min-h-[100px] flex flex-col items-center justify-center my-4 bg-yellow-100 border-2 border-dashed border-yellow-400 rounded-lg text-center p-4">
+          <p className="font-bold text-yellow-800">ESPACIO PUBLICITARIO</p>
+          <p className="text-yellow-700 text-sm">
+            <strong>Slot de anuncio: '{slot}'</strong>
+          </p>
+           <p className="text-yellow-600 text-xs mt-1">
+            (Este recuadro solo es visible en desarrollo. Se reemplazará por un anuncio real en producción si AdSense está configurado).
           </p>
         </div>
       );
@@ -45,7 +58,7 @@ const AdBanner = ({ slot }: AdBannerProps) => {
   // Using a key forces React to re-mount the component when the slot changes,
   // which helps ensure the ad script runs correctly for each unique ad placement.
   return (
-    <div className="w-full min-h-[100px] flex items-center justify-center my-4" key={`ad-slot-${slot}`}>
+    <div className="w-full min-h-[100px] flex items-center justify-center my-4" ref={adContainerRef} key={`ad-slot-${slot}`}>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
