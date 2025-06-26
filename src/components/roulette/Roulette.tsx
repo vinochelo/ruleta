@@ -46,6 +46,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
+  const tickSoundRef = useRef<HTMLAudioElement>(null);
+  const spinEndSoundRef = useRef<HTMLAudioElement>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -54,47 +56,19 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
   
   const playTickSound = useCallback(() => {
-    if (typeof window === 'undefined' || !window.AudioContext) return;
-    const audioContext = new window.AudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = 'triangle'; // A softer, less "beepy" click
-    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.03); // Very short sound
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.03);
-
-    oscillator.onended = () => {
-      audioContext.close().catch(() => {});
-    };
+    if (tickSoundRef.current) {
+      tickSoundRef.current.currentTime = 0;
+      tickSoundRef.current.volume = 0.5;
+      tickSoundRef.current.play().catch(() => {});
+    }
   }, []);
 
   const playSpinEndSound = useCallback(() => {
-    if (typeof window === 'undefined' || !window.AudioContext) return;
-    const audioContext = new window.AudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5 note
-    gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.4);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.4);
-
-    oscillator.onended = () => {
-        audioContext.close().catch(() => {});
-    };
+    if (spinEndSoundRef.current) {
+      spinEndSoundRef.current.currentTime = 0;
+      spinEndSoundRef.current.volume = 0.3;
+      spinEndSoundRef.current.play().catch(() => {});
+    }
   }, []);
 
   const getCoordinatesForAngle = useCallback((angleDegrees: number, radius: number) => {
@@ -254,100 +228,104 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
-      <CardHeader>
-        <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center p-4 sm:p-6">
-        <div 
-          className={cn(
-            "relative w-full h-auto aspect-square max-w-[340px] sm:max-w-[500px] lg:max-w-[600px]", 
-            (isSpinning || selectableCategories.length === 0)
-              ? "cursor-not-allowed opacity-70"
-              : "cursor-pointer"
-          )}
-          onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
-          role="button"
-          aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}
-          tabIndex={(isSpinning || selectableCategories.length === 0) ? -1 : 0}
-          onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                  if (!(isSpinning || selectableCategories.length === 0)) {
-                      spin();
-                  }
-              }
-          }}
-        >
-          <svg 
-            viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
-            className="overflow-visible" 
-          >
-            <defs>
-              {segments.map(segment => (
-                <path id={segment.textPathId} d={segment.textArcPathData} key={segment.textPathId} />
-              ))}
-            </defs>
-            <g 
-              style={{ 
-                transform: `rotate(${rotation}deg)`, 
-                transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
-              }}
-            >
-              {segments.map((segment) => (
-                <g key={segment.id}>
-                  <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
-                  <text 
-                    fill={segment.textColor} 
-                    dominantBaseline="middle" 
-                    className="pointer-events-none select-none font-roulette font-bold"
-                    style={{fontSize: `${segment.fontSize}px`}} 
-                  >
-                    <textPath 
-                      href={`#${segment.textPathId}`} 
-                      startOffset="5%"
-                      textAnchor={segment.textAnchor}
-                    >
-                      {segment.displayText}
-                    </textPath>
-                  </text>
-                </g>
-              ))}
-            </g>
-          </svg>
-          {/* Pointer */}
-          <svg
-              width="36"
-              height="48"
-              viewBox="0 0 36 48"
-              className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-10"
-              style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))" }}
-          >
-              <path
-                  d="M18 48 C18 48 0 24 0 18 A18 18 0 1 1 36 18 C36 24 18 48 18 48 Z"
-                  fill="hsl(var(--primary))"
-                  stroke="#FFFFFF"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-              />
-              <circle cx="18" cy="18" r="6" fill="white" />
-          </svg>
-
-          {/* Center decorative element */}
+    <>
+      <audio ref={tickSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_233e52c56a.mp3?filename=wooden-wheel-tick-1-97216.mp3" preload="auto" />
+      <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3" preload="auto" />
+      <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
+        <CardHeader>
+          <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center p-4 sm:p-6">
           <div 
             className={cn(
-              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-red-600 rounded-full z-5 flex items-center justify-center pointer-events-none shadow-md"
+              "relative w-full h-auto aspect-square max-w-[340px] sm:max-w-[500px] lg:max-w-[600px]", 
+              (isSpinning || selectableCategories.length === 0)
+                ? "cursor-not-allowed opacity-70"
+                : "cursor-pointer"
             )}
+            onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
+            role="button"
+            aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}
+            tabIndex={(isSpinning || selectableCategories.length === 0) ? -1 : 0}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    if (!(isSpinning || selectableCategories.length === 0)) {
+                        spin();
+                    }
+                }
+            }}
           >
-             {isSpinning ? (
-                <Loader2 className="w-8 h-8 text-white animate-spin" /> 
-             ) : (
-                <Play className="w-8 h-8 text-white" /> 
-             )}
+            <svg 
+              viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
+              className="overflow-visible" 
+            >
+              <defs>
+                {segments.map(segment => (
+                  <path id={segment.textPathId} d={segment.textArcPathData} key={segment.textPathId} />
+                ))}
+              </defs>
+              <g 
+                style={{ 
+                  transform: `rotate(${rotation}deg)`, 
+                  transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
+                }}
+              >
+                {segments.map((segment) => (
+                  <g key={segment.id}>
+                    <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
+                    <text 
+                      fill={segment.textColor} 
+                      dominantBaseline="middle" 
+                      className="pointer-events-none select-none font-roulette font-bold"
+                      style={{fontSize: `${segment.fontSize}px`}} 
+                    >
+                      <textPath 
+                        href={`#${segment.textPathId}`} 
+                        startOffset="5%"
+                        textAnchor={segment.textAnchor}
+                      >
+                        {segment.displayText}
+                      </textPath>
+                    </text>
+                  </g>
+                ))}
+              </g>
+            </svg>
+            {/* Pointer */}
+            <svg
+                width="36"
+                height="48"
+                viewBox="0 0 36 48"
+                className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-10"
+                style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))" }}
+            >
+                <path
+                    d="M18 48 C18 48 0 24 0 18 A18 18 0 1 1 36 18 C36 24 18 48 18 48 Z"
+                    fill="hsl(var(--primary))"
+                    stroke="#FFFFFF"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                />
+                <circle cx="18" cy="18" r="6" fill="white" />
+            </svg>
+
+            {/* Center decorative element */}
+            <div 
+              className={cn(
+                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-red-600 rounded-full z-5 flex items-center justify-center pointer-events-none shadow-md"
+              )}
+            >
+               {isSpinning ? (
+                  <Loader2 className="w-8 h-8 text-white animate-spin" /> 
+               ) : (
+                  <Play className="w-8 h-8 text-white" /> 
+               )}
+            </div>
           </div>
-        </div>
-        
-      </CardContent>
-    </Card>
+          
+        </CardContent>
+      </Card>
+    </>
   );
 };
 
