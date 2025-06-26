@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -16,6 +17,56 @@ interface RouletteProps {
   categories: Category[];
   onSpinEnd: (category: Category, color: string) => void;
 }
+
+// --- NEW BROWSER-NATIVE SOUND SYSTEM ---
+
+const playRouletteTick = () => {
+  if (typeof window === 'undefined' || !window.AudioContext) return;
+  const audioContext = new window.AudioContext();
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+
+  oscillator.type = 'triangle';
+  oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  oscillator.start();
+  oscillator.stop(audioContext.currentTime + 0.05);
+  oscillator.onended = () => {
+    audioContext.close().catch(() => {});
+  };
+};
+
+const playRouletteEndSound = () => {
+  if (typeof window === 'undefined' || !window.AudioContext) return;
+  const audioContext = new window.AudioContext();
+  const gainNode = audioContext.createGain();
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.connect(audioContext.destination);
+
+  const playTone = (freq: number, time: number, duration: number) => {
+    const oscillator = audioContext.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(freq, time);
+    oscillator.connect(gainNode);
+    oscillator.start(time);
+    oscillator.stop(time + duration);
+  };
+
+  const now = audioContext.currentTime;
+  playTone(880, now, 0.1);
+  playTone(660, now + 0.1, 0.2);
+  const totalDuration = 0.3;
+  setTimeout(() => {
+    audioContext.close().catch(() => {});
+  }, totalDuration * 1000 + 100);
+};
+
+
+// --- ROULETTE COMPONENT ---
 
 const rouletteSegmentColors = [
   "#F87171", "#60A5FA", "#34D399", "#FBBF24", 
@@ -47,12 +98,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
-
-  // --- SOUND SYSTEM REBUILT ---
-  // Use refs to directly access the <audio> elements in the DOM.
-  // This is the most robust method for React.
-  const spinSoundRef = useRef<HTMLAudioElement>(null);
-  const endSoundRef = useRef<HTMLAudioElement>(null);
+  const lastKnownAngle = useRef(0);
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -125,11 +171,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
     
-    // --- Direct sound control via refs ---
-    if (spinSoundRef.current) {
-        spinSoundRef.current.play().catch(e => console.error("Error al reproducir sonido de giro:", e));
-    }
-
     setIsSpinning(true);
 
     const selectedCategory = selectableCategories[Math.floor(Math.random() * selectableCategories.length)];
@@ -147,6 +188,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     
     const startTime = performance.now();
     const startRotation = rotation;
+    lastKnownAngle.current = startRotation;
 
     const easeOutQuint = (x: number): number => 1 - Math.pow(1 - x, 5);
 
@@ -156,6 +198,15 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         const easedProgress = easeOutQuint(progress);
         
         const newRotation = startRotation + (finalRotationValue - startRotation) * easedProgress;
+        
+        // Sound logic: Play tick when crossing a segment boundary
+        const currentSegmentIndex = Math.floor((newRotation % 360) / anglePerSegment);
+        const lastSegmentIndex = Math.floor((lastKnownAngle.current % 360) / anglePerSegment);
+        if (currentSegmentIndex !== lastSegmentIndex) {
+            playRouletteTick();
+        }
+        lastKnownAngle.current = newRotation;
+        
         setRotation(newRotation);
 
         if (progress < 1) {
@@ -163,16 +214,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         } else {
             setRotation(finalRotationValue);
             setIsSpinning(false);
-            
-            // --- Direct sound control via refs ---
-            if (spinSoundRef.current) {
-                spinSoundRef.current.pause();
-                spinSoundRef.current.currentTime = 0; // Reset for next spin
-            }
-            if (endSoundRef.current) {
-                endSoundRef.current.play().catch(e => console.error("Error al reproducir sonido final:", e));
-            }
-
+            playRouletteEndSound();
             onSpinEnd(selectedCategory, selectedColor);
         }
     };
@@ -186,9 +228,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
-      // Stop any lingering sound on unmount
-      spinSoundRef.current?.pause();
-      endSoundRef.current?.pause();
     };
   }, []);
 
@@ -224,19 +263,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
-      {/* Audio elements are now part of the JSX, controlled by refs. */}
-      {/* They are hidden and preloaded. */}
-      <audio 
-        ref={spinSoundRef} 
-        src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_120271b4a5.mp3?filename=roulette-wheel-spin-102043.mp3" 
-        loop 
-        preload="auto"
-      />
-      <audio 
-        ref={endSoundRef} 
-        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_165e38167c.mp3?filename=slot-machine-ding-1-193498.mp3" 
-        preload="auto"
-      />
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
