@@ -255,14 +255,15 @@ export default function HomePage() {
     // Check for winner first
     if (winningScore > 0 && winningTeam.score >= winningScore) {
       setWinner(winningTeam);
-      praiseWinner({ winnerName: winningTeam.name })
+      praiseWinner({ winnerName: winningTeam.name, gameMode: gameMode })
         .then(result => {
           const message = result.praiseMessage;
           setWinnerPraise(message);
           speakFn(message);
         })
         .catch(() => {
-          const fallbackMessage = `¡Felicidades, ${winningTeam.name}! ¡Han ganado!`;
+          const fallbackVerb = gameMode === 'teams' ? 'Han ganado' : 'Has ganado';
+          const fallbackMessage = `¡Felicidades, ${winningTeam.name}! ¡${fallbackVerb}!`;
           setWinnerPraise(fallbackMessage);
           speakFn(fallbackMessage);
         });
@@ -289,7 +290,7 @@ export default function HomePage() {
         speakFn(announcement);
       }
     }
-  }, [teams, winningScore, persistTeams, speakFn, praiseWinner, totalPointsScored]);
+  }, [teams, winningScore, persistTeams, speakFn, praiseWinner, totalPointsScored, gameMode]);
 
   const handleRemoveTeam = useCallback((teamId: string) => {
     const teamToRemove = teams.find(t => t.id === teamId);
