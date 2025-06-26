@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -13,16 +12,16 @@ const playBeep = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine'; // Tono más limpio para un "tick"
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Tono más alto para más tensión
-    gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
+    oscillator.type = 'triangle'; // A slightly different, piercing tone
+    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime); // Higher pitch for more tension
+    gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.08);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.1);
+    oscillator.stop(audioContext.currentTime + 0.08);
 
     oscillator.onended = () => {
       audioContext.close().catch(() => {});

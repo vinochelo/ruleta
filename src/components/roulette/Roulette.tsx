@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -60,16 +59,18 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime); 
-    gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.08);
+    oscillator.type = 'square'; // More "clicky" than sine
+    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.05);
+
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.08);
+    oscillator.stop(audioContext.currentTime + 0.05);
 
     oscillator.onended = () => {
       audioContext.close().catch(() => {});

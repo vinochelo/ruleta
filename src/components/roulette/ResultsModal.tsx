@@ -201,7 +201,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     if (selectedWord) {
       setTimeout(() => {
         speakFn(`La palabra era ${selectedWord}.`);
-      }, 2000);
+      }, 3000);
     }
   }, [selectedWord, speakFn]);
 
