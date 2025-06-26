@@ -1,12 +1,5 @@
 
 'use server';
-/**
- * @fileOverview An AI flow to generate a funny congratulatory message for the game winner.
- *
- * - praiseWinner - A function that handles generating the praise message.
- * - PraiseWinnerInput - The input type for the praiseWinner function.
- * - PraiseWinnerOutput - The return type for the praiseWinner function.
- */
 
 import {ai, geminiFlash} from '@/ai/genkit';
 import {z} from 'zod';
@@ -78,4 +71,3 @@ const praiseWinnerFlow = ai.defineFlow(
     return { praiseMessage: `¡Felicidades, ${input.winnerName}! ¡${fallbackVerb} de una forma espectacular!` };
   }
 );
-

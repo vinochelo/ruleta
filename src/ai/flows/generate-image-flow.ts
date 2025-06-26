@@ -1,13 +1,5 @@
 
 'use server';
-/**
- * @fileOverview AI flows for generating images for the Pictionary game.
- * This file provides two distinct flows: one for a quick, basic image,
- * and another for a single, more elaborate image.
- *
- * - generateQuickImage - Generates a single, simple line drawing for speed.
- * - generateArtisticImages - Generates a single, highly-detailed artistic image.
- */
 
 import { ai, geminiImage } from '@/ai/genkit';
 import { z } from 'zod';

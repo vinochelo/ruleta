@@ -8,7 +8,27 @@ import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: 'Ruleta Rupestre',
-  description: 'A fun Pictionary-style roulette game',
+  description: '¡Una divertida forma de pasar con amigos! Gira la ruleta, dibuja la palabra y que comiencen las risas.',
+  openGraph: {
+    title: 'Ruleta Rupestre',
+    description: '¡Una divertida forma de pasar con amigos! Gira la ruleta, dibuja la palabra y que comiencen las risas.',
+    images: [
+      {
+        url: 'https://placehold.co/1200x630.png',
+        width: 1200,
+        height: 630,
+        alt: 'Imagen de la Ruleta del juego Ruleta Rupestre',
+      },
+    ],
+    locale: 'es_ES',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ruleta Rupestre',
+    description: '¡Una divertida forma de pasar con amigos! Gira la ruleta, dibuja la palabra y que comiencen las risas.',
+    images: ['https://placehold.co/1200x630.png'],
+  },
 };
 
 export default function RootLayout({
@@ -17,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

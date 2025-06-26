@@ -1,12 +1,5 @@
 
 'use server';
-/**
- * @fileOverview An AI flow to suggest Pictionary words for a given category.
- *
- * - suggestWordsForCategory - A function that handles word suggestions.
- * - SuggestWordsInput - The input type for the suggestWordsForCategory function.
- * - SuggestWordsOutput - The return type for the suggestWordsForCategory function.
- */
 
 import {ai, geminiFlash} from '@/ai/genkit';
 import {z} from 'zod';
