@@ -15,7 +15,6 @@ import Timer from '@/components/timer/Timer';
 import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import AdBanner from '../ads/AdBanner';
 
 interface ResultsModalProps {
   isOpen: boolean;
@@ -400,11 +399,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             </div>
           </div>
         </div>
-        <div className="w-full flex justify-center">
-          <div className="w-full max-w-2xl">
-            {isOpen && <AdBanner slot="results" />}
-          </div>
-        </div>
+        
       </DialogContent>
     </Dialog>
   );

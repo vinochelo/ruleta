@@ -2,7 +2,6 @@
 import CategoryManagement from '@/components/categories/CategoryManagement';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Brain } from 'lucide-react';
-import AdBanner from '@/components/ads/AdBanner';
 
 export default function ManageCategoriesPage() {
   return (
@@ -37,7 +36,6 @@ export default function ManageCategoriesPage() {
         </CardContent>
       </Card>
       
-      <AdBanner slot="main" />
     </div>
   );
 }

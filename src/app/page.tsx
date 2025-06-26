@@ -18,7 +18,6 @@ import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
-import AdBanner from '@/components/ads/AdBanner';
 import { GameInstructions } from '@/components/GameInstructions';
 
 interface Category {
@@ -535,7 +534,7 @@ export default function HomePage() {
                     />
                 </CardContent>
             </Card>
-            <AdBanner slot="main" />
+            
         </div>
       </div>
 

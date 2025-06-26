@@ -12,7 +12,6 @@ import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutput } from '@/ai/flows/suggest-words-flow';
-import AdBanner from '../ads/AdBanner';
 
 const STORAGE_KEY = 'ruletaRupestreCategories';
 
@@ -554,7 +553,7 @@ const CategoryManagement: React.FC = () => {
         </CardFooter>
       </Card>
       
-      <AdBanner slot="main" />
+      
 
       {editingCategory && (
         <EditCategoryDialog
