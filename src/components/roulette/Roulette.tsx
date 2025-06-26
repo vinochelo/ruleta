@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -222,10 +223,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
        {/* Audio elements - invisible */}
        <audio id="roulette-spin-sound" loop preload="auto">
-        <source src="https://www.soundjay.com/clock/sounds/clock-ticking-1.mp3" type="audio/mpeg" />
+        <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_51288a7b3c.mp3" type="audio/mpeg" />
       </audio>
       <audio id="roulette-end-sound" preload="auto">
-        <source src="https://www.soundjay.com/buttons/sounds/button-3.mp3" type="audio/mpeg" />
+        <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74434.mp3" type="audio/mpeg" />
       </audio>
 
       <CardHeader>
