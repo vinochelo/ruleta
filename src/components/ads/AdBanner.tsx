@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef } from 'react';
@@ -11,13 +12,16 @@ const AdBanner = ({ slot }: AdBannerProps) => {
   const adSlotId = AD_SLOT_IDS[slot];
   const isConfigured = ADSENSE_CLIENT_ID.startsWith('ca-pub-') && adSlotId !== "0000000000";
   const adContainerRef = useRef<HTMLDivElement>(null);
+  const adPushedRef = useRef(false); // Ref to track if the ad has been pushed
 
   useEffect(() => {
-    if (isConfigured && adContainerRef.current) {
+    // Only proceed if the ad is configured and hasn't been pushed yet.
+    if (isConfigured && adContainerRef.current && !adPushedRef.current) {
       const pushAd = () => {
         try {
           // @ts-ignore
           (window.adsbygoogle = window.adsbygoogle || []).push({});
+          adPushedRef.current = true; // Mark as pushed to prevent duplicates
         } catch (err) {
           if (process.env.NODE_ENV === 'development') {
             console.error(`AdSense push error for slot '${slot}':`, err);
@@ -25,18 +29,21 @@ const AdBanner = ({ slot }: AdBannerProps) => {
         }
       };
 
-      // A more robust way to push ads:
-      // Check the container's width before pushing. If it's 0, it means the
-      // component (like a modal) is not yet visible or sized. We retry a few
-      // times with a short delay.
-      const checkAndPush = (retries = 5) => {
+      // Retry mechanism to wait for the container to become visible.
+      // Increased retries and delay for more robustness, especially with animations.
+      const checkAndPush = (retries = 15, delay = 150) => {
+        // If the container is visible and has a width, push the ad.
         if (adContainerRef.current && adContainerRef.current.offsetWidth > 0) {
           pushAd();
-        } else if (retries > 0) {
-          setTimeout(() => checkAndPush(retries - 1), 100);
-        } else {
+        } 
+        // If we still have retries left, wait and try again.
+        else if (retries > 0) {
+          setTimeout(() => checkAndPush(retries - 1, delay), delay);
+        } 
+        // If we're out of retries, log an error in development.
+        else {
           if (process.env.NODE_ENV === 'development') {
-            console.error(`AdSense push failed for slot '${slot}': Container width is 0 after retries.`);
+            console.error(`AdSense push failed for slot '${slot}': Container width is 0 after all retries.`);
           }
         }
       };
@@ -44,6 +51,11 @@ const AdBanner = ({ slot }: AdBannerProps) => {
       checkAndPush();
     }
   }, [isConfigured, slot]);
+
+  // Reset the pushed status if the slot changes, allowing a new ad to be pushed.
+  useEffect(() => {
+    adPushedRef.current = false;
+  }, [slot]);
 
   if (!isConfigured) {
     if (process.env.NODE_ENV === 'development') {
