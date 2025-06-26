@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -9,7 +8,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { XCircle, Lightbulb, Play, Users, Paintbrush, Clock, Brain, CheckCircle, RotateCcw } from "lucide-react";
+import { X, Lightbulb, Play, Users, Paintbrush, Clock, Brain, CheckCircle, RotateCcw } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -17,32 +16,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-export function GameInstructions() {
-  const [isVisible, setIsVisible] = useState(false); // Default to not visible until localStorage is checked
+interface GameInstructionsProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-  useEffect(() => {
-    // Check localStorage on component mount
-    const hidden = localStorage.getItem("hideGameInstructions") === "true";
-    setIsVisible(!hidden); // If hidden is true, set isVisible to false
-  }, []);
-
-  const handleClose = () => {
-    setIsVisible(false);
-    localStorage.setItem("hideGameInstructions", "true"); // Persist preference
-  };
-
-  if (!isVisible) {
-    return (
-      <Button
-        onClick={() => {
-          setIsVisible(true);
-          localStorage.setItem("hideGameInstructions", "false"); // Show instructions again
-        }}
-        className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90"
-      >
-        Mostrar Instrucciones del Juego
-      </Button>
-    );
+export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
+  if (!isOpen) {
+    return null;
   }
 
   return (
@@ -55,10 +36,11 @@ export function GameInstructions() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleClose}
+          onClick={onClose}
           aria-label="Cerrar instrucciones"
+          className="h-9 w-9 rounded-full text-foreground/60 hover:bg-destructive/10 hover:text-destructive"
         >
-          <XCircle className="h-6 w-6 text-foreground/50 hover:text-foreground" />
+          <X className="h-6 w-6" />
         </Button>
       </CardHeader>
       <CardContent>

@@ -13,13 +13,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus, Sparkles, User, UserPlus } from 'lucide-react';
+import { Volume2, PlusCircle, Trash2, RotateCcw, Users, Plus, Sparkles, User, UserPlus, Lightbulb } from 'lucide-react';
 import { praiseWinner } from '@/ai/flows/praise-winner-flow';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import AdBanner from '@/components/ads/AdBanner';
-import { GameInstructions } from '@/components/GameInstructions'; // Import the new component
+import { GameInstructions } from '@/components/GameInstructions';
 
 interface Category {
   id: string;
@@ -79,9 +79,26 @@ export default function HomePage() {
   const [useAIImages, setUseAIImages] = useState(false);
   const [gameMode, setGameMode] = useState<'teams' | 'players'>('teams');
   const [animatingScoreTeamId, setAnimatingScoreTeamId] = useState<string | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const { speak, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
+  
+  // Load Instructions visibility
+  useEffect(() => {
+    const hidden = localStorage.getItem("hideGameInstructions") === "true";
+    setShowInstructions(!hidden);
+  }, []);
+
+  const handleCloseInstructions = () => {
+    setShowInstructions(false);
+    localStorage.setItem("hideGameInstructions", "true");
+  };
+
+  const handleShowInstructions = () => {
+    setShowInstructions(true);
+    localStorage.setItem("hideGameInstructions", "false");
+  };
 
   // Load Categories
   useEffect(() => {
@@ -345,7 +362,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
-      <GameInstructions /> {/* Render the GameInstructions component here */}
+      <GameInstructions isOpen={showInstructions} onClose={handleCloseInstructions} />
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2 space-y-4">
           <Card className="shadow-lg">
@@ -491,6 +508,19 @@ export default function HomePage() {
 
         <div className="lg:col-span-3 flex flex-col gap-4">
           <Roulette categories={categories} onSpinEnd={handleSpinEnd} />
+          {!showInstructions && (
+            <div className="flex justify-center -mt-2">
+              <Button
+                onClick={handleShowInstructions}
+                variant="outline"
+                size="sm"
+                className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-transform hover:scale-105"
+              >
+                <Lightbulb className="mr-2 h-4 w-4" />
+                Mostrar Instrucciones
+              </Button>
+            </div>
+          )}
            <Card className="shadow-lg">
                 <CardContent className="p-3 flex items-center justify-between">
                     <Label htmlFor="ai-images-switch" className="flex items-center gap-2 font-medium text-base cursor-pointer">
