@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -52,12 +53,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const endSoundRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // This effect runs only once on component mount
+    // Initialize audio objects ONCE on component mount
     spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_165e3b5e4f.mp3');
+    spinSoundRef.current.loop = true;
+    
     endSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74434.mp3');
-    if (spinSoundRef.current) {
-        spinSoundRef.current.loop = true;
-    }
 
     // Cleanup function to pause audio when the component unmounts
     return () => {
@@ -65,6 +65,25 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         endSoundRef.current?.pause();
     };
   }, []);
+
+  useEffect(() => {
+    // This effect controls audio playback based on the isSpinning state
+    if (isSpinning) {
+        if (spinSoundRef.current) {
+            spinSoundRef.current.currentTime = 0;
+            spinSoundRef.current.play().catch(() => {}); // Catch potential errors silently
+        }
+    } else {
+        // Only trigger stop logic if the sound actually played to prevent noise on initial load
+        if (spinSoundRef.current && !spinSoundRef.current.paused) {
+            spinSoundRef.current.pause();
+            if (endSoundRef.current) {
+                endSoundRef.current.currentTime = 0;
+                endSoundRef.current.play().catch(() => {});
+            }
+        }
+    }
+  }, [isSpinning]);
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -136,13 +155,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
-
-    setIsSpinning(true);
     
-    if (spinSoundRef.current) {
-        spinSoundRef.current.currentTime = 0;
-        spinSoundRef.current.play().catch(e => {}); // Catch potential errors silently
-    }
+    setIsSpinning(true);
 
     const selectedCategory = selectableCategories[Math.floor(Math.random() * selectableCategories.length)];
     const displayIndex = displayCategories.findIndex(cat => cat.id === selectedCategory.id) ?? 0;
@@ -175,13 +189,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         } else {
             setRotation(finalRotationValue);
             setIsSpinning(false);
-            
-            spinSoundRef.current?.pause();
-            if (endSoundRef.current) {
-              endSoundRef.current.currentTime = 0;
-              endSoundRef.current.play().catch(e => {}); // Catch potential errors silently
-            }
-
             onSpinEnd(selectedCategory, selectedColor);
         }
     };
