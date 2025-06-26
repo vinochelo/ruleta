@@ -121,7 +121,7 @@ const generateQuickImageFlow = ai.defineFlow(
   async (input) => {
     try {
       ensureApiKey();
-      const prompt = `A very simple, minimalist, black and white icon for a pictionary game. The icon should represent: '${input.word}'. CRITICAL: The image must contain NO text, letters, or numbers. Only the drawing.`;
+      const prompt = `Un icono muy simple, minimalista, en blanco y negro para un juego de Pictionary. El icono debe representar: '${input.word}'. CRÍTICAMENTE IMPORTANTE: La imagen no debe contener texto, letras ni números. Solo el dibujo.`;
       
       const { imageUrl, error } = await generateSingleImage(prompt);
       
@@ -172,7 +172,7 @@ const generateArtisticImagesFlow = ai.defineFlow(
   async (input) => {
     try {
       ensureApiKey();
-      const prompt = `A highly detailed, photorealistic, and artistic image representing '${input.word}'. The image should be visually stunning and suitable for a game. CRITICAL: The image must not contain any text, letters, or numbers whatsoever. Focus solely on the visual representation of the concept.`;
+      const prompt = `Una imagen muy detallada, fotorrealista y artística que represente '${input.word}'. La imagen debe ser visualmente impresionante y adecuada para un juego. CRÍTICAMENTE IMPORTANTE: La imagen no debe contener ningún tipo de texto, letras o números. Céntrate únicamente en la representación visual del concepto.`;
 
       const { imageUrl, error } = await generateSingleImage(prompt);
       
