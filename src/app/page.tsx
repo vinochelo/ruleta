@@ -531,6 +531,7 @@ export default function HomePage() {
                         id="ai-images-switch"
                         checked={useAIImages}
                         onCheckedChange={setUseAIImages}
+                        className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-destructive"
                     />
                 </CardContent>
             </Card>
