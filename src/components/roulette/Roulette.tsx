@@ -47,13 +47,20 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
   const activeSpinSound = useRef<HTMLAudioElement | null>(null);
-  const spinEndSoundRef = useRef<HTMLAudioElement>(null);
+  const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
 
   const numSegments = displayCategories.length;
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+        spinEndSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3");
+        spinEndSoundRef.current.preload = 'auto';
+    }
+  }, []);
 
   const playSpinEndSound = useCallback(() => {
     if (spinEndSoundRef.current) {
@@ -228,7 +235,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
-      <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3" preload="auto" />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
