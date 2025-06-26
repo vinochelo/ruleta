@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -10,17 +11,33 @@ interface AdBannerProps {
 const AdBanner = ({ slot }: AdBannerProps) => {
   const adSlotId = AD_SLOT_IDS[slot];
   const isConfigured = ADSENSE_CLIENT_ID.startsWith('ca-pub-') && adSlotId !== "0000000000";
+  
+  // Slots inside modals might need a delay for the container to get its width.
+  const isModalSlot = slot === 'results' || slot === 'winner';
 
   useEffect(() => {
     if (isConfigured) {
-      try {
-        // @ts-ignore
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (err) {
-        // Silently fail in production
+      const pushAd = () => {
+        try {
+          // @ts-ignore
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (err) {
+          // In development, it's useful to see these errors.
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`AdSense push error for slot '${slot}':`, err);
+          }
+        }
+      };
+      
+      // If it's a modal slot, wait a bit for the modal to animate and get its dimensions.
+      if (isModalSlot) {
+        const timer = setTimeout(pushAd, 300); // 300ms should be enough for animations
+        return () => clearTimeout(timer);
+      } else {
+        pushAd();
       }
     }
-  }, [isConfigured, slot]);
+  }, [isConfigured, slot, isModalSlot]);
 
   if (!isConfigured) {
     if (process.env.NODE_ENV === 'development') {
@@ -36,8 +53,10 @@ const AdBanner = ({ slot }: AdBannerProps) => {
     return null;
   }
 
+  // Using a key forces React to re-mount the component when the slot changes,
+  // which helps ensure the ad script runs correctly for each unique ad placement.
   return (
-    <div className="w-full min-h-[100px] flex items-center justify-center my-4" key={slot}>
+    <div className="w-full min-h-[100px] flex items-center justify-center my-4" key={`ad-slot-${slot}`}>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
