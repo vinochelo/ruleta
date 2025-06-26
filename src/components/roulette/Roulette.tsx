@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -49,9 +48,27 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
 
-  // Refs for the declarative audio elements
-  const spinSoundRef = useRef<HTMLAudioElement>(null);
-  const spinEndSoundRef = useRef<HTMLAudioElement>(null);
+  // --- NEW ROBUST AUDIO LOGIC ---
+  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
+  const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // This effect runs only ONCE on component mount.
+    // We create the audio objects here and set their sources immediately.
+    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/07/audio_c4f0a822b3.mp3');
+    spinSoundRef.current.loop = true;
+    spinSoundRef.current.preload = 'auto';
+
+    spinEndSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74412.mp3');
+    spinEndSoundRef.current.preload = 'auto';
+
+    // The cleanup function ensures we stop sounds if the component is unmounted.
+    return () => {
+      spinSoundRef.current?.pause();
+      spinEndSoundRef.current?.pause();
+    };
+  }, []); // The empty dependency array is crucial.
+  // --- END NEW AUDIO LOGIC ---
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -125,6 +142,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     if (isSpinning || selectableCategories.length === 0) return;
     setIsSpinning(true);
     
+    // Use the pre-loaded audio object
     if (spinSoundRef.current) {
       spinSoundRef.current.currentTime = 0;
       spinSoundRef.current.play().catch(e => console.error("Error playing spin sound:", e));
@@ -163,6 +181,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         if (progress < 1) {
             animationFrameId.current = requestAnimationFrame(animate);
         } else {
+            // Stop spin sound, play end sound
             if (spinSoundRef.current) {
               spinSoundRef.current.pause();
             }
@@ -182,13 +201,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation]);
   
   useEffect(() => {
+    // This effect is only for cleaning up the animation frame on unmount.
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
-      // Pause sounds on unmount to prevent memory leaks
-      spinSoundRef.current?.pause();
-      spinEndSoundRef.current?.pause();
     };
   }, []);
 
@@ -223,106 +240,99 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   }
 
   return (
-    <>
-      <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
-        <CardHeader>
-          <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center p-4 sm:p-6">
+    <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
+      <CardHeader>
+        <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center p-4 sm:p-6">
+        <div 
+          className={cn(
+            "relative w-full h-auto aspect-square max-w-[340px] sm:max-w-[500px] lg:max-w-[600px]", 
+            (isSpinning || selectableCategories.length === 0)
+              ? "cursor-not-allowed opacity-70"
+              : "cursor-pointer"
+          )}
+          onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
+          role="button"
+          aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}
+          tabIndex={(isSpinning || selectableCategories.length === 0) ? -1 : 0}
+          onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                  if (!(isSpinning || selectableCategories.length === 0)) {
+                      spin();
+                  }
+              }
+          }}
+        >
+          <svg 
+            viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
+            className="overflow-visible" 
+          >
+            <defs>
+              {segments.map(segment => (
+                <path id={segment.textPathId} d={segment.textArcPathData} key={segment.textPathId} />
+              ))}
+            </defs>
+            <g 
+              style={{ 
+                transform: `rotate(${rotation}deg)`, 
+                transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
+              }}
+            >
+              {segments.map((segment) => (
+                <g key={segment.id}>
+                  <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
+                  <text 
+                    fill={segment.textColor} 
+                    dominantBaseline="middle" 
+                    className="pointer-events-none select-none font-roulette font-bold"
+                    style={{fontSize: `${segment.fontSize}px`}} 
+                  >
+                    <textPath 
+                      href={`#${segment.textPathId}`} 
+                      startOffset="5%"
+                      textAnchor={segment.textAnchor}
+                    >
+                      {segment.displayText}
+                    </textPath>
+                  </text>
+                </g>
+              ))}
+            </g>
+          </svg>
+          {/* Pointer */}
+          <svg
+              width="36"
+              height="48"
+              viewBox="0 0 36 48"
+              className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-10"
+              style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))" }}
+          >
+              <path
+                  d="M18 48 C18 48 0 24 0 18 A18 18 0 1 1 36 18 C36 24 18 48 18 48 Z"
+                  fill="hsl(var(--primary))"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  strokeLinejoin="round"
+              />
+              <circle cx="18" cy="18" r="6" fill="white" />
+          </svg>
+
+          {/* Center decorative element */}
           <div 
             className={cn(
-              "relative w-full h-auto aspect-square max-w-[340px] sm:max-w-[500px] lg:max-w-[600px]", 
-              (isSpinning || selectableCategories.length === 0)
-                ? "cursor-not-allowed opacity-70"
-                : "cursor-pointer"
+              "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-red-600 rounded-full z-5 flex items-center justify-center pointer-events-none shadow-md"
             )}
-            onClick={!(isSpinning || selectableCategories.length === 0) ? spin : undefined}
-            role="button"
-            aria-label={isSpinning ? "Girando ruleta" : "Girar la ruleta"}
-            tabIndex={(isSpinning || selectableCategories.length === 0) ? -1 : 0}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    if (!(isSpinning || selectableCategories.length === 0)) {
-                        spin();
-                    }
-                }
-            }}
           >
-            <svg 
-              viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`} 
-              className="overflow-visible" 
-            >
-              <defs>
-                {segments.map(segment => (
-                  <path id={segment.textPathId} d={segment.textArcPathData} key={segment.textPathId} />
-                ))}
-              </defs>
-              <g 
-                style={{ 
-                  transform: `rotate(${rotation}deg)`, 
-                  transformOrigin: `${CENTER_X}px ${CENTER_Y}px`,
-                }}
-              >
-                {segments.map((segment) => (
-                  <g key={segment.id}>
-                    <path d={segment.path} fill={segment.fill} stroke="#FFFFFF" strokeWidth="2"/>
-                    <text 
-                      fill={segment.textColor} 
-                      dominantBaseline="middle" 
-                      className="pointer-events-none select-none font-roulette font-bold"
-                      style={{fontSize: `${segment.fontSize}px`}} 
-                    >
-                      <textPath 
-                        href={`#${segment.textPathId}`} 
-                        startOffset="5%"
-                        textAnchor={segment.textAnchor}
-                      >
-                        {segment.displayText}
-                      </textPath>
-                    </text>
-                  </g>
-                ))}
-              </g>
-            </svg>
-            {/* Pointer */}
-            <svg
-                width="36"
-                height="48"
-                viewBox="0 0 36 48"
-                className="absolute top-[-16px] left-1/2 -translate-x-1/2 z-10"
-                style={{ filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.3))" }}
-            >
-                <path
-                    d="M18 48 C18 48 0 24 0 18 A18 18 0 1 1 36 18 C36 24 18 48 18 48 Z"
-                    fill="hsl(var(--primary))"
-                    stroke="#FFFFFF"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                />
-                <circle cx="18" cy="18" r="6" fill="white" />
-            </svg>
-
-            {/* Center decorative element */}
-            <div 
-              className={cn(
-                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-red-600 rounded-full z-5 flex items-center justify-center pointer-events-none shadow-md"
-              )}
-            >
-               {isSpinning ? (
-                  <Loader2 className="w-8 h-8 text-white animate-spin" /> 
-               ) : (
-                  <Play className="w-8 h-8 text-white" /> 
-               )}
-            </div>
+             {isSpinning ? (
+                <Loader2 className="w-8 h-8 text-white animate-spin" /> 
+             ) : (
+                <Play className="w-8 h-8 text-white" /> 
+             )}
           </div>
-          
-        </CardContent>
-      </Card>
-      
-      {/* Invisible audio elements, pre-loaded by the browser. This is the most reliable method. */}
-      <audio ref={spinSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/07/audio_c4f0a822b3.mp3" loop preload="auto"></audio>
-      <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74412.mp3" preload="auto"></audio>
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
