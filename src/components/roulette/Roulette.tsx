@@ -46,26 +46,38 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
-  const activeSpinSound = useRef<HTMLAudioElement | null>(null);
+
+  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
   const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
-  
+
+  useEffect(() => {
+    // This effect runs once on the client after the component mounts.
+    // It pre-loads the audio files.
+    if (typeof window !== "undefined") {
+      spinSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3");
+      spinSoundRef.current.preload = 'auto';
+      spinSoundRef.current.volume = 0.5;
+
+      spinEndSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3");
+      spinEndSoundRef.current.preload = 'auto';
+      spinEndSoundRef.current.volume = 0.3;
+    }
+
+    // Cleanup function to pause audio if component unmounts while spinning
+    return () => {
+      spinSoundRef.current?.pause();
+    };
+  }, []);
+
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
 
   const numSegments = displayCategories.length;
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-        spinEndSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3");
-        spinEndSoundRef.current.preload = 'auto';
-    }
-  }, []);
-
   const playSpinEndSound = useCallback(() => {
     if (spinEndSoundRef.current) {
       spinEndSoundRef.current.currentTime = 0;
-      spinEndSoundRef.current.volume = 0.3;
       spinEndSoundRef.current.play().catch(() => {});
     }
   }, []);
@@ -134,13 +146,14 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
-
     setIsSpinning(true);
-    
-    const audio = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3");
-    audio.volume = 0.5;
-    audio.play().catch(() => {});
-    activeSpinSound.current = audio;
+
+    if (spinSoundRef.current) {
+      spinSoundRef.current.currentTime = 0;
+      spinSoundRef.current.play().catch(error => {
+        console.error("Error playing spin sound:", error);
+      });
+    }
 
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
     const selectedCategory = selectableCategories[randomIndex];
@@ -175,10 +188,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         if (progress < 1) {
             animationFrameId.current = requestAnimationFrame(animate);
         } else {
-            if (activeSpinSound.current) {
-              activeSpinSound.current.pause();
-              activeSpinSound.current.currentTime = 0;
-              activeSpinSound.current = null;
+            if (spinSoundRef.current) {
+              spinSoundRef.current.pause();
             }
             setRotation(finalRotationValue);
             setIsSpinning(false);
@@ -195,10 +206,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     return () => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
-      }
-      if (activeSpinSound.current) {
-        activeSpinSound.current.pause();
-        activeSpinSound.current = null;
       }
     };
   }, []);
