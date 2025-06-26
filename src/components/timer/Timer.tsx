@@ -13,8 +13,8 @@ const playBeep = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'square';
-    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    oscillator.type = 'sine'; // Tono más limpio para un "tick"
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // Tono más alto para más tensión
     gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
 

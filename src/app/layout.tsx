@@ -8,10 +8,10 @@ import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: 'Ruleta Rupestre',
-  description: '¡Una divertida forma de pasar con amigos! Gira la ruleta, dibuja la palabra y que comiencen las risas.',
+  description: 'Una experiencia con amigos o familia',
   openGraph: {
     title: 'Ruleta Rupestre',
-    description: '¡Una divertida forma de pasar con amigos! Gira la ruleta, dibuja la palabra y que comiencen las risas.',
+    description: 'Una experiencia con amigos o familia',
     images: [
       {
         url: 'https://placehold.co/1200x630.png',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Ruleta Rupestre',
-    description: '¡Una divertida forma de pasar con amigos! Gira la ruleta, dibuja la palabra y que comiencen las risas.',
+    description: 'Una experiencia con amigos o familia',
     images: ['https://placehold.co/1200x630.png'],
   },
 };
