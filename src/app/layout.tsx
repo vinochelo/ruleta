@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import Header from '@/components/Header';
 import Script from 'next/script';
 import { ADSENSE_CLIENT_ID } from '@/lib/ads';
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: 'Ruleta Rupestre',
@@ -39,6 +41,8 @@ export default function RootLayout({
           </main>
           <Toaster />
         </div>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );

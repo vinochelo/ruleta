@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
@@ -20,6 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import AdBanner from '@/components/ads/AdBanner';
+import { GameInstructions } from '@/components/GameInstructions'; // Import the new component
 
 interface Category {
   id: string;
@@ -60,6 +60,7 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
 const CATEGORIES_STORAGE_KEY = 'ruletaRupestreCategories';
 const TEAMS_STORAGE_KEY = 'ruletaRupestreTeams';
 const GAME_MODE_STORAGE_KEY = 'ruletaRupestreGameMode';
+const AI_IMAGES_STORAGE_KEY = 'ruletaRupestreAIImages';
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -75,7 +76,7 @@ export default function HomePage() {
   const [winnerPraise, setWinnerPraise] = useState<string | null>(null);
   const [totalPointsScored, setTotalPointsScored] = useState(0);
   const [usedWords, setUsedWords] = useState<Record<string, string[]>>({});
-  const [useAIImages, setUseAIImages] = useState(true);
+  const [useAIImages, setUseAIImages] = useState(false);
   const [gameMode, setGameMode] = useState<'teams' | 'players'>('teams');
   const [animatingScoreTeamId, setAnimatingScoreTeamId] = useState<string | null>(null);
 
@@ -156,6 +157,18 @@ export default function HomePage() {
   useEffect(() => {
     localStorage.setItem(GAME_MODE_STORAGE_KEY, gameMode);
   }, [gameMode]);
+
+  // Load and Persist AI Image Preference
+  useEffect(() => {
+    const storedPreference = localStorage.getItem(AI_IMAGES_STORAGE_KEY);
+    if (storedPreference !== null) {
+      setUseAIImages(JSON.parse(storedPreference));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(AI_IMAGES_STORAGE_KEY, JSON.stringify(useAIImages));
+  }, [useAIImages]);
   
   const playPointSound = () => {
     if (typeof window !== 'undefined' && window.AudioContext) {
@@ -332,6 +345,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-8">
+      <GameInstructions /> {/* Render the GameInstructions component here */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2 space-y-4">
           <Card className="shadow-lg">
