@@ -46,7 +46,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
-  const tickSoundRef = useRef<HTMLAudioElement>(null);
   const spinEndSoundRef = useRef<HTMLAudioElement>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
@@ -56,10 +55,25 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
   
   const playTickSound = useCallback(() => {
-    if (tickSoundRef.current) {
-      tickSoundRef.current.currentTime = 0;
-      tickSoundRef.current.volume = 0.5;
-      tickSoundRef.current.play().catch(() => {});
+    if (typeof window !== 'undefined' && window.AudioContext) {
+      const audioContext = new window.AudioContext();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(1200, audioContext.currentTime); // High pitch for a click
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 0.05);
+
+      oscillator.onended = () => {
+        audioContext.close().catch(() => {});
+      };
     }
   }, []);
 
@@ -229,7 +243,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
-      <audio ref={tickSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c3b9b4aef9.mp3?filename=tick-tock-94263.mp3" preload="auto" />
       <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3" preload="auto" />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>

@@ -6,26 +6,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const playBeep = () => {
+const playHeartbeat = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
-    const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(1600, audioContext.currentTime);
-    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
-
-    oscillator.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // Lower volume for a thump
     gainNode.connect(audioContext.destination);
 
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.1);
+    const playPulse = (freq: number, time: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(freq, time);
+        
+        // Envelope for the pulse
+        gainNode.gain.setValueAtTime(0.3, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, time + duration);
 
-    oscillator.onended = () => {
-      audioContext.close().catch(() => {});
+        oscillator.connect(gainNode);
+        oscillator.start(time);
+        oscillator.stop(time + duration);
     };
+
+    const now = audioContext.currentTime;
+    playPulse(80, now, 0.1); // "lub"
+    playPulse(60, now + 0.15, 0.1); // "dub"
+
+    setTimeout(() => {
+        audioContext.close().catch(() => {});
+    }, 400); // Close context after sounds are played
   }
 };
 
@@ -38,7 +46,7 @@ const playTimerEndSound = () => {
 
     const playTone = (freq: number, time: number, duration: number) => {
         const oscillator = audioContext.createOscillator();
-        oscillator.type = 'square';
+        oscillator.type = 'sawtooth';
         oscillator.frequency.setValueAtTime(freq, time);
         oscillator.connect(gainNode);
         oscillator.start(time);
@@ -46,8 +54,8 @@ const playTimerEndSound = () => {
     };
 
     const now = audioContext.currentTime;
-    playTone(300, now, 0.15); 
-    playTone(200, now + 0.15, 0.25); 
+    playTone(220, now, 0.15); 
+    playTone(164, now + 0.15, 0.25);
 
     const totalDuration = 0.15 + 0.25;
     setTimeout(() => {
@@ -88,7 +96,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
       setIsFinished(true);
     } else if (timeLeft > 0 && isRunning) {
       if (timeLeft <= 10) {
-        playBeep();
+        playHeartbeat();
       }
       if (timeLeft % 10 === 0) {
         setIsPulsing(true);
