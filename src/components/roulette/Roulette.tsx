@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -51,18 +52,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // This effect runs once on the client after the component mounts.
-    // It pre-loads the audio files.
-    if (typeof window !== "undefined") {
-      spinSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3");
-      spinSoundRef.current.preload = 'auto';
-      spinSoundRef.current.volume = 0.5;
-
-      spinEndSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3");
-      spinEndSoundRef.current.preload = 'auto';
-      spinEndSoundRef.current.volume = 0.3;
-    }
-
     // Cleanup function to pause audio if component unmounts while spinning
     return () => {
       spinSoundRef.current?.pause();
@@ -78,6 +67,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const playSpinEndSound = useCallback(() => {
     if (spinEndSoundRef.current) {
       spinEndSoundRef.current.currentTime = 0;
+      spinEndSoundRef.current.volume = 0.3;
       spinEndSoundRef.current.play().catch(() => {});
     }
   }, []);
@@ -150,6 +140,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
     if (spinSoundRef.current) {
       spinSoundRef.current.currentTime = 0;
+      spinSoundRef.current.volume = 0.5;
       spinSoundRef.current.play().catch(error => {
         console.error("Error playing spin sound:", error);
       });
@@ -242,6 +233,16 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
+      <audio 
+        ref={spinSoundRef} 
+        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3" 
+        preload="auto"
+      />
+      <audio 
+        ref={spinEndSoundRef}
+        src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3"
+        preload="auto"
+      />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
