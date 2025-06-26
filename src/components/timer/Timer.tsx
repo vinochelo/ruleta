@@ -6,34 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const playHeartbeat = () => {
+const playTimerTick = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
+    const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // Lower volume for a thump
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime); // Increased volume
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+    
+    oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
-    const playPulse = (freq: number, time: number, duration: number) => {
-        const oscillator = audioContext.createOscillator();
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(freq, time);
-        
-        // Envelope for the pulse
-        gainNode.gain.setValueAtTime(0.3, time);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, time + duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.1);
 
-        oscillator.connect(gainNode);
-        oscillator.start(time);
-        oscillator.stop(time + duration);
-    };
-
-    const now = audioContext.currentTime;
-    playPulse(80, now, 0.1); // "lub"
-    playPulse(60, now + 0.15, 0.1); // "dub"
-
-    setTimeout(() => {
+    oscillator.onended = () => {
         audioContext.close().catch(() => {});
-    }, 400); // Close context after sounds are played
+    };
   }
 };
 
@@ -96,7 +88,7 @@ const Timer: React.FC<TimerProps> = ({ initialDuration, onTimerEnd, autoStart = 
       setIsFinished(true);
     } else if (timeLeft > 0 && isRunning) {
       if (timeLeft <= 10) {
-        playHeartbeat();
+        playTimerTick();
       }
       if (timeLeft % 10 === 0) {
         setIsPulsing(true);

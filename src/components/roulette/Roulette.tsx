@@ -46,6 +46,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
+  const spinSoundRef = useRef<HTMLAudioElement>(null);
   const spinEndSoundRef = useRef<HTMLAudioElement>(null);
   
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
@@ -53,29 +54,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   const numSegments = displayCategories.length;
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
-  
-  const playTickSound = useCallback(() => {
-    if (typeof window !== 'undefined' && window.AudioContext) {
-      const audioContext = new window.AudioContext();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(1200, audioContext.currentTime); // High pitch for a click
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.05);
-
-      oscillator.onended = () => {
-        audioContext.close().catch(() => {});
-      };
-    }
-  }, []);
 
   const playSpinEndSound = useCallback(() => {
     if (spinEndSoundRef.current) {
@@ -151,6 +129,12 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     if (isSpinning || selectableCategories.length === 0) return;
 
     setIsSpinning(true);
+    if (spinSoundRef.current) {
+      spinSoundRef.current.currentTime = 0;
+      spinSoundRef.current.volume = 0.5;
+      spinSoundRef.current.play().catch(() => {});
+    }
+
 
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
     const selectedCategory = selectableCategories[randomIndex];
@@ -171,7 +155,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     
     const startTime = performance.now();
     const startRotation = rotation;
-    let lastTickSegment = Math.floor(startRotation / anglePerSegment);
 
     const easeOutQuint = (x: number): number => 1 - Math.pow(1 - x, 5);
 
@@ -183,15 +166,13 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         const newRotation = startRotation + (finalRotationValue - startRotation) * easedProgress;
         setRotation(newRotation);
 
-        const currentSegment = Math.floor(newRotation / anglePerSegment);
-        if (currentSegment > lastTickSegment) {
-            playTickSound();
-            lastTickSegment = currentSegment;
-        }
-
         if (progress < 1) {
             animationFrameId.current = requestAnimationFrame(animate);
         } else {
+            if (spinSoundRef.current) {
+              spinSoundRef.current.pause();
+              spinSoundRef.current.currentTime = 0;
+            }
             setRotation(finalRotationValue);
             setIsSpinning(false);
             playSpinEndSound();
@@ -201,7 +182,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
     animationFrameId.current = requestAnimationFrame(animate);
 
-  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation, playTickSound, playSpinEndSound]);
+  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation, playSpinEndSound]);
   
   useEffect(() => {
     return () => {
@@ -243,6 +224,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
+      <audio ref={spinSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3" preload="auto" />
       <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3" preload="auto" />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
