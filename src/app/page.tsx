@@ -79,15 +79,17 @@ export default function HomePage() {
   const [useAIImages, setUseAIImages] = useState(false);
   const [gameMode, setGameMode] = useState<'teams' | 'players'>('teams');
   const [animatingScoreTeamId, setAnimatingScoreTeamId] = useState<string | null>(null);
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
 
   const { speak, isSupported: speechSupported } = useSpeechSynthesis();
   const { toast } = useToast();
   
   // Load Instructions visibility
   useEffect(() => {
-    const hidden = localStorage.getItem("hideGameInstructions") === "true";
-    setShowInstructions(!hidden);
+    const previouslyHidden = localStorage.getItem("hideGameInstructions") === "true";
+    if (previouslyHidden) {
+      setShowInstructions(false);
+    }
   }, []);
 
   const handleCloseInstructions = () => {
@@ -97,7 +99,7 @@ export default function HomePage() {
 
   const handleShowInstructions = () => {
     setShowInstructions(true);
-    localStorage.setItem("hideGameInstructions", "false");
+    localStorage.removeItem("hideGameInstructions");
   };
 
   // Load Categories
@@ -178,9 +180,7 @@ export default function HomePage() {
   // Load and Persist AI Image Preference
   useEffect(() => {
     const storedPreference = localStorage.getItem(AI_IMAGES_STORAGE_KEY);
-    if (storedPreference !== null) {
-      setUseAIImages(JSON.parse(storedPreference));
-    }
+    setUseAIImages(storedPreference === 'true');
   }, []);
 
   useEffect(() => {
@@ -514,7 +514,7 @@ export default function HomePage() {
                 onClick={handleShowInstructions}
                 variant="outline"
                 size="sm"
-                className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 transition-transform hover:scale-105"
+                className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30 transition-transform hover:scale-105"
               >
                 <Lightbulb className="mr-2 h-4 w-4" />
                 Mostrar Instrucciones
