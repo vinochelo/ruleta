@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -48,40 +47,15 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
 
-  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
-  const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    // This effect runs once on the client-side after the component mounts
-    // It creates the audio objects and preloads them.
-    const spinAudio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_173b22e1cf.mp3');
-    spinAudio.preload = 'auto';
-    spinSoundRef.current = spinAudio;
-
-    const endAudio = new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c744f2.mp3');
-    endAudio.preload = 'auto';
-    spinEndSoundRef.current = endAudio;
-
-    // Cleanup function to pause audio if the component unmounts
-    return () => {
-      spinSoundRef.current?.pause();
-      spinEndSoundRef.current?.pause();
-    };
-  }, []);
+  // This is the new, robust method for handling audio.
+  const spinSoundRef = useRef<HTMLAudioElement>(null);
+  const spinEndSoundRef = useRef<HTMLAudioElement>(null);
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
 
   const numSegments = displayCategories.length;
   const anglePerSegment = numSegments > 0 ? 360 / numSegments : 360;
-
-  const playSpinEndSound = useCallback(() => {
-    if (spinEndSoundRef.current) {
-      spinEndSoundRef.current.currentTime = 0;
-      spinEndSoundRef.current.volume = 0.3;
-      spinEndSoundRef.current.play().catch(() => {});
-    }
-  }, []);
 
   const getCoordinatesForAngle = useCallback((angleDegrees: number, radius: number) => {
     const angleRadians = ((angleDegrees - 90) * Math.PI) / 180; 
@@ -153,7 +127,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       spinSoundRef.current.currentTime = 0;
       spinSoundRef.current.volume = 0.5;
       spinSoundRef.current.play().catch(error => {
-        // We can log the error, but we don't need to show it to the user
         console.error("Error playing spin sound:", error);
       });
     }
@@ -193,17 +166,22 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         } else {
             if (spinSoundRef.current) {
               spinSoundRef.current.pause();
+              spinSoundRef.current.currentTime = 0;
+            }
+            if(spinEndSoundRef.current){
+              spinEndSoundRef.current.currentTime = 0;
+              spinEndSoundRef.current.volume = 0.3;
+              spinEndSoundRef.current.play().catch(() => {});
             }
             setRotation(finalRotationValue);
             setIsSpinning(false);
-            playSpinEndSound();
             onSpinEnd(selectedCategory, selectedColor);
         }
     };
 
     animationFrameId.current = requestAnimationFrame(animate);
 
-  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation, playSpinEndSound]);
+  }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation]);
   
   useEffect(() => {
     return () => {
@@ -211,6 +189,14 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
+  }, []);
+  
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      spinSoundRef.current?.pause();
+      spinEndSoundRef.current?.pause();
+    }
   }, []);
 
   if (categories.length === 0) {
@@ -245,6 +231,17 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
+      <audio 
+        ref={spinSoundRef} 
+        src="https://cdn.pixabay.com/audio/2022/03/15/audio_173b22e1cf.mp3" 
+        preload="auto" 
+        loop
+      />
+      <audio 
+        ref={spinEndSoundRef} 
+        src="https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c744f2.mp3" 
+        preload="auto" 
+      />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
