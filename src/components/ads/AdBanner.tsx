@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ADSENSE_CLIENT_ID, AD_SLOT_IDS } from '@/lib/ads';
 
 interface AdBannerProps {
@@ -11,33 +10,40 @@ interface AdBannerProps {
 const AdBanner = ({ slot }: AdBannerProps) => {
   const adSlotId = AD_SLOT_IDS[slot];
   const isConfigured = ADSENSE_CLIENT_ID.startsWith('ca-pub-') && adSlotId !== "0000000000";
-  
-  // Slots inside modals might need a delay for the container to get its width.
-  const isModalSlot = slot === 'results' || slot === 'winner';
+  const adContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isConfigured) {
+    if (isConfigured && adContainerRef.current) {
       const pushAd = () => {
         try {
           // @ts-ignore
           (window.adsbygoogle = window.adsbygoogle || []).push({});
         } catch (err) {
-          // In development, it's useful to see these errors.
           if (process.env.NODE_ENV === 'development') {
             console.error(`AdSense push error for slot '${slot}':`, err);
           }
         }
       };
+
+      // A more robust way to push ads:
+      // Check the container's width before pushing. If it's 0, it means the
+      // component (like a modal) is not yet visible or sized. We retry a few
+      // times with a short delay.
+      const checkAndPush = (retries = 5) => {
+        if (adContainerRef.current && adContainerRef.current.offsetWidth > 0) {
+          pushAd();
+        } else if (retries > 0) {
+          setTimeout(() => checkAndPush(retries - 1), 100);
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`AdSense push failed for slot '${slot}': Container width is 0 after retries.`);
+          }
+        }
+      };
       
-      // If it's a modal slot, wait a bit for the modal to animate and get its dimensions.
-      if (isModalSlot) {
-        const timer = setTimeout(pushAd, 300); // 300ms should be enough for animations
-        return () => clearTimeout(timer);
-      } else {
-        pushAd();
-      }
+      checkAndPush();
     }
-  }, [isConfigured, slot, isModalSlot]);
+  }, [isConfigured, slot]);
 
   if (!isConfigured) {
     if (process.env.NODE_ENV === 'development') {
@@ -56,7 +62,7 @@ const AdBanner = ({ slot }: AdBannerProps) => {
   // Using a key forces React to re-mount the component when the slot changes,
   // which helps ensure the ad script runs correctly for each unique ad placement.
   return (
-    <div className="w-full min-h-[100px] flex items-center justify-center my-4" key={`ad-slot-${slot}`}>
+    <div ref={adContainerRef} className="w-full min-h-[100px] flex items-center justify-center my-4" key={`ad-slot-${slot}`}>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
