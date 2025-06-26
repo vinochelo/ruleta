@@ -48,22 +48,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
 
-  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
-  const endSoundRef = useRef<HTMLAudioElement | null>(null);
-
-  // --- NEW SOUND SYSTEM: Initialize audio objects ONCE on component mount ---
-  useEffect(() => {
-    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_120271b4a5.mp3?filename=roulette-wheel-spin-102043.mp3');
-    spinSoundRef.current.loop = true;
-    
-    endSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_165e38167c.mp3?filename=slot-machine-ding-1-193498.mp3');
-
-    // Cleanup function to pause audio when the component unmounts
-    return () => {
-        spinSoundRef.current?.pause();
-        endSoundRef.current?.pause();
-    };
-  }, []); // Empty dependency array means this effect runs only once
+  // --- SOUND SYSTEM REBUILT ---
+  // Use refs to directly access the <audio> elements in the DOM.
+  // This is the most robust method for React.
+  const spinSoundRef = useRef<HTMLAudioElement>(null);
+  const endSoundRef = useRef<HTMLAudioElement>(null);
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -136,9 +125,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spin = useCallback(() => {
     if (isSpinning || selectableCategories.length === 0) return;
     
-    // --- NEW SOUND SYSTEM: Direct control on spin start ---
+    // --- Direct sound control via refs ---
     if (spinSoundRef.current) {
-        spinSoundRef.current.currentTime = 0;
         spinSoundRef.current.play().catch(e => console.error("Error al reproducir sonido de giro:", e));
     }
 
@@ -176,12 +164,12 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
             setRotation(finalRotationValue);
             setIsSpinning(false);
             
-            // --- NEW SOUND SYSTEM: Direct control on spin end ---
+            // --- Direct sound control via refs ---
             if (spinSoundRef.current) {
                 spinSoundRef.current.pause();
+                spinSoundRef.current.currentTime = 0; // Reset for next spin
             }
             if (endSoundRef.current) {
-                endSoundRef.current.currentTime = 0;
                 endSoundRef.current.play().catch(e => console.error("Error al reproducir sonido final:", e));
             }
 
@@ -198,6 +186,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
+      // Stop any lingering sound on unmount
+      spinSoundRef.current?.pause();
+      endSoundRef.current?.pause();
     };
   }, []);
 
@@ -233,6 +224,19 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
+      {/* Audio elements are now part of the JSX, controlled by refs. */}
+      {/* They are hidden and preloaded. */}
+      <audio 
+        ref={spinSoundRef} 
+        src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_120271b4a5.mp3?filename=roulette-wheel-spin-102043.mp3" 
+        loop 
+        preload="auto"
+      />
+      <audio 
+        ref={endSoundRef} 
+        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_165e38167c.mp3?filename=slot-machine-ding-1-193498.mp3" 
+        preload="auto"
+      />
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
