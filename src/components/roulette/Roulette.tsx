@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -47,9 +48,29 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
 
-  // This is the new, robust method for handling audio.
-  const spinSoundRef = useRef<HTMLAudioElement>(null);
-  const spinEndSoundRef = useRef<HTMLAudioElement>(null);
+  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
+  const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    // This effect runs only ONCE when the component mounts.
+    // It creates the audio objects and pre-loads them safely.
+    const spinAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_173b22e1cf.mp3");
+    spinAudio.preload = 'auto';
+    spinAudio.loop = true;
+    spinAudio.volume = 0.5;
+    spinSoundRef.current = spinAudio;
+
+    const endAudio = new Audio("https://cdn.pixabay.com/audio/2022/03/10/audio_e622d385a7.mp3");
+    endAudio.preload = 'auto';
+    endAudio.volume = 0.3;
+    spinEndSoundRef.current = endAudio;
+
+    // Cleanup function to stop audio if the component is unmounted.
+    return () => {
+      spinSoundRef.current?.pause();
+      spinEndSoundRef.current?.pause();
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount.
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -125,7 +146,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
     if (spinSoundRef.current) {
       spinSoundRef.current.currentTime = 0;
-      spinSoundRef.current.volume = 0.5;
       spinSoundRef.current.play().catch(error => {
         console.error("Error playing spin sound:", error);
       });
@@ -166,12 +186,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         } else {
             if (spinSoundRef.current) {
               spinSoundRef.current.pause();
-              spinSoundRef.current.currentTime = 0;
             }
             if(spinEndSoundRef.current){
               spinEndSoundRef.current.currentTime = 0;
-              spinEndSoundRef.current.volume = 0.3;
-              spinEndSoundRef.current.play().catch(() => {});
+              spinEndSoundRef.current.play().catch((err) => {console.error("Error playing end sound", err)});
             }
             setRotation(finalRotationValue);
             setIsSpinning(false);
@@ -189,14 +207,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, []);
-  
-  // Cleanup audio on unmount
-  useEffect(() => {
-    return () => {
-      spinSoundRef.current?.pause();
-      spinEndSoundRef.current?.pause();
-    }
   }, []);
 
   if (categories.length === 0) {
@@ -231,17 +241,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
-      <audio 
-        ref={spinSoundRef} 
-        src="https://cdn.pixabay.com/audio/2022/03/15/audio_173b22e1cf.mp3" 
-        preload="auto" 
-        loop
-      />
-      <audio 
-        ref={spinEndSoundRef} 
-        src="https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c744f2.mp3" 
-        preload="auto" 
-      />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
