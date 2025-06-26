@@ -53,12 +53,14 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   useEffect(() => {
     // This effect runs once on the client-side after the component mounts
-    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3');
-    spinEndSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3');
-    
-    // Preload audio files for better performance
-    spinSoundRef.current.preload = 'auto';
-    spinEndSoundRef.current.preload = 'auto';
+    // It creates the audio objects and preloads them.
+    const spinAudio = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_173b22e1cf.mp3');
+    spinAudio.preload = 'auto';
+    spinSoundRef.current = spinAudio;
+
+    const endAudio = new Audio('https://cdn.pixabay.com/audio/2021/08/04/audio_12b0c744f2.mp3');
+    endAudio.preload = 'auto';
+    spinEndSoundRef.current = endAudio;
 
     // Cleanup function to pause audio if the component unmounts
     return () => {
@@ -151,6 +153,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       spinSoundRef.current.currentTime = 0;
       spinSoundRef.current.volume = 0.5;
       spinSoundRef.current.play().catch(error => {
+        // We can log the error, but we don't need to show it to the user
         console.error("Error playing spin sound:", error);
       });
     }
