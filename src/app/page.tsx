@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, FormEvent } from 'react';
@@ -24,6 +25,7 @@ interface Category {
   id: string;
   name: string;
   words: string[];
+  isActive?: boolean;
 }
 
 const TEAM_COLORS = [
@@ -39,21 +41,21 @@ interface Team {
 }
 
 const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
-    { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine", "Tijeras", "Cuchara", "Botella", "Ventana", "Puerta"] },
-    { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa", "Pez", "Caballo", "Vaca", "Mono", "Cebra"] },
-    { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso", "Huevo", "Sopa", "Galleta", "Naranja", "Uvas"] },
-    { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar", "Dormir", "Comer", "Beber", "Conducir", "Llorar"] },
-    { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante", "Cine", "Supermercado", "Gimnasio", "Aeropuerto", "Estación de tren"] },
-    { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo", "Napoleón", "Beethoven", "Newton", "Michael Jackson", "Marilyn Monroe"] },
-    { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca", "Forrest Gump", "Pulp Fiction", "Los Simpson", "El Rey León", "La Casa de Papel"] },
-    { id: "default-profesiones-uuid", name: "Profesiones", words: ["Médico", "Profesor", "Bombero", "Policía", "Cocinero", "Astronauta", "Pintor", "Músico", "Actor", "Científico", "Ingeniero", "Abogado", "Periodista", "Carpintero", "Piloto"] },
-    { id: "default-deportes-uuid", name: "Deportes", words: ["Fútbol", "Baloncesto", "Tenis", "Natación", "Béisbol", "Golf", "Boxeo", "Ciclismo", "Atletismo", "Esquí", "Voleibol", "Rugby", "Fórmula 1", "Surf", "Ajedrez"] },
-    { id: "default-transporte-uuid", name: "Transporte", words: ["Coche", "Avión", "Barco", "Bicicleta", "Tren", "Autobús", "Motocicleta", "Helicóptero", "Submarino", "Cohete", "Globo aerostático", "Patinete", "Camión", "Tranvía", "Canoa"] },
-    { id: "default-naturaleza-uuid", name: "Naturaleza", words: ["Árbol", "Flor", "Río", "Sol", "Luna", "Estrella", "Nube", "Volcán", "Arcoíris", "Catarata", "Planta", "Roca", "Mar", "Relámpago", "Hoja"] },
-    { id: "default-hogar-uuid", name: "Cosas de Casa", words: ["Sofá", "Cama", "Ducha", "Nevera", "Horno", "Ventana", "Puerta", "Espejo", "Alfombra", "Televisión", "Microondas", "Aspiradora", "Plancha", "Tostadora", "Lavadora"] },
-    { id: "default-ropa-uuid", name: "Ropa", words: ["Camisa", "Pantalón", "Zapato", "Sombrero", "Vestido", "Falda", "Chaqueta", "Calcetines", "Bufanda", "Guantes", "Bikini", "Gorra", "Botas", "Pijama", "Corbata"] },
-    { id: "default-cuerpo-uuid", name: "Partes del Cuerpo", words: ["Ojo", "Nariz", "Boca", "Mano", "Pie", "Cabeza", "Brazo", "Pierna", "Oreja", "Pelo", "Dedo", "Rodilla", "Codo", "Hombro", "Espalda"] },
-    { id: "default-instrumentos-uuid", name: "Instrumentos Musicales", words: ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Saxofón", "Arpa", "Tambor", "Bajo", "Ukelele", "Acordeón", "Clarinete", "Trombón", "Xilófono"] }
+    { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine", "Tijeras", "Cuchara", "Botella", "Ventana", "Puerta"], isActive: true },
+    { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa", "Pez", "Caballo", "Vaca", "Mono", "Cebra"], isActive: true },
+    { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso", "Huevo", "Sopa", "Galleta", "Naranja", "Uvas"], isActive: true },
+    { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar", "Dormir", "Comer", "Beber", "Conducir", "Llorar"], isActive: true },
+    { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante", "Cine", "Supermercado", "Gimnasio", "Aeropuerto", "Estación de tren"], isActive: true },
+    { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo", "Napoleón", "Beethoven", "Newton", "Michael Jackson", "Marilyn Monroe"], isActive: true },
+    { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca", "Forrest Gump", "Pulp Fiction", "Los Simpson", "El Rey León", "La Casa de Papel"], isActive: true },
+    { id: "default-profesiones-uuid", name: "Profesiones", words: ["Médico", "Profesor", "Bombero", "Policía", "Cocinero", "Astronauta", "Pintor", "Músico", "Actor", "Científico", "Ingeniero", "Abogado", "Periodista", "Carpintero", "Piloto"], isActive: true },
+    { id: "default-deportes-uuid", name: "Deportes", words: ["Fútbol", "Baloncesto", "Tenis", "Natación", "Béisbol", "Golf", "Boxeo", "Ciclismo", "Atletismo", "Esquí", "Voleibol", "Rugby", "Fórmula 1", "Surf", "Ajedrez"], isActive: true },
+    { id: "default-transporte-uuid", name: "Transporte", words: ["Coche", "Avión", "Barco", "Bicicleta", "Tren", "Autobús", "Motocicleta", "Helicóptero", "Submarino", "Cohete", "Globo aerostático", "Patinete", "Camión", "Tranvía", "Canoa"], isActive: true },
+    { id: "default-naturaleza-uuid", name: "Naturaleza", words: ["Árbol", "Flor", "Río", "Sol", "Luna", "Estrella", "Nube", "Volcán", "Arcoíris", "Catarata", "Planta", "Roca", "Mar", "Relámpago", "Hoja"], isActive: true },
+    { id: "default-hogar-uuid", name: "Cosas de Casa", words: ["Sofá", "Cama", "Ducha", "Nevera", "Horno", "Ventana", "Puerta", "Espejo", "Alfombra", "Televisión", "Microondas", "Aspiradora", "Plancha", "Tostadora", "Lavadora"], isActive: true },
+    { id: "default-ropa-uuid", name: "Ropa", words: ["Camisa", "Pantalón", "Zapato", "Sombrero", "Vestido", "Falda", "Chaqueta", "Calcetines", "Bufanda", "Guantes", "Bikini", "Gorra", "Botas", "Pijama", "Corbata"], isActive: true },
+    { id: "default-cuerpo-uuid", name: "Partes del Cuerpo", words: ["Ojo", "Nariz", "Boca", "Mano", "Pie", "Cabeza", "Brazo", "Pierna", "Oreja", "Pelo", "Dedo", "Rodilla", "Codo", "Hombro", "Espalda"], isActive: true },
+    { id: "default-instrumentos-uuid", name: "Instrumentos Musicales", words: ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Saxofón", "Arpa", "Tambor", "Bajo", "Ukelele", "Acordeón", "Clarinete", "Trombón", "Xilófono"], isActive: true }
 ];
 
 const CATEGORIES_STORAGE_KEY = 'ruletaRupestreCategories';
@@ -112,6 +114,7 @@ export default function HomePage() {
             id: String(cat.id || crypto.randomUUID()),
             name: String(cat.name || "Categoría sin nombre"),
             words: Array.isArray(cat.words) ? cat.words.map(String) : [],
+            isActive: typeof cat.isActive === 'boolean' ? cat.isActive : true,
           }));
           const uniqueCategoriesMap = new Map<string, Category>();
           validatedCategories.forEach(cat => {

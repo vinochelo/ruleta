@@ -12,6 +12,8 @@ import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutput } from '@/ai/flows/suggest-words-flow';
+import { Switch } from '../ui/switch';
+import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'ruletaRupestreCategories';
 
@@ -19,24 +21,25 @@ interface Category {
   id: string;
   name: string;
   words: string[];
+  isActive?: boolean;
 }
 
 const DEFAULT_CATEGORIES: Category[] = [
-    { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine", "Tijeras", "Cuchara", "Botella", "Ventana", "Puerta"] },
-    { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa", "Pez", "Caballo", "Vaca", "Mono", "Cebra"] },
-    { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso", "Huevo", "Sopa", "Galleta", "Naranja", "Uvas"] },
-    { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar", "Dormir", "Comer", "Beber", "Conducir", "Llorar"] },
-    { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante", "Cine", "Supermercado", "Gimnasio", "Aeropuerto", "Estación de tren"] },
-    { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo", "Napoleón", "Beethoven", "Newton", "Michael Jackson", "Marilyn Monroe"] },
-    { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca", "Forrest Gump", "Pulp Fiction", "Los Simpson", "El Rey León", "La Casa de Papel"] },
-    { id: "default-profesiones-uuid", name: "Profesiones", words: ["Médico", "Profesor", "Bombero", "Policía", "Cocinero", "Astronauta", "Pintor", "Músico", "Actor", "Científico", "Ingeniero", "Abogado", "Periodista", "Carpintero", "Piloto"] },
-    { id: "default-deportes-uuid", name: "Deportes", words: ["Fútbol", "Baloncesto", "Tenis", "Natación", "Béisbol", "Golf", "Boxeo", "Ciclismo", "Atletismo", "Esquí", "Voleibol", "Rugby", "Fórmula 1", "Surf", "Ajedrez"] },
-    { id: "default-transporte-uuid", name: "Transporte", words: ["Coche", "Avión", "Barco", "Bicicleta", "Tren", "Autobús", "Motocicleta", "Helicóptero", "Submarino", "Cohete", "Globo aerostático", "Patinete", "Camión", "Tranvía", "Canoa"] },
-    { id: "default-naturaleza-uuid", name: "Naturaleza", words: ["Árbol", "Flor", "Río", "Sol", "Luna", "Estrella", "Nube", "Volcán", "Arcoíris", "Catarata", "Planta", "Roca", "Mar", "Relámpago", "Hoja"] },
-    { id: "default-hogar-uuid", name: "Cosas de Casa", words: ["Sofá", "Cama", "Ducha", "Nevera", "Horno", "Ventana", "Puerta", "Espejo", "Alfombra", "Televisión", "Microondas", "Aspiradora", "Plancha", "Tostadora", "Lavadora"] },
-    { id: "default-ropa-uuid", name: "Ropa", words: ["Camisa", "Pantalón", "Zapato", "Sombrero", "Vestido", "Falda", "Chaqueta", "Calcetines", "Bufanda", "Guantes", "Bikini", "Gorra", "Botas", "Pijama", "Corbata"] },
-    { id: "default-cuerpo-uuid", name: "Partes del Cuerpo", words: ["Ojo", "Nariz", "Boca", "Mano", "Pie", "Cabeza", "Brazo", "Pierna", "Oreja", "Pelo", "Dedo", "Rodilla", "Codo", "Hombro", "Espalda"] },
-    { id: "default-instrumentos-uuid", name: "Instrumentos Musicales", words: ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Saxofón", "Arpa", "Tambor", "Bajo", "Ukelele", "Acordeón", "Clarinete", "Trombón", "Xilófono"] }
+    { id: "default-objetos-uuid", name: "Objetos", words: ["Silla", "Mesa", "Lámpara", "Libro", "Teléfono", "Taza", "Reloj", "Gafas", "Llave", "Peine", "Tijeras", "Cuchara", "Botella", "Ventana", "Puerta"], isActive: true },
+    { id: "default-animales-uuid", name: "Animales", words: ["Perro", "Gato", "Elefante", "León", "Jirafa", "Tigre", "Oso", "Pájaro", "Serpiente", "Mariposa", "Pez", "Caballo", "Vaca", "Mono", "Cebra"], isActive: true },
+    { id: "default-comida-uuid", name: "Comida", words: ["Manzana", "Pizza", "Hamburguesa", "Pasta", "Helado", "Sushi", "Ensalada", "Pan", "Chocolate", "Queso", "Huevo", "Sopa", "Galleta", "Naranja", "Uvas"], isActive: true },
+    { id: "default-acciones-uuid", name: "Acciones", words: ["Correr", "Saltar", "Nadar", "Escribir", "Leer", "Cantar", "Bailar", "Cocinar", "Volar", "Pintar", "Dormir", "Comer", "Beber", "Conducir", "Llorar"], isActive: true },
+    { id: "default-lugares-uuid", name: "Lugares", words: ["Playa", "Montaña", "Ciudad", "Bosque", "Desierto", "Parque", "Escuela", "Museo", "Hospital", "Restaurante", "Cine", "Supermercado", "Gimnasio", "Aeropuerto", "Estación de tren"], isActive: true },
+    { id: "default-personajes-uuid", name: "Personajes Famosos", words: ["Einstein", "Chaplin", "Picasso", "Mozart", "Cleopatra", "Da Vinci", "Marie Curie", "Shakespeare", "Gandhi", "Frida Kahlo", "Napoleón", "Beethoven", "Newton", "Michael Jackson", "Marilyn Monroe"], isActive: true },
+    { id: "default-peliculas-uuid", name: "Películas y Series", words: ["Titanic", "Star Wars", "Friends", "Stranger Things", "Harry Potter", "El Padrino", "Juego de Tronos", "Breaking Bad", "Matrix", "Casablanca", "Forrest Gump", "Pulp Fiction", "Los Simpson", "El Rey León", "La Casa de Papel"], isActive: true },
+    { id: "default-profesiones-uuid", name: "Profesiones", words: ["Médico", "Profesor", "Bombero", "Policía", "Cocinero", "Astronauta", "Pintor", "Músico", "Actor", "Científico", "Ingeniero", "Abogado", "Periodista", "Carpintero", "Piloto"], isActive: true },
+    { id: "default-deportes-uuid", name: "Deportes", words: ["Fútbol", "Baloncesto", "Tenis", "Natación", "Béisbol", "Golf", "Boxeo", "Ciclismo", "Atletismo", "Esquí", "Voleibol", "Rugby", "Fórmula 1", "Surf", "Ajedrez"], isActive: true },
+    { id: "default-transporte-uuid", name: "Transporte", words: ["Coche", "Avión", "Barco", "Bicicleta", "Tren", "Autobús", "Motocicleta", "Helicóptero", "Submarino", "Cohete", "Globo aerostático", "Patinete", "Camión", "Tranvía", "Canoa"], isActive: true },
+    { id: "default-naturaleza-uuid", name: "Naturaleza", words: ["Árbol", "Flor", "Río", "Sol", "Luna", "Estrella", "Nube", "Volcán", "Arcoíris", "Catarata", "Planta", "Roca", "Mar", "Relámpago", "Hoja"], isActive: true },
+    { id: "default-hogar-uuid", name: "Cosas de Casa", words: ["Sofá", "Cama", "Ducha", "Nevera", "Horno", "Ventana", "Puerta", "Espejo", "Alfombra", "Televisión", "Microondas", "Aspiradora", "Plancha", "Tostadora", "Lavadora"], isActive: true },
+    { id: "default-ropa-uuid", name: "Ropa", words: ["Camisa", "Pantalón", "Zapato", "Sombrero", "Vestido", "Falda", "Chaqueta", "Calcetines", "Bufanda", "Guantes", "Bikini", "Gorra", "Botas", "Pijama", "Corbata"], isActive: true },
+    { id: "default-cuerpo-uuid", name: "Partes del Cuerpo", words: ["Ojo", "Nariz", "Boca", "Mano", "Pie", "Cabeza", "Brazo", "Pierna", "Oreja", "Pelo", "Dedo", "Rodilla", "Codo", "Hombro", "Espalda"], isActive: true },
+    { id: "default-instrumentos-uuid", name: "Instrumentos Musicales", words: ["Guitarra", "Piano", "Violín", "Batería", "Flauta", "Trompeta", "Saxofón", "Arpa", "Tambor", "Bajo", "Ukelele", "Acordeón", "Clarinete", "Trombón", "Xilófono"], isActive: true }
 ];
 
 
@@ -84,6 +87,7 @@ const CategoryManagement: React.FC = () => {
                 id: String(cat.id || crypto.randomUUID()),
                 name: String(cat.name || "Categoría sin nombre"),
                 words: Array.isArray(cat.words) ? cat.words.map(String) : [],
+                isActive: typeof cat.isActive === 'boolean' ? cat.isActive : true,
             }));
             const uniqueCategoriesMap = new Map<string, Category>();
             validatedCategoriesFromStorage.forEach(cat => {
@@ -156,7 +160,7 @@ const CategoryManagement: React.FC = () => {
         return;
     }
 
-    const newCategory: Category = { id: crypto.randomUUID(), name, words: [] };
+    const newCategory: Category = { id: crypto.randomUUID(), name, words: [], isActive: true };
     persistCategories([...categories, newCategory]);
     toast({ title: "Categoría Añadida", description: `La categoría vacía "${name}" ha sido añadida.` });
     setNewCategoryName('');
@@ -168,6 +172,14 @@ const CategoryManagement: React.FC = () => {
     if (categoryToDelete) {
       toast({ title: "Categoría Eliminada", description: `"${categoryToDelete.name}" ha sido eliminada.`, variant: "destructive" });
     }
+  };
+
+  const handleToggleCategoryActive = (id: string) => {
+    persistCategories(
+      categories.map((cat) =>
+        cat.id === id ? { ...cat, isActive: !(cat.isActive ?? true) } : cat
+      )
+    );
   };
 
   const handleEditCategorySubmit = (updatedCategory: Category) => {
@@ -381,6 +393,7 @@ const CategoryManagement: React.FC = () => {
                 id: crypto.randomUUID(),
                 name: categoryForAISuggestion,
                 words: cleanWordsToAdd,
+                isActive: true,
             };
             persistCategories([...categories, newCategory]);
             toast({ title: "Categoría Creada", description: `Se creó "${newCategory.name}" con ${newCategory.words.length} palabra(s).` });
@@ -452,7 +465,7 @@ const CategoryManagement: React.FC = () => {
             <ListChecks className="h-6 w-6" />
             Categorías Existentes ({categories.length})
           </CardTitle>
-          <CardDescription>Gestiona las temáticas y palabras actuales de la ruleta.</CardDescription>
+          <CardDescription>Gestiona las temáticas y palabras actuales de la ruleta. Puedes activar o desactivar categorías para incluirlas o no en el juego.</CardDescription>
         </CardHeader>
         <CardContent>
           {categories.length === 0 ? (
@@ -463,13 +476,14 @@ const CategoryManagement: React.FC = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[30%]">Nombre Categoría</TableHead>
-                    <TableHead className="w-[55%]">Palabras ({categories.reduce((acc, cat) => acc + cat.words.length, 0)})</TableHead>
+                    <TableHead className="w-[45%]">Palabras ({categories.reduce((acc, cat) => acc + cat.words.length, 0)})</TableHead>
+                    <TableHead className="text-center">Estado</TableHead>
                     <TableHead className="text-right w-[15%]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedCategories.map((category) => (
-                    <TableRow key={category.id}>
+                    <TableRow key={category.id} className={cn(!(category.isActive ?? true) && "bg-muted/50 text-muted-foreground")}>
                       <TableCell className="font-medium align-top py-4">{category.name}</TableCell>
                       <TableCell className="align-top py-4">
                         <div className="flex flex-wrap gap-1 mb-2 max-h-28 overflow-y-auto pr-2">
@@ -516,6 +530,15 @@ const CategoryManagement: React.FC = () => {
                              Sugerir con IA
                            </Button>
                         </div>
+                      </TableCell>
+                       <TableCell className="text-center align-top py-4">
+                        <Switch
+                            checked={category.isActive ?? true}
+                            onCheckedChange={() => handleToggleCategoryActive(category.id)}
+                            className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-destructive"
+                            aria-label={category.isActive ?? true ? 'Desactivar categoría' : 'Activar categoría'}
+                            disabled={isAISuggesting || categoryQueue.length > 0}
+                        />
                       </TableCell>
                       <TableCell className="text-right align-top py-4 space-x-0.5 sm:space-x-1">
                         <Button

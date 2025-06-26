@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -9,6 +10,7 @@ interface Category {
   id: string;
   name: string;
   words: string[];
+  isActive?: boolean;
 }
 
 interface RouletteProps {
@@ -47,23 +49,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
 
-  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
-  const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
+  // Refs for the declarative audio elements
+  const spinSoundRef = useRef<HTMLAudioElement>(null);
+  const spinEndSoundRef = useRef<HTMLAudioElement>(null);
 
-  // Safely initialize audio on component mount
-  useEffect(() => {
-    spinSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2022/11/21/audio_1ac5698b6a.mp3");
-    spinSoundRef.current.loop = true;
-
-    spinEndSoundRef.current = new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_e622d385a7.mp3");
-    
-    // Cleanup function to pause audio if the component unmounts while spinning
-    return () => {
-      spinSoundRef.current?.pause();
-    };
-  }, []); // Empty dependency array ensures this runs only once
-
-  const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0), [categories]);
+  const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
 
   const numSegments = displayCategories.length;
@@ -135,7 +125,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     if (isSpinning || selectableCategories.length === 0) return;
     setIsSpinning(true);
     
-    spinSoundRef.current?.play().catch(e => console.error("Error playing spin sound:", e));
+    if (spinSoundRef.current) {
+      spinSoundRef.current.currentTime = 0;
+      spinSoundRef.current.play().catch(e => console.error("Error playing spin sound:", e));
+    }
 
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
     const selectedCategory = selectableCategories[randomIndex];
@@ -172,9 +165,11 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         } else {
             if (spinSoundRef.current) {
               spinSoundRef.current.pause();
-              spinSoundRef.current.currentTime = 0;
             }
-            spinEndSoundRef.current?.play().catch(e => console.error("Error playing end sound:", e));
+            if (spinEndSoundRef.current) {
+              spinEndSoundRef.current.currentTime = 0;
+              spinEndSoundRef.current.play().catch(e => console.error("Error playing end sound:", e));
+            }
 
             setRotation(finalRotationValue);
             setIsSpinning(false);
@@ -191,6 +186,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }
+      // Pause sounds on unmount to prevent memory leaks
+      spinSoundRef.current?.pause();
+      spinEndSoundRef.current?.pause();
     };
   }, []);
 
@@ -217,8 +215,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center py-10">
            <AlertTriangle className="w-12 h-12 text-amber-500 mb-4" />
-          <p className="text-amber-600">Ninguna categoría tiene palabras.</p>
-          <p className="text-sm text-muted-foreground">Añade palabras a las categorías para poder jugar.</p>
+          <p className="text-amber-600">Ninguna categoría tiene palabras o todas están desactivadas.</p>
+          <p className="text-sm text-muted-foreground">Añade palabras a las categorías o actívalas para poder jugar.</p>
         </CardContent>
       </Card>
     );
@@ -320,6 +318,10 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
           
         </CardContent>
       </Card>
+      
+      {/* Invisible audio elements, pre-loaded by the browser. This is the most reliable method. */}
+      <audio ref={spinSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/07/audio_c4f0a822b3.mp3" loop preload="auto"></audio>
+      <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74412.mp3" preload="auto"></audio>
     </>
   );
 };
