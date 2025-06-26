@@ -12,16 +12,16 @@ const playBeep = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'triangle'; // A slightly different, piercing tone
-    oscillator.frequency.setValueAtTime(1200, audioContext.currentTime); // Higher pitch for more tension
-    gainNode.gain.setValueAtTime(0.06, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.08);
+    oscillator.type = 'square'; // A classic, sharp "digital" beep sound
+    oscillator.frequency.setValueAtTime(1400, audioContext.currentTime); // High pitch for urgency
+    gainNode.gain.setValueAtTime(0.04, audioContext.currentTime); // Reduced volume to be less harsh
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.07);
 
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.destination);
 
     oscillator.start();
-    oscillator.stop(audioContext.currentTime + 0.08);
+    oscillator.stop(audioContext.currentTime + 0.07);
 
     oscillator.onended = () => {
       audioContext.close().catch(() => {});
