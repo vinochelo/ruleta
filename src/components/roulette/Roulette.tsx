@@ -49,18 +49,25 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
 
-  // Stop sound if component unmounts
+  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
+  const endSoundRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
+    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/07/audio_c4f0a822b3.mp3?filename=roulette-wheel-142852.mp3');
+    spinSoundRef.current.volume = 0.5;
+
+    endSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74412.mp3?filename=slot-machine-win-100250.mp3');
+    endSoundRef.current.volume = 0.5;
+
+    spinSoundRef.current.load();
+    endSoundRef.current.load();
+
     return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-      const spinSound = document.getElementById('roulette-spin-sound') as HTMLAudioElement | null;
-      if (spinSound) {
-          spinSound.pause();
-      }
+      spinSoundRef.current?.pause();
+      endSoundRef.current?.pause();
     };
   }, []);
+
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -134,11 +141,9 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     if (isSpinning || selectableCategories.length === 0) return;
     setIsSpinning(true);
     
-    // Play spin sound
-    const spinSound = document.getElementById('roulette-spin-sound') as HTMLAudioElement;
-    if (spinSound) {
-      spinSound.currentTime = 0;
-      spinSound.play().catch(e => console.error("Error playing spin sound:", e));
+    if (spinSoundRef.current) {
+      spinSoundRef.current.currentTime = 0;
+      spinSoundRef.current.play().catch(e => console.error("Error playing spin sound:", e));
     }
 
     const randomIndex = Math.floor(Math.random() * selectableCategories.length);
@@ -174,14 +179,12 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
         if (progress < 1) {
             animationFrameId.current = requestAnimationFrame(animate);
         } else {
-            // Stop spin sound, play end sound
-            if (spinSound) {
-              spinSound.pause();
+            if (spinSoundRef.current) {
+              spinSoundRef.current.pause();
             }
-            const endSound = document.getElementById('roulette-spin-end-sound') as HTMLAudioElement;
-            if (endSound) {
-              endSound.currentTime = 0;
-              endSound.play().catch(e => console.error("Error playing end sound:", e));
+            if (endSoundRef.current) {
+              endSoundRef.current.currentTime = 0;
+              endSoundRef.current.play().catch(e => console.error("Error playing end sound:", e));
             }
 
             setRotation(finalRotationValue);
@@ -193,6 +196,14 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     animationFrameId.current = requestAnimationFrame(animate);
 
   }, [isSpinning, selectableCategories, displayCategories, anglePerSegment, onSpinEnd, segments, rotation]);
+
+  useEffect(() => {
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []);
 
   if (categories.length === 0) {
     return (
@@ -226,10 +237,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
-      {/* Invisible audio elements for playback */}
-      <audio id="roulette-spin-sound" src="https://cdn.pixabay.com/download/audio/2022/03/07/audio_c4f0a822b3.mp3?filename=roulette-wheel-142852.mp3" preload="auto" loop></audio>
-      <audio id="roulette-spin-end-sound" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c74412.mp3?filename=slot-machine-win-100250.mp3" preload="auto"></audio>
-
       <CardHeader>
         <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
       </CardHeader>
