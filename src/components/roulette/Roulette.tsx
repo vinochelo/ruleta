@@ -52,9 +52,18 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const spinEndSoundRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Cleanup function to pause audio if component unmounts while spinning
+    // This effect runs once on the client-side after the component mounts
+    spinSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3');
+    spinEndSoundRef.current = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3');
+    
+    // Preload audio files for better performance
+    spinSoundRef.current.preload = 'auto';
+    spinEndSoundRef.current.preload = 'auto';
+
+    // Cleanup function to pause audio if the component unmounts
     return () => {
       spinSoundRef.current?.pause();
+      spinEndSoundRef.current?.pause();
     };
   }, []);
 
@@ -233,16 +242,6 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
-      <audio 
-        ref={spinSoundRef} 
-        src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_173b22e1cf.mp3?filename=roulette-wheel-102830.mp3" 
-        preload="auto"
-      />
-      <audio 
-        ref={spinEndSoundRef}
-        src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3"
-        preload="auto"
-      />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
           <CardTitle className="title-text text-3xl">¡Gira la Ruleta!</CardTitle>
