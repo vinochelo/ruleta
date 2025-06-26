@@ -11,5 +11,4 @@ export const ADSENSE_CLIENT_ID = "ca-pub-4231719422597751";
 export const AD_SLOT_IDS = {
   main: "7120343438",     // ID para el banner en la página principal y de categorías
   results: "9519276066",   // ID para el banner en el modal de resultados/timer
-  winner: "9519276066",    // ID para el banner en el modal de ganador
 };
