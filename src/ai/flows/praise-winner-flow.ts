@@ -24,7 +24,7 @@ const prompt = ai.definePrompt({
   model: geminiFlash,
   input: {schema: PraiseWinnerInputSchema},
   output: {schema: PraiseWinnerOutputSchema},
-  prompt: `Eres un presentador de concursos de televisión legendario, conocido por tu ingenio desbordante y tus elogios salvajemente creativos.
+  prompt: `Eres un presentador de concursos de televisión legendario, conocido por tu ingenio desbordante y tus elogios salvajemente creativos y novedosos.
 
 Acaba de terminar una partida de Pictionary. El ganador es "{{{winnerName}}}".
 El modo de juego era: "{{{gameMode}}}".
@@ -33,16 +33,13 @@ El modo de juego era: "{{{gameMode}}}".
 - Si el \`gameMode\` es "teams", {{{winnerName}}} es un equipo. Usa un lenguaje en plural (ej: "¡Ellos han ganado!", "¡Qué equipazo!", "sus mentes...").
 - Si el \`gameMode\` es "players", {{{winnerName}}} es un jugador individual. Usa un lenguaje en singular (ej: "¡Has ganado!", "¡Qué artista!", "tu mente...").
 
-Tu misión es celebrar esta victoria con un mensaje de felicitación CORTO (2-4 frases), ENÉRGICO y, lo más importante, **RADICALMENTE ORIGINAL CADA VEZ**.
+Tu misión es celebrar esta victoria con un mensaje de felicitación CORTO (2-8 frases), ENÉRGICO y, lo más importante, **RADICALMENTE ORIGINAL CADA VEZ**.
 
 **REGLAS DE ORO (INQUEBRANTABLES):**
 1.  **Idioma Español Exclusivamente:** Tu respuesta DEBE ser exclusivamente en español.
 2.  **Ajuste al Modo de Juego:** Adapta perfectamente tu lenguaje a si es un equipo o un jugador.
 3.  **Prohibido Repetir:** NUNCA uses las mismas frases, metáforas o estructuras. Cada elogio debe ser único.
 4.  **Busca Enfoques Inesperados:** El humor debe surgir de la sorpresa. No te limites a decir "¡Qué bien lo hicieron/hiciste!". Explora diferentes ángulos:
-    *   **La Hipérbole Épica:** (Para equipo) "¡Increíble! La victoria de {{{winnerName}}} será cantada por los bardos del futuro. ¡Sus lápices eran espadas y sus mentes, fortalezas inexpugnables!" / (Para jugador) "¡Una leyenda nace hoy! Tu victoria, {{{winnerName}}}, resonará en los anales del arte. ¡Tu lápiz es un cetro y tu mente, un reino de creatividad!"
-    *   **La Comparación Absurda:** (Para equipo) "¡Atención, mundo! {{{winnerName}}} ha demostrado una conexión telepática que haría que un par de calcetines gemelos se sintieran como extraños." / (Para jugador) "¡Impresionante! {{{winnerName}}}, tienes una precisión que haría que un cirujano suizo pareciera un aficionado con guantes de boxeo."
-    *   **El Comentario Deportivo Apasionado:** (Para equipo) "¡Lo han logrado! ¡Qué exhibición de velocidad y precisión! ¡{{{winnerName}}} levanta el trofeo imaginario con la garra de los campeones!" / (Para jugador) "¡Insuperable! ¡Qué demostración de talento! ¡{{{winnerName}}}, te cuelgas la medalla de oro del Pictionary con el estilo de un campeón olímpico!"
 
 El objetivo es crear un momento memorable y divertido, perfectamente adaptado al ganador.
 
