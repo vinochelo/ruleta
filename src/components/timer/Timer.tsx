@@ -12,9 +12,9 @@ const playBeep = () => {
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
 
-    oscillator.type = 'sine'; // A pure tone is often clearer
-    oscillator.frequency.setValueAtTime(1600, audioContext.currentTime); // High pitch for urgency
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime); // Increased volume significantly
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(1600, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.1);
 
     oscillator.connect(gainNode);
@@ -33,12 +33,12 @@ const playTimerEndSound = () => {
   if (typeof window !== 'undefined' && window.AudioContext) {
     const audioContext = new window.AudioContext();
     const gainNode = audioContext.createGain();
-    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
     gainNode.connect(audioContext.destination);
 
     const playTone = (freq: number, time: number, duration: number) => {
         const oscillator = audioContext.createOscillator();
-        oscillator.type = 'sawtooth'; 
+        oscillator.type = 'square';
         oscillator.frequency.setValueAtTime(freq, time);
         oscillator.connect(gainNode);
         oscillator.start(time);
@@ -46,10 +46,10 @@ const playTimerEndSound = () => {
     };
 
     const now = audioContext.currentTime;
-    playTone(1200, now, 0.1);
-    playTone(1200, now + 0.15, 0.2);
+    playTone(300, now, 0.15); 
+    playTone(200, now + 0.15, 0.25); 
 
-    const totalDuration = 0.15 + 0.2;
+    const totalDuration = 0.15 + 0.25;
     setTimeout(() => {
         audioContext.close().catch(() => {});
     }, totalDuration * 1000 + 200);

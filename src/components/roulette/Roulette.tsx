@@ -229,7 +229,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 
   return (
     <>
-      <audio ref={tickSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_233e52c56a.mp3?filename=wooden-wheel-tick-1-97216.mp3" preload="auto" />
+      <audio ref={tickSoundRef} src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c3b9b4aef9.mp3?filename=tick-tock-94263.mp3" preload="auto" />
       <audio ref={spinEndSoundRef} src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c744f2.mp3?filename=chime-6385.mp3" preload="auto" />
       <Card className="w-full max-w-2xl mx-auto text-center shadow-xl transform transition-all duration-300 hover:shadow-2xl">
         <CardHeader>
