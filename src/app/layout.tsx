@@ -8,7 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ruletarupestre.web.app'),
+  metadataBase: new URL('https://rupestre.vercel.app/'),
   title: 'Ruleta Rupestre | El Juego de Pictionary Online',
   description: 'Juega a Ruleta Rupestre, un divertido juego de Pictionary online para adivinar palabras con amigos y familia. ¡Gira la ruleta, dibuja y que comience la diversión!',
   openGraph: {
