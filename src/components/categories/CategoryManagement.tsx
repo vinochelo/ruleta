@@ -15,7 +15,7 @@ import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutpu
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 
-const STORAGE_KEY = 'ruletaRupestreCategories';
+const STORAGE_KEY = 'ruletaPictionaryCategories';
 
 interface Category {
   id: string;

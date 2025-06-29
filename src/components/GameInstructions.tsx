@@ -62,7 +62,7 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
                 </li>
                 <li>
                   <Paintbrush className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Materiales:** Necesitarán una pizarra grande o un papelógrafo, y marcadores o tiza que sean claramente visibles para todos los participantes. Este será su lienzo para el arte rupestre moderno.
+                  **Materiales:** Necesitarán una pizarra grande o un papelógrafo, y marcadores o tiza que sean claramente visibles para todos los participantes. Este será su lienzo para sus obras maestras.
                 </li>
                 <li>
                   <Lightbulb className="inline h-4 w-4 mr-1 text-secondary" />

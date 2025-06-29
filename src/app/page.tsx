@@ -63,10 +63,10 @@ const DEFAULT_CATEGORIES_WITH_WORDS: Category[] = [
     { id: "default-meteorologia-uuid", name: "Fenómenos Meteorológicos", words: ["Lluvia", "Nieve", "Sol", "Tornado", "Relámpago", "Trueno", "Viento", "Niebla", "Granizo", "Arcoíris", "Huracán", "Sequía", "Inundación", "Ola de calor", "Aurora boreal", "Eclipse", "Monzón", "Ventisca", "Rocío", "Nube"], isActive: true }
 ];
 
-const CATEGORIES_STORAGE_KEY = 'ruletaRupestreCategories';
-const TEAMS_STORAGE_KEY = 'ruletaRupestreTeams';
-const GAME_MODE_STORAGE_KEY = 'ruletaRupestreGameMode';
-const AI_IMAGES_STORAGE_KEY = 'ruletaRupestreAIImages';
+const CATEGORIES_STORAGE_KEY = 'ruletaPictionaryCategories';
+const TEAMS_STORAGE_KEY = 'ruletaPictionaryTeams';
+const GAME_MODE_STORAGE_KEY = 'ruletaPictionaryGameMode';
+const AI_IMAGES_STORAGE_KEY = 'ruletaPictionaryAIImages';
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
