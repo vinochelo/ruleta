@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -31,7 +32,7 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="title-text flex items-center gap-2">
           <Lightbulb className="h-6 w-6" />
-          ¡Bienvenido a Ruleta Rupestre! ¿Cómo Jugar?
+          ¡Bienvenido a Ruleta Pictionary! ¿Cómo Jugar?
         </CardTitle>
         <Button
           variant="ghost"
@@ -83,7 +84,7 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
                 </li>
                 <li>
                   <Users className="inline h-4 w-4 mr-1 text-secondary" />
-                  **El Artista Secreto:** Solo la persona designada para dibujar (el "Artista Rupestre" de ese turno) debe ver la palabra que salió. ¡El silencio es oro para los demás!
+                  **El Artista Secreto:** Solo la persona designada para dibujar (el "Artista" de ese turno) debe ver la palabra que salió. ¡El silencio es oro para los demás!
                 </li>
                 <li>
                   <Clock className="inline h-4 w-4 mr-1 text-secondary" />
@@ -91,7 +92,7 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
                 </li>
                 <li>
                   <Brain className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Asistencia IA (Opcional):** Si el Artista necesita un poco de inspiración para empezar, Ruleta Rupestre puede generar una imagen de referencia usando Inteligencia Artificial. ¡Recuerda, es solo una guía, no para copiar directamente!
+                  **Asistencia IA (Opcional):** Si el Artista necesita un poco de inspiración para empezar, Ruleta Pictionary puede generar una imagen de referencia usando Inteligencia Artificial. ¡Recuerda, es solo una guía, no para copiar directamente!
                 </li>
                 <li>
                   <Lightbulb className="inline h-4 w-4 mr-1 text-secondary" />
@@ -121,7 +122,7 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
 
           <AccordionItem value="item-4">
             <AccordionTrigger className="font-semibold text-lg text-primary">
-              <Lightbulb className="h-5 w-5 mr-2" /> 4. Consejos para el Éxito Rupestre
+              <Lightbulb className="h-5 w-5 mr-2" /> 4. Consejos para el Éxito
             </AccordionTrigger>
             <AccordionContent className="text-foreground/80 pl-8">
               <ul className="list-disc list-inside space-y-2">
@@ -135,7 +136,7 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
                 </li>
                 <li>
                   <Play className="inline h-4 w-4 mr-1 text-secondary" />
-                  **¡Lo más importante, Diviértete!:** La esencia de Ruleta Rupestre es reír, interactuar y pasar un momento inolvidable con amigos o familia. ¡Que la creatividad fluya!
+                  **¡Lo más importante, Diviértete!:** La esencia de Ruleta Pictionary es reír, interactuar y pasar un momento inolvidable con amigos o familia. ¡Que la creatividad fluya!
                 </li>
               </ul>
             </AccordionContent>

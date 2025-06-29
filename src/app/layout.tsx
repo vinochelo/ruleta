@@ -9,10 +9,10 @@ import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://rupestre.vercel.app/'),
-  title: 'Ruleta Rupestre | El Juego de Pictionary Online',
-  description: 'Juega a Ruleta Rupestre, un divertido juego de Pictionary online para adivinar palabras con amigos y familia. ¡Gira la ruleta, dibuja y que comience la diversión!',
+  title: 'Ruleta Pictionary | El Juego de Pictionary Online',
+  description: 'Juega a Ruleta Pictionary, un divertido juego de Pictionary online para adivinar palabras con amigos y familia. ¡Gira la ruleta, dibuja y que comience la diversión!',
   openGraph: {
-    title: 'Ruleta Rupestre | El Juego de Pictionary Online',
+    title: 'Ruleta Pictionary | El Juego de Pictionary Online',
     description: '¡El Pictionary online más divertido! Gira la ruleta, dibuja la palabra secreta y que tu equipo adivine. Ideal para fiestas y reuniones familiares.',
     images: [
       {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ruleta Rupestre | El Juego de Pictionary Online',
+    title: 'Ruleta Pictionary | El Juego de Pictionary Online',
     description: '¡El Pictionary online más divertido! Gira la ruleta, dibuja la palabra secreta y que tu equipo adivine.',
     images: ['https://placehold.co/1200x630.png'],
   },

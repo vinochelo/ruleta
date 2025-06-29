@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Gamepad2, ListChecks } from 'lucide-react';
 
@@ -20,7 +21,7 @@ export default function Header() {
 
           <Link href="/" className="flex items-center gap-2">
             <Gamepad2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">Ruleta Rupestre</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-primary whitespace-nowrap">Ruleta Pictionary</h1>
           </Link>
           
           <nav className="flex items-center gap-4">
