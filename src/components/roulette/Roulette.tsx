@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -99,6 +98,7 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
   const [rotation, setRotation] = useState(0);
   const animationFrameId = useRef<number | null>(null);
   const lastKnownAngle = useRef(0);
+  const recentlyPickedRef = useRef<string[]>([]);
 
   const selectableCategories = useMemo(() => categories.filter(cat => cat.words && cat.words.length > 0 && (cat.isActive ?? true)), [categories]);
   const displayCategories = selectableCategories.length > 0 ? selectableCategories : categories;
@@ -173,7 +173,32 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     
     setIsSpinning(true);
 
-    const selectedCategory = selectableCategories[Math.floor(Math.random() * selectableCategories.length)];
+    // --- IMPROVED RANDOMNESS LOGIC ---
+    // Determine the number of recent categories to avoid. At least 1, up to a third of the total.
+    const maxRecent = Math.max(1, Math.floor(selectableCategories.length / 3));
+
+    // Filter out categories that were picked recently.
+    let potentialCategories = selectableCategories.filter(
+      (cat) => !recentlyPickedRef.current.includes(cat.id)
+    );
+    
+    // If filtering leaves no options (i.e., all categories have been picked recently),
+    // reset the pool to the full list to avoid getting stuck.
+    if (potentialCategories.length === 0) {
+      potentialCategories = selectableCategories;
+      recentlyPickedRef.current = []; // Clear recent list as we are forced to reuse.
+    }
+
+    // Select a random category from the filtered, smarter list.
+    const selectedCategory = potentialCategories[Math.floor(Math.random() * potentialCategories.length)];
+    
+    // Update the list of recently picked categories for the next spin.
+    recentlyPickedRef.current.push(selectedCategory.id);
+    if (recentlyPickedRef.current.length > maxRecent) {
+      recentlyPickedRef.current.shift(); // Remove the oldest item to keep the list size constrained.
+    }
+    // --- END OF IMPROVED RANDOMNESS LOGIC ---
+
     const displayIndex = displayCategories.findIndex(cat => cat.id === selectedCategory.id) ?? 0;
     const selectedSegment = segments.find(seg => seg.id === selectedCategory.id);
     const selectedColor = selectedSegment ? selectedSegment.fill : rouletteSegmentColors[0];
