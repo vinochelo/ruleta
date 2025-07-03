@@ -203,8 +203,8 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
     const selectedSegment = segments.find(seg => seg.id === selectedCategory.id);
     const selectedColor = selectedSegment ? selectedSegment.fill : rouletteSegmentColors[0];
 
-    const spins = 10 + Math.floor(Math.random() * 5);
-    const duration = 8000;
+    const spins = 5 + Math.floor(Math.random() * 3);
+    const duration = 4000;
     
     const currentRotationNormalized = rotation % 360;
     const targetSegmentMidpointAngle = (displayIndex * anglePerSegment) + (anglePerSegment / 2);
