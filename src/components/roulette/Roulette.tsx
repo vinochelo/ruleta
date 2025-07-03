@@ -25,15 +25,15 @@ const playRouletteTick = () => {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
 
-  oscillator.type = 'triangle';
-  oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
-  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(700, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.08);
 
   oscillator.connect(gainNode);
   gainNode.connect(audioContext.destination);
   oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.05);
+  oscillator.stop(audioContext.currentTime + 0.08);
   oscillator.onended = () => {
     audioContext.close().catch(() => {});
   };
@@ -43,7 +43,7 @@ const playRouletteEndSound = () => {
   if (typeof window === 'undefined' || !window.AudioContext) return;
   const audioContext = new window.AudioContext();
   const gainNode = audioContext.createGain();
-  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
   gainNode.connect(audioContext.destination);
 
   const playTone = (freq: number, time: number, duration: number) => {
@@ -56,8 +56,8 @@ const playRouletteEndSound = () => {
   };
 
   const now = audioContext.currentTime;
-  playTone(880, now, 0.1);
-  playTone(660, now + 0.1, 0.2);
+  playTone(523.25, now, 0.1); 
+  playTone(783.99, now + 0.1, 0.2);
   const totalDuration = 0.3;
   setTimeout(() => {
     audioContext.close().catch(() => {});
