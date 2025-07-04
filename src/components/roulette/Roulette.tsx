@@ -26,18 +26,18 @@ const playRouletteTick = () => {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
 
-  // Sine wave for a softer, more mechanical "thump" or "click" sound.
+  // Sine wave for a very soft "thump".
   oscillator.type = 'sine';
-  // A lower frequency to feel less like a digital beep.
-  oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-  // Higher initial gain but with a very rapid decay to create a short "click".
-  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.03);
+  // Lowered frequency for a deeper, less intrusive sound.
+  oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
+  // Lowered gain to make it much quieter.
+  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
 
   oscillator.connect(gainNode);
   gainNode.connect(audioContext.destination);
   oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.03); // Corresponds with the fast decay.
+  oscillator.stop(audioContext.currentTime + 0.05); // Slightly longer decay.
   oscillator.onended = () => {
     audioContext.close().catch(() => {});
   };
@@ -47,12 +47,12 @@ const playRouletteEndSound = () => {
   if (typeof window === 'undefined' || !window.AudioContext) return;
   const audioContext = new window.AudioContext();
   const gainNode = audioContext.createGain();
-  gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+  // Lowered gain for a softer final sound.
+  gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
   gainNode.connect(audioContext.destination);
 
   const playTone = (freq: number, time: number, duration: number) => {
     const oscillator = audioContext.createOscillator();
-    // Using 'sine' for a smooth, bell-like sound that matches the new tick.
     oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(freq, time);
     oscillator.connect(gainNode);
@@ -61,12 +61,12 @@ const playRouletteEndSound = () => {
   };
 
   const now = audioContext.currentTime;
-  // A pleasant, bell-like C-major arpeggio.
-  playTone(523.25, now, 0.12); // C5
-  playTone(659.25, now + 0.12, 0.12); // E5
-  playTone(783.99, now + 0.24, 0.2); // G5
+  // A calmer, lower-octave arpeggio for a gentler feel.
+  playTone(261.63, now, 0.15); // C4
+  playTone(329.63, now + 0.15, 0.15); // E4
+  playTone(392.00, now + 0.30, 0.25); // G4
 
-  const totalDuration = 0.44;
+  const totalDuration = 0.55;
   setTimeout(() => {
     audioContext.close().catch(() => {});
   }, totalDuration * 1000 + 100);
