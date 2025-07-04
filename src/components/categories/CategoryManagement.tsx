@@ -2,11 +2,11 @@
 "use client";
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2 } from 'lucide-react';
+import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle } from 'lucide-react';
 import EditCategoryDialog from './EditCategoryDialog';
 import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,17 @@ import { Badge } from '@/components/ui/badge';
 import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutput } from '@/ai/flows/suggest-words-flow';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const STORAGE_KEY = 'ruletaPictionaryCategories';
 
@@ -62,6 +73,7 @@ const CategoryManagement: React.FC = () => {
   const [isAISuggesting, setIsAISuggesting] = useState(false);
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
   const [categoryQueue, setCategoryQueue] = useState<string[]>([]);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
 
   const persistCategories = useCallback((updatedCategories: Category[]) => {
@@ -80,6 +92,11 @@ const CategoryManagement: React.FC = () => {
     persistCategories([...DEFAULT_CATEGORIES]);
     toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
   }, [persistCategories, toast]);
+
+  const handleResetClick = () => {
+      resetToDefaultCategories();
+      setIsResetConfirmOpen(false);
+  }
 
   useEffect(() => {
     const storedCategoriesRaw = localStorage.getItem(STORAGE_KEY);
@@ -575,9 +592,30 @@ const CategoryManagement: React.FC = () => {
           )}
         </CardContent>
         <CardFooter>
-            <Button variant="outline" onClick={resetToDefaultCategories} className="transition-transform hover:scale-105" disabled={isAISuggesting || categoryQueue.length > 0}>
-                Restaurar Categorías y Palabras por Defecto
-            </Button>
+          <AlertDialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="transition-transform hover:scale-105" disabled={isAISuggesting || categoryQueue.length > 0}>
+                    Restaurar Categorías y Palabras por Defecto
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-6 w-6 text-destructive" />
+                      ¿Estás seguro?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción es irreversible. Se eliminarán todas tus categorías y palabras personalizadas, reemplazándolas por la lista original del juego.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleResetClick} className={cn(buttonVariants({ variant: "destructive" }))}>
+                      Sí, Restaurar
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
         </CardFooter>
       </Card>
       
