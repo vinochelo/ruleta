@@ -1,3 +1,4 @@
+"use client";
 
 import CategoryManagement from '@/components/categories/CategoryManagement';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,7 @@ export default function ManageCategoriesPage() {
               Crear listas de palabras puede ser tedioso, ¡pero no tiene por qué serlo! La Inteligencia Artificial está aquí para ayudarte.
             </p>
             <p>
-              Simplemente escribe el nombre de la categoría que se te ocurra (p. ej., "Marcas de coches", "Superhéroes", "Postres famosos") y pulsa el botón de **Añadir con IA**. La IA generará una lista de palabras relevantes y listas para jugar en segundos. ¡Así de fácil!
+              Simplemente escribe el nombre de la categoría que se te ocurra (p. ej., "Marcas de coches", "Superhéroes", "Postres famosos") y pulsa el botón de **"Añadir con IA"**. La IA generará una lista de palabras relevantes y listas para jugar en segundos. ¡Así de fácil!
             </p>
           </CardDescription>
         </CardContent>
