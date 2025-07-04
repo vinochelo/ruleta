@@ -26,18 +26,19 @@ const playRouletteTick = () => {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
 
-  // Sine wave for a very soft "thump".
-  oscillator.type = 'sine';
-  // Lowered frequency for a deeper, less intrusive sound.
-  oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
-  // Lowered gain to make it much quieter.
-  gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
+  // Triangle wave for a sharper, more "clicky" sound.
+  oscillator.type = 'triangle';
+  // Higher frequency for a more defined tick.
+  oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+  // Slightly increased gain for clarity, but still subtle.
+  gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+  // Very fast decay to create a short "click".
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.04);
 
   oscillator.connect(gainNode);
   gainNode.connect(audioContext.destination);
   oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.05); // Slightly longer decay.
+  oscillator.stop(audioContext.currentTime + 0.04);
   oscillator.onended = () => {
     audioContext.close().catch(() => {});
   };
@@ -47,8 +48,8 @@ const playRouletteEndSound = () => {
   if (typeof window === 'undefined' || !window.AudioContext) return;
   const audioContext = new window.AudioContext();
   const gainNode = audioContext.createGain();
-  // Lowered gain for a softer final sound.
-  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+  // Increased gain for a more present final sound.
+  gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
   gainNode.connect(audioContext.destination);
 
   const playTone = (freq: number, time: number, duration: number) => {
@@ -61,10 +62,10 @@ const playRouletteEndSound = () => {
   };
 
   const now = audioContext.currentTime;
-  // A calmer, lower-octave arpeggio for a gentler feel.
-  playTone(261.63, now, 0.15); // C4
-  playTone(329.63, now + 0.15, 0.15); // E4
-  playTone(392.00, now + 0.30, 0.25); // G4
+  // A higher-octave arpeggio for a clearer, more uplifting sound.
+  playTone(523.25, now, 0.15); // C5
+  playTone(659.25, now + 0.15, 0.15); // E5
+  playTone(783.99, now + 0.30, 0.25); // G5
 
   const totalDuration = 0.55;
   setTimeout(() => {
@@ -392,3 +393,4 @@ const Roulette: React.FC<RouletteProps> = ({ categories, onSpinEnd }) => {
 };
 
 export default Roulette;
+    
