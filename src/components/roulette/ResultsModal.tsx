@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
@@ -10,9 +11,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, Play, ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import { TimerIcon, X, ImageIcon, Loader2, Sparkles } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
-import { generateQuickImage, generateArtisticImages } from '@/ai/flows/generate-image-flow';
+import { generateQuickImage } from '@/ai/flows/generate-image-flow';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -55,26 +56,14 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 
   // AI Image Generation State
   const [aiHelpActive, setAiHelpActive] = useState(false);
-  const [isGeneratingQuick, setIsGeneratingQuick] = useState(false);
-  const [isGeneratingArtistic, setIsGeneratingArtistic] = useState(false);
-  const [quickImage, setQuickImage] = useState<string | null>(null);
-  const [referenceImages, setReferenceImages] = useState<string[]>([]);
-  const [artisticText, setArtisticText] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Slideshow state
-  const [allImages, setAllImages] = useState<string[]>([]);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
   const resetAIState = useCallback(() => {
     setAiHelpActive(false);
-    setIsGeneratingQuick(false);
-    setIsGeneratingArtistic(false);
-    setQuickImage(null);
-    setReferenceImages([]);
-    setArtisticText(null);
-    setAllImages([]);
-    setCurrentImageIndex(0);
+    setIsGenerating(false);
+    setGeneratedImage(null);
   }, []);
 
   const startImageGeneration = useCallback(async (word: string) => {
@@ -82,59 +71,27 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     
     resetAIState();
     setAiHelpActive(true);
-    setIsGeneratingQuick(true);
+    setIsGenerating(true);
 
     try {
-      // --- Stage 1: Generate Quick Image ---
-      const quickResult = await generateQuickImage({ word });
+      const result = await generateQuickImage({ word });
       
-      if (quickResult.error) {
+      if (result.error) {
         toast({
             title: "Error al generar imagen",
-            description: quickResult.error,
+            description: result.error,
             variant: "destructive",
         });
         setAiHelpActive(false); // Go back to the "get inspiration" button
-        setIsGeneratingQuick(false); // Stop loading state
-        return; 
-      }
-
-      if (quickResult.imageDataUri) {
-        setQuickImage(quickResult.imageDataUri);
-        setIsGeneratingQuick(false); // Quick image part is done
-
-        // --- Stage 2: Generate Elaborate Image (in background) ---
-        setIsGeneratingArtistic(true);
-        generateArtisticImages({ word }).then(artisticResult => {
-            if (artisticResult.imageDataUri) {
-                setReferenceImages([artisticResult.imageDataUri]);
-                setArtisticText(null); // No more artistic text image
-            }
-            if (artisticResult.error) {
-                toast({
-                    title: "Error en imagen artística",
-                    description: artisticResult.error,
-                    variant: "destructive",
-                });
-            }
-        }).catch(err => {
-            toast({
-                title: "Error Inesperado",
-                description: `La generación de la imagen artística falló: ${err.message || 'Error desconocido'}.`,
-                variant: "destructive",
-            });
-        }).finally(() => {
-            setIsGeneratingArtistic(false);
-        });
-
+      } else if (result.imageDataUri) {
+        setGeneratedImage(result.imageDataUri);
       } else {
-        toast({
+         toast({
             title: "Error Inesperado",
             description: "La IA no devolvió una imagen pero no especificó un error. Inténtalo de nuevo.",
             variant: "destructive",
         });
         setAiHelpActive(false);
-        setIsGeneratingQuick(false);
       }
     } catch (error: any) {
         toast({
@@ -143,15 +100,10 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             variant: "destructive",
         });
         setAiHelpActive(false);
-        setIsGeneratingQuick(false);
+    } finally {
+        setIsGenerating(false);
     }
   }, [resetAIState, toast]);
-
-  // Effect to combine all images into a single array for the slideshow
-  useEffect(() => {
-    const newImages = [quickImage, ...referenceImages, artisticText].filter((img): img is string => !!img);
-    setAllImages(newImages);
-  }, [quickImage, referenceImages, artisticText]);
   
   // Effect to manage state when modal opens
   useEffect(() => {
@@ -169,17 +121,6 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
       }
     }
   }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
-
-  // Effect for automatic slideshow, stops at the end
-  useEffect(() => {
-    if (allImages.length > 1 && currentImageIndex < allImages.length - 1) {
-      const timer = setTimeout(() => {
-        setCurrentImageIndex((prevIndex) => prevIndex + 1);
-      }, 3000); // Change image every 3 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [allImages, currentImageIndex]);
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
@@ -232,90 +173,60 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   }
 
   const renderContent = () => {
-    const ContentContainer: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => (
-      <div className={cn("w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative", className)}>
-        {children}
-      </div>
-    );
-  
-    const MainImageBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
+    const ImageBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
+      <div className="w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative">
         <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
           {children}
         </div>
-      );
+      </div>
+    );
     
     if (!aiHelpActive) {
       return (
-        <ContentContainer>
-          <MainImageBox>
-            <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-              <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
-              <p className="text-lg text-muted-foreground">La ayuda de IA está desactivada.</p>
-              <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Obtener Inspiración
-              </Button>
-            </div>
-          </MainImageBox>
-        </ContentContainer>
+        <ImageBox>
+          <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+            <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
+            <p className="text-lg text-muted-foreground">La ayuda de IA está desactivada.</p>
+            <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+              <Sparkles className="mr-2 h-5 w-5" />
+              Obtener Inspiración
+            </Button>
+          </div>
+        </ImageBox>
       );
     }
     
-    if (isGeneratingQuick && allImages.length === 0) {
+    if (isGenerating) {
       return (
-        <ContentContainer>
-          <MainImageBox>
-              <div className="flex flex-col items-center justify-center gap-4 text-primary">
-                <Loader2 className="h-16 w-16 animate-spin" />
-                <p className="text-xl font-medium">Generando inspiración...</p>
-              </div>
-          </MainImageBox>
-        </ContentContainer>
+        <ImageBox>
+          <div className="flex flex-col items-center justify-center gap-4 text-primary">
+            <Loader2 className="h-16 w-16 animate-spin" />
+            <p className="text-xl font-medium">Generando inspiración...</p>
+          </div>
+        </ImageBox>
       );
     }
 
-    if (allImages.length === 0) {
+    if (generatedImage) {
       return (
-        <ContentContainer>
-          <MainImageBox>
-              <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-                <p className="text-lg text-muted-foreground">No se pudo generar la imagen.</p>
-                 <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
-                    <Sparkles className="mr-2 h-5 w-5" />
-                    Reintentar
-                </Button>
-              </div>
-          </MainImageBox>
-        </ContentContainer>
+        <ImageBox>
+          <Image src={generatedImage} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
+        </ImageBox>
       );
     }
 
-    if (allImages.length > 0) {
-      return (
-        <ContentContainer>
-          <MainImageBox>
-            <Image src={allImages[currentImageIndex]} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
-
-            {isGeneratingArtistic && (
-              <div className="absolute top-2 right-2 z-10 flex items-center gap-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full animate-pulse">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                <span>Generando más...</span>
-              </div>
-            )}
-          </MainImageBox>
-        </ContentContainer>
-      );
-    }
-
+    // This case handles when AI generation was attempted but failed and is no longer loading
     return (
-      <ContentContainer>
-           <MainImageBox>
-              <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-                <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-              </div>
-           </MainImageBox>
-      </ContentContainer>
+      <ImageBox>
+        <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+          <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
+          <p className="text-lg text-muted-foreground">No se pudo generar la imagen.</p>
+          <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+              <Sparkles className="mr-2 h-5 w-5" />
+              Reintentar
+          </Button>
+        </div>
+      </ImageBox>
     );
   };
 
