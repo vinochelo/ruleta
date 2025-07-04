@@ -158,18 +158,18 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
 
   const wordLength = selectedWord?.length || 0;
-  let wordFontSizeClass = 'text-5xl sm:text-7xl lg:text-8xl';
+  let wordFontSizeClass = 'text-4xl sm:text-5xl lg:text-6xl';
   if (wordLength > 8) {
-    wordFontSizeClass = 'text-4xl sm:text-6xl lg:text-7xl';
+    wordFontSizeClass = 'text-3xl sm:text-4xl lg:text-5xl';
   }
   if (wordLength > 15) {
-    wordFontSizeClass = 'text-3xl sm:text-5xl lg:text-6xl';
+    wordFontSizeClass = 'text-2xl sm:text-3xl lg:text-4xl';
   }
   if (wordLength > 20) {
-    wordFontSizeClass = 'text-2xl sm:text-4xl lg:text-5xl';
+    wordFontSizeClass = 'text-xl sm:text-2xl lg:text-3xl';
   }
   if (wordLength > 24) {
-    wordFontSizeClass = 'text-xl sm:text-3xl lg:text-4xl';
+    wordFontSizeClass = 'text-lg sm:text-xl lg:text-2xl';
   }
 
   const renderContent = () => {
