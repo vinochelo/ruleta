@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -25,19 +26,18 @@ const playRouletteTick = () => {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
 
-  // A triangle wave gives a more 'classic game' or 'chiptune' feel
-  oscillator.type = 'triangle';
-  // A higher frequency for a sharper, more distinct 'tick'
-  oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
-  // Lowered gain for a less intrusive sound
-  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-  // A very fast decay to make it a short, sharp 'tick'
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
+  // Sine wave for a softer, more mechanical "thump" or "click" sound.
+  oscillator.type = 'sine';
+  // A lower frequency to feel less like a digital beep.
+  oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+  // Higher initial gain but with a very rapid decay to create a short "click".
+  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.03);
 
   oscillator.connect(gainNode);
   gainNode.connect(audioContext.destination);
   oscillator.start();
-  oscillator.stop(audioContext.currentTime + 0.05);
+  oscillator.stop(audioContext.currentTime + 0.03); // Corresponds with the fast decay.
   oscillator.onended = () => {
     audioContext.close().catch(() => {});
   };
@@ -47,13 +47,13 @@ const playRouletteEndSound = () => {
   if (typeof window === 'undefined' || !window.AudioContext) return;
   const audioContext = new window.AudioContext();
   const gainNode = audioContext.createGain();
-  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
   gainNode.connect(audioContext.destination);
 
   const playTone = (freq: number, time: number, duration: number) => {
     const oscillator = audioContext.createOscillator();
-    // Using 'triangle' for a consistent sound profile with the tick
-    oscillator.type = 'triangle';
+    // Using 'sine' for a smooth, bell-like sound that matches the new tick.
+    oscillator.type = 'sine';
     oscillator.frequency.setValueAtTime(freq, time);
     oscillator.connect(gainNode);
     oscillator.start(time);
@@ -61,12 +61,12 @@ const playRouletteEndSound = () => {
   };
 
   const now = audioContext.currentTime;
-  // A happy, upwards C-major arpeggio
-  playTone(523.25, now, 0.1); // C5
-  playTone(659.25, now + 0.1, 0.1); // E5
-  playTone(783.99, now + 0.2, 0.15); // G5
+  // A pleasant, bell-like C-major arpeggio.
+  playTone(523.25, now, 0.12); // C5
+  playTone(659.25, now + 0.12, 0.12); // E5
+  playTone(783.99, now + 0.24, 0.2); // G5
 
-  const totalDuration = 0.35;
+  const totalDuration = 0.44;
   setTimeout(() => {
     audioContext.close().catch(() => {});
   }, totalDuration * 1000 + 100);
