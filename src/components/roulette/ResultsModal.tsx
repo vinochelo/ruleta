@@ -190,9 +190,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
             <Button
               onClick={handleRequestAiHelp}
               size="lg"
-              className="transition-transform hover:scale-105 py-6 px-10 text-xl rounded-full"
+              className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
             >
-              <Sparkles className="mr-2 h-5 w-5" />
+              <Sparkles className="mr-4 h-8 w-8" />
               Obtener Inspiración
             </Button>
           </div>
@@ -228,9 +228,9 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <Button
             onClick={handleRequestAiHelp}
             size="lg"
-            className="transition-transform hover:scale-105 py-6 px-10 text-xl rounded-full"
+            className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
           >
-              <Sparkles className="mr-2 h-5 w-5" />
+              <Sparkles className="mr-4 h-8 w-8" />
               Reintentar
           </Button>
         </div>
