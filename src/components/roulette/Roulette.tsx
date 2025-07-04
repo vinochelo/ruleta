@@ -31,7 +31,7 @@ const playRouletteTick = () => {
   // Lowered frequency for a deeper, less intrusive sound.
   oscillator.frequency.setValueAtTime(150, audioContext.currentTime);
   // Lowered gain to make it much quieter.
-  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.05, audioContext.currentTime);
   gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.05);
 
   oscillator.connect(gainNode);
@@ -48,7 +48,7 @@ const playRouletteEndSound = () => {
   const audioContext = new window.AudioContext();
   const gainNode = audioContext.createGain();
   // Lowered gain for a softer final sound.
-  gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
   gainNode.connect(audioContext.destination);
 
   const playTone = (freq: number, time: number, duration: number) => {

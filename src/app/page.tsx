@@ -67,6 +67,8 @@ const CATEGORIES_STORAGE_KEY = 'ruletaPictionaryCategories';
 const TEAMS_STORAGE_KEY = 'ruletaPictionaryTeams';
 const GAME_MODE_STORAGE_KEY = 'ruletaPictionaryGameMode';
 const AI_IMAGES_STORAGE_KEY = 'ruletaPictionaryAIImages';
+const USED_WORDS_STORAGE_KEY = 'ruletaPictionaryUsedWords';
+
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -170,6 +172,21 @@ export default function HomePage() {
         setTeams([]);
       }
     }
+  }, []);
+  
+  // Load Used Words
+  useEffect(() => {
+      const storedUsedWords = localStorage.getItem(USED_WORDS_STORAGE_KEY);
+      if (storedUsedWords) {
+        try {
+          const parsedUsedWords = JSON.parse(storedUsedWords);
+          if(typeof parsedUsedWords === 'object' && parsedUsedWords !== null) {
+            setUsedWords(parsedUsedWords);
+          }
+        } catch (e) {
+          setUsedWords({});
+        }
+      }
   }, []);
 
   // Load and Persist Game Mode
@@ -311,6 +328,7 @@ export default function HomePage() {
     persistTeams(teams.map(team => ({ ...team, score: 0 })));
     setTotalPointsScored(0);
     setUsedWords({});
+    localStorage.removeItem(USED_WORDS_STORAGE_KEY);
     toast({ title: "Puntuaciones Reiniciadas", description: "Todas las puntuaciones se han reiniciado a 0." });
     speakFn("Puntuaciones reiniciadas.");
   }, [teams, persistTeams, toast, speakFn]);
@@ -350,10 +368,12 @@ export default function HomePage() {
     }
     
     if (newUsedListForCategory) {
-      setUsedWords(prev => ({
-        ...prev,
-        [category.id]: newUsedListForCategory
-      }));
+      const newUsedWords = {
+        ...usedWords,
+        [category.id]: newUsedListForCategory,
+      };
+      setUsedWords(newUsedWords);
+      localStorage.setItem(USED_WORDS_STORAGE_KEY, JSON.stringify(newUsedWords));
     }
     
     setSelectedWord(wordToDraw);
