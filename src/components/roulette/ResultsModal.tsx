@@ -187,7 +187,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
           <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
             <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
             <p className="text-lg text-muted-foreground">La ayuda de IA está desactivada.</p>
-            <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+            <Button
+              onClick={handleRequestAiHelp}
+              size="lg"
+              className="transition-transform hover:scale-105 py-6 px-10 text-xl rounded-full"
+            >
               <Sparkles className="mr-2 h-5 w-5" />
               Obtener Inspiración
             </Button>
@@ -221,7 +225,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
           <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
           <p className="text-lg text-muted-foreground">No se pudo generar la imagen.</p>
-          <Button onClick={handleRequestAiHelp} size="lg" className="transition-transform hover:scale-105">
+          <Button
+            onClick={handleRequestAiHelp}
+            size="lg"
+            className="transition-transform hover:scale-105 py-6 px-10 text-xl rounded-full"
+          >
               <Sparkles className="mr-2 h-5 w-5" />
               Reintentar
           </Button>
