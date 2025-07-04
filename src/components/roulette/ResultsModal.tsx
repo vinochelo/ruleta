@@ -158,18 +158,18 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   };
 
   const wordLength = selectedWord?.length || 0;
-  let wordFontSizeClass = 'text-4xl sm:text-6xl lg:text-7xl';
+  let wordFontSizeClass = 'text-5xl sm:text-7xl lg:text-8xl';
   if (wordLength > 8) {
-    wordFontSizeClass = 'text-3xl sm:text-5xl lg:text-6xl';
+    wordFontSizeClass = 'text-4xl sm:text-6xl lg:text-7xl';
   }
   if (wordLength > 15) {
-    wordFontSizeClass = 'text-2xl sm:text-4xl lg:text-5xl';
+    wordFontSizeClass = 'text-3xl sm:text-5xl lg:text-6xl';
   }
   if (wordLength > 20) {
-    wordFontSizeClass = 'text-xl sm:text-3xl lg:text-4xl';
+    wordFontSizeClass = 'text-2xl sm:text-4xl lg:text-5xl';
   }
   if (wordLength > 24) {
-    wordFontSizeClass = 'text-lg sm:text-2xl lg:text-3xl';
+    wordFontSizeClass = 'text-xl sm:text-3xl lg:text-4xl';
   }
 
   const renderContent = () => {
@@ -278,7 +278,7 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
                     </p>
                 </div>
                 
-                <div className="text-center bg-card/50 backdrop-blur-sm p-3 rounded-xl shadow-lg border w-full min-h-[120px] flex flex-col justify-center">
+                <div className="text-center bg-card/50 backdrop-blur-sm p-3 rounded-xl shadow-lg border w-full min-h-[150px] flex flex-col justify-center">
                     <p className="text-sm text-muted-foreground">Palabra a dibujar</p>
                     <p 
                         className={`${wordFontSizeClass} font-bold drop-shadow-md font-roulette break-words leading-tight`} 
