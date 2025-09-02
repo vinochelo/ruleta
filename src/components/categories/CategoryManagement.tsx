@@ -719,5 +719,3 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
-
-    
