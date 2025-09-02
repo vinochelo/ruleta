@@ -128,3 +128,50 @@ const generateQuickImageFlow = ai.defineFlow(
     }
   }
 );
+
+
+// --- Flow 2: Detailed Image Generation ---
+
+const DetailedImageInputSchema = z.object({
+  word: z.string().describe('The word to generate a detailed image for.'),
+});
+export type DetailedImageInput = z.infer<typeof DetailedImageInputSchema>;
+
+const DetailedImageOutputSchema = z.object({
+  imageDataUri: z.string().nullable().describe("A data URI for the generated image. Null if generation fails. Format: 'data:<mimetype>;base64,<encoded_data>'."),
+  error: z.string().nullable().describe("An error message if image generation failed."),
+});
+export type DetailedImageOutput = z.infer<typeof DetailedImageOutputSchema>;
+
+
+export async function generateDetailedImage(
+  input: DetailedImageInput
+): Promise<DetailedImageOutput> {
+  return generateDetailedImageFlow(input);
+}
+
+const generateDetailedImageFlow = ai.defineFlow(
+  {
+    name: 'generateDetailedImageFlow',
+    inputSchema: DetailedImageInputSchema,
+    outputSchema: DetailedImageOutputSchema,
+  },
+  async (input) => {
+    try {
+      ensureApiKey();
+      // This prompt is different: it asks for a detailed, colorful, photorealistic image.
+      const prompt = `Una imagen detallada, colorida y fotorrealista para un juego de adivinanzas. La imagen debe representar claramente: '${input.word}'. La imagen debe ser visualmente rica y descriptiva, sin incluir texto, letras o números.`;
+      
+      const { imageUrl, error } = await generateSingleImage(prompt);
+      
+      if (imageUrl) {
+          return { imageDataUri: imageUrl, error: null };
+      } else {
+          const finalError = error || "Ocurrió un error inesperado en la generación de la imagen detallada.";
+          return { imageDataUri: null, error: finalError };
+      }
+    } catch (e: any) {
+      return { imageDataUri: null, error: e.message };
+    }
+  }
+);

@@ -11,9 +11,9 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { TimerIcon, X, ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import { TimerIcon, X, ImageIcon, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import Timer from '@/components/timer/Timer';
-import { generateQuickImage } from '@/ai/flows/generate-image-flow';
+import { generateQuickImage, generateDetailedImage } from '@/ai/flows/generate-image-flow';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +37,8 @@ const TIMER_OPTIONS = [
 
 const TIMER_BUTTON_COLORS = ['#34D399', '#60A5FA', '#FBBF24', '#F87171'];
 
+type ViewState = 'initial' | 'simple_image' | 'detailed_image';
+
 const ResultsModal: React.FC<ResultsModalProps> = ({
   isOpen,
   onClose,
@@ -52,93 +54,121 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
   const [isTimerFinished, setIsTimerFinished] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [timerShouldAutoStart, setTimerShouldAutoStart] = useState(false);
-  const [animatingButton, setAnimatingButton] = useState<number | null>(null); // For button animation
+  const [animatingButton, setAnimatingButton] = useState<number | null>(null);
 
   // AI Image Generation State
-  const [aiHelpActive, setAiHelpActive] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [viewState, setViewState] = useState<ViewState>('initial');
+  const [isLoading, setIsLoading] = useState(false);
+  const [simpleImage, setSimpleImage] = useState<string | null>(null);
+  const [detailedImage, setDetailedImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const resetAIState = useCallback(() => {
-    setAiHelpActive(false);
-    setIsGenerating(false);
-    setGeneratedImage(null);
+    setViewState('initial');
+    setIsLoading(false);
+    setSimpleImage(null);
+    setDetailedImage(null);
   }, []);
 
-  const startImageGeneration = useCallback(async (word: string) => {
+  const startInitialImageGeneration = useCallback(async (word: string) => {
     if (!word) return;
     
     resetAIState();
-    setAiHelpActive(true);
-    setIsGenerating(true);
+    setIsLoading(true);
 
     try {
       const result = await generateQuickImage({ word });
-      
       if (result.error) {
         toast({
             title: "Error al generar imagen",
             description: result.error,
             variant: "destructive",
         });
-        setAiHelpActive(false); // Go back to the "get inspiration" button
       } else if (result.imageDataUri) {
-        setGeneratedImage(result.imageDataUri);
+        setSimpleImage(result.imageDataUri);
+        setViewState('simple_image');
       } else {
          toast({
             title: "Error Inesperado",
-            description: "La IA no devolvió una imagen pero no especificó un error. Inténtalo de nuevo.",
+            description: "La IA no devolvió una imagen pero no especificó un error.",
             variant: "destructive",
         });
-        setAiHelpActive(false);
       }
     } catch (error: any) {
         toast({
             title: "Error Crítico de Conexión",
-            description: error.message || "Ocurrió un error irrecuperable al contactar el servicio de IA. Revisa tu conexión o la configuración de la API.",
+            description: error.message || "Ocurrió un error irrecuperable al contactar el servicio de IA.",
             variant: "destructive",
         });
-        setAiHelpActive(false);
     } finally {
-        setIsGenerating(false);
+        setIsLoading(false);
     }
   }, [resetAIState, toast]);
+
+  const startDetailedImageGeneration = useCallback(async (word: string) => {
+    if (!word) return;
+
+    setIsLoading(true);
+    setDetailedImage(null); // Clear previous detailed image
+
+    try {
+      const result = await generateDetailedImage({ word });
+      if (result.error) {
+        toast({
+            title: "Error en Pista Avanzada",
+            description: result.error,
+            variant: "destructive",
+        });
+      } else if (result.imageDataUri) {
+        setDetailedImage(result.imageDataUri);
+        setViewState('detailed_image'); // Switch view to the new detailed image
+      } else {
+         toast({
+            title: "Error Inesperado",
+            description: "La IA no devolvió una imagen detallada pero no especificó un error.",
+            variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+        toast({
+            title: "Error Crítico de Conexión",
+            description: error.message || "Ocurrió un error irrecuperable al contactar el servicio de IA.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
   
   // Effect to manage state when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Reset timer state
-      setTimerDuration(0); // Start with 0 duration
+      setTimerDuration(0);
       setIsTimerFinished(false);
       setTimerKey(prev => prev + 1);
-      setTimerShouldAutoStart(false); // Don't start on open
-      // Reset AI state
+      setTimerShouldAutoStart(false);
       resetAIState();
 
       if (useAIImages && selectedWord) {
-        startImageGeneration(selectedWord);
+        startInitialImageGeneration(selectedWord);
       }
     }
-  }, [isOpen, useAIImages, selectedWord, startImageGeneration, resetAIState]);
+  }, [isOpen, useAIImages, selectedWord, startInitialImageGeneration, resetAIState]);
 
   const handleTimeButtonClick = (duration: number) => {
     speakTimeSelection(duration);
     setTimerDuration(duration);
     setIsTimerFinished(false);
-    setTimerShouldAutoStart(true); // This will trigger the timer to start on remount
+    setTimerShouldAutoStart(true);
     setTimerKey(prevKey => prevKey + 1);
 
-    // Button animation logic
     setAnimatingButton(duration);
-    setTimeout(() => {
-      setAnimatingButton(null);
-    }, 300); // Duration of the animation
+    setTimeout(() => setAnimatingButton(null), 300);
   };
   
   const handleTimerEndInternal = useCallback(() => {
     setIsTimerFinished(true);
-    setTimerShouldAutoStart(false); // Stop trying to autostart on future renders
+    setTimerShouldAutoStart(false);
     if (selectedWord) {
       setTimeout(() => {
         speakFn(`La palabra era ${selectedWord}.`);
@@ -151,90 +181,86 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
     onClose();
   };
   
-  const handleRequestAiHelp = () => {
+  const handleRequestSimpleHelp = () => {
     if (selectedWord) {
-      startImageGeneration(selectedWord);
+      startInitialImageGeneration(selectedWord);
+    }
+  };
+
+  const handleRequestDetailedHelp = () => {
+    if(selectedWord) {
+      startDetailedImageGeneration(selectedWord);
     }
   };
 
   const wordLength = selectedWord?.length || 0;
   let wordFontSizeClass = 'text-4xl sm:text-5xl lg:text-6xl';
-  if (wordLength > 8) {
-    wordFontSizeClass = 'text-3xl sm:text-4xl lg:text-5xl';
-  }
-  if (wordLength > 15) {
-    wordFontSizeClass = 'text-2xl sm:text-3xl lg:text-4xl';
-  }
-  if (wordLength > 20) {
-    wordFontSizeClass = 'text-xl sm:text-2xl lg:text-3xl';
-  }
-  if (wordLength > 24) {
-    wordFontSizeClass = 'text-lg sm:text-xl lg:text-2xl';
-  }
+  if (wordLength > 8) wordFontSizeClass = 'text-3xl sm:text-4xl lg:text-5xl';
+  if (wordLength > 15) wordFontSizeClass = 'text-2xl sm:text-3xl lg:text-4xl';
+  if (wordLength > 20) wordFontSizeClass = 'text-xl sm:text-2xl lg:text-2xl';
+  if (wordLength > 24) wordFontSizeClass = 'text-lg sm:text-xl lg:text-2xl';
 
   const renderContent = () => {
-    const ImageBox: React.FC<{children: React.ReactNode}> = ({ children }) => (
-      <div className="w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative">
-        <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
-          {children}
+    const ImageBox: React.FC<{children: React.ReactNode, title: string, showAdvancedHintButton?: boolean }> = ({ children, title, showAdvancedHintButton = false }) => (
+        <div className="w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative">
+            <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+              {children}
+            </div>
+             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 w-full px-4">
+                <p className="text-sm font-semibold text-white bg-black/40 px-3 py-1 rounded-full">{title}</p>
+                {showAdvancedHintButton && (
+                  <Button onClick={handleRequestDetailedHelp} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg transition-transform hover:scale-105" disabled={isLoading}>
+                    {isLoading && viewState !== 'detailed_image' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                    Pista Avanzada
+                  </Button>
+                )}
+            </div>
         </div>
-      </div>
     );
-    
-    if (!aiHelpActive) {
-      return (
-        <ImageBox>
-          <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-            <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
-            <p className="text-lg text-muted-foreground">La ayuda de IA está desactivada.</p>
-            <Button
-              onClick={handleRequestAiHelp}
-              size="lg"
-              className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
-            >
-              <Sparkles className="mr-4 h-8 w-8" />
-              Obtener Inspiración
-            </Button>
-          </div>
-        </ImageBox>
-      );
-    }
-    
-    if (isGenerating) {
-      return (
-        <ImageBox>
-          <div className="flex flex-col items-center justify-center gap-4 text-primary">
-            <Loader2 className="h-16 w-16 animate-spin" />
-            <p className="text-xl font-medium">Generando inspiración...</p>
-          </div>
-        </ImageBox>
-      );
-    }
 
-    if (generatedImage) {
+    if (isLoading) {
       return (
-        <ImageBox>
-          <Image src={generatedImage} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
-        </ImageBox>
-      );
-    }
-
-    // This case handles when AI generation was attempted but failed and is no longer loading
-    return (
-      <ImageBox>
-        <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
-          <ImageIcon className="h-32 w-32 text-muted-foreground/20" />
-          <p className="text-lg text-muted-foreground">No se pudo generar la imagen.</p>
-          <Button
-            onClick={handleRequestAiHelp}
-            size="lg"
-            className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
-          >
-              <Sparkles className="mr-4 h-8 w-8" />
-              Reintentar
-          </Button>
+        <div className="w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative">
+            <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+                <div className="flex flex-col items-center justify-center gap-4 text-primary">
+                    <Loader2 className="h-16 w-16 animate-spin" />
+                    <p className="text-xl font-medium">Generando inspiración...</p>
+                </div>
+            </div>
         </div>
-      </ImageBox>
+      );
+    }
+    
+    // Determine which image to show based on viewState
+    const imageToShow = viewState === 'detailed_image' ? detailedImage : simpleImage;
+    
+    if (useAIImages && imageToShow) {
+        let title = viewState === 'detailed_image' ? "Pista Avanzada" : "Inspiración Rápida";
+        return (
+            <ImageBox title={title} showAdvancedHintButton={viewState === 'simple_image'}>
+                 <Image src={imageToShow} alt={`Inspiración para ${selectedWord}`} layout="fill" objectFit="contain" className="p-4" unoptimized />
+            </ImageBox>
+        );
+    }
+
+    // Default view if no AI help or if it fails
+    return (
+       <div className="w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative">
+            <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
+                 <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
+                    <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
+                    <p className="text-lg text-muted-foreground">{useAIImages ? "No se pudo generar la imagen." : "La ayuda de IA está desactivada."}</p>
+                    <Button
+                    onClick={handleRequestSimpleHelp}
+                    size="lg"
+                    className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
+                    >
+                    <Sparkles className="mr-4 h-8 w-8" />
+                    {useAIImages ? "Reintentar" : "Obtener Inspiración"}
+                    </Button>
+                </div>
+            </div>
+        </div>
     );
   };
 
