@@ -6,12 +6,13 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle } from 'lucide-react';
+import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket } from 'lucide-react';
 import EditCategoryDialog from './EditCategoryDialog';
 import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutput } from '@/ai/flows/suggest-words-flow';
+import { suggestBulkCategories } from '@/ai/flows/suggest-bulk-categories-flow';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import {
@@ -71,6 +72,7 @@ const CategoryManagement: React.FC = () => {
   const [aiDuplicateWords, setAiDuplicateWords] = useState<string[]>([]);
   const [categoryForAISuggestion, setCategoryForAISuggestion] = useState<string>('');
   const [isAISuggesting, setIsAISuggesting] = useState(false);
+  const [isAIBulkSuggesting, setIsAIBulkSuggesting] = useState(false);
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
   const [categoryQueue, setCategoryQueue] = useState<string[]>([]);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
@@ -438,6 +440,47 @@ const CategoryManagement: React.FC = () => {
     }
   };
 
+  const handleBulkAdd = async () => {
+    setIsAIBulkSuggesting(true);
+    toast({ title: "Generando categorías...", description: "La IA está creando un nuevo set de categorías y palabras. Esto puede tardar un momento." });
+
+    try {
+        const result = await suggestBulkCategories();
+        const suggestedCats = result.categories || [];
+        if (suggestedCats.length === 0) {
+            toast({ title: "Error de IA", description: "La IA no devolvió ninguna categoría. Inténtalo de nuevo.", variant: "destructive" });
+            return;
+        }
+
+        const existingCategoryNames = new Set(categories.map(c => c.name.toLowerCase()));
+        const newCategories = suggestedCats
+            .filter(sc => !existingCategoryNames.has(sc.name.toLowerCase()))
+            .map(sc => ({
+                id: crypto.randomUUID(),
+                name: sc.name,
+                words: [...new Set(sc.words)].sort(),
+                isActive: true,
+            }));
+
+        const duplicateCount = suggestedCats.length - newCategories.length;
+
+        if (newCategories.length > 0) {
+            persistCategories([...categories, ...newCategories]);
+            toast({ title: "¡Categorías Añadidas!", description: `Se han añadido ${newCategories.length} nuevas categorías temáticas al juego.` });
+        }
+
+        if (duplicateCount > 0) {
+            toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCount} categorías porque ya existían nombres similares.`, variant: "default" });
+        }
+    } catch (error) {
+        toast({ title: "Error Crítico", description: "No se pudieron generar las categorías.", variant: "destructive" });
+    } finally {
+        setIsAIBulkSuggesting(false);
+    }
+  };
+
+  const isUIBlocked = isAISuggesting || categoryQueue.length > 0 || isAIBulkSuggesting;
+
   const sortedCategories = [...categories].sort((a, b) => 
     a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
   );
@@ -450,7 +493,7 @@ const CategoryManagement: React.FC = () => {
             <PlusCircle className="h-6 w-6" />
             Añadir Nueva Categoría
           </CardTitle>
-          <CardDescription>Añade categorías fácilmente. Escribe un nombre (o varios, separados por comas) y pulsa **"Añadir con IA"**. La IA creará una lista de palabras por ti.</CardDescription>
+          <CardDescription>Añade categorías manualmente. Escribe un nombre y pulsa "Añadir con IA" para que la IA sugiera palabras para esa categoría, o "Añadir Vacía" para hacerlo tú mismo.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -461,23 +504,39 @@ const CategoryManagement: React.FC = () => {
               placeholder="Ej: Películas de los 90, Animales de la granja..."
               className="flex-grow"
               aria-label="Nombre de la nueva categoría"
-              disabled={isAISuggesting || categoryQueue.length > 0}
+              disabled={isUIBlocked}
             />
             <div className="flex gap-2">
               <Button 
                 type="button" 
                 onClick={handleAddNewCategoryWithAI}
                 className="transition-transform hover:scale-105 flex-1 sm:flex-none"
-                disabled={isAISuggesting || newCategoryName.trim() === '' || categoryQueue.length > 0}
+                disabled={isUIBlocked || newCategoryName.trim() === ''}
               >
                 {isAISuggesting || categoryQueue.length > 0 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
                 Añadir con IA
               </Button>
-              <Button onClick={(e) => handleAddCategory(e as any)} variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isAISuggesting || newCategoryName.trim() === '' || categoryQueue.length > 0 || newCategoryName.includes(',')}>
+              <Button onClick={(e) => handleAddCategory(e as any)} variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isUIBlocked || newCategoryName.trim() === '' || newCategoryName.includes(',')}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Añadir Vacía
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+      
+      <Card className="shadow-lg bg-primary/10 border-primary/20">
+        <CardHeader>
+          <CardTitle className="title-text text-2xl flex items-center gap-2">
+            <Rocket className="h-6 w-6" />
+            Modo Novato: ¡Carga Rápida!
+          </CardTitle>
+          <CardDescription>¿No quieres configurar nada? Pulsa este botón y la IA generará 5 categorías temáticas y divertidas, con todas sus palabras, para que puedas empezar a jugar al instante.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked}>
+            {isAIBulkSuggesting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Brain className="mr-2 h-5 w-5" />}
+            {isAIBulkSuggesting ? 'Generando Magia...' : 'Generar 5 Categorías Temáticas con IA'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -491,7 +550,7 @@ const CategoryManagement: React.FC = () => {
         </CardHeader>
         <CardContent>
           {categories.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No hay categorías. ¡Añade alguna!</p>
+            <p className="text-muted-foreground text-center py-4">No hay categorías. ¡Añade alguna con los botones de arriba!</p>
           ) : (
             <div className="overflow-x-auto rounded-md border">
               <Table>
@@ -519,7 +578,7 @@ const CategoryManagement: React.FC = () => {
                                 onClick={() => handleDeleteWord(category.id, wordIndex)}
                                 className="ml-1 h-4 w-4 text-destructive hover:text-red-700 p-0"
                                 aria-label={`Eliminar palabra ${word}`}
-                                disabled={isAISuggesting || categoryQueue.length > 0}
+                                disabled={isUIBlocked}
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -535,9 +594,9 @@ const CategoryManagement: React.FC = () => {
                               placeholder="Añadir palabra"
                               className="h-8 text-sm"
                               aria-label={`Añadir palabra a ${category.name}`}
-                              disabled={isAISuggesting || categoryQueue.length > 0}
+                              disabled={isUIBlocked}
                             />
-                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8" disabled={isAISuggesting || categoryQueue.length > 0}>
+                            <Button type="submit" size="icon" variant="ghost" className="h-8 w-8" disabled={isUIBlocked}>
                               <Plus className="h-4 w-4" />
                             </Button>
                           </form>
@@ -545,7 +604,7 @@ const CategoryManagement: React.FC = () => {
                             size="sm" 
                             variant="outline" 
                             onClick={() => handleOpenAISuggestionsForExisting(category)}
-                            disabled={isAISuggesting || categoryQueue.length > 0}
+                            disabled={isUIBlocked}
                             className="h-8 text-xs whitespace-nowrap"
                             >
                              {isAISuggesting && targetCategoryIdForAIWords === category.id ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Brain className="mr-1 h-3 w-3" />}
@@ -559,7 +618,7 @@ const CategoryManagement: React.FC = () => {
                             onCheckedChange={() => handleToggleCategoryActive(category.id)}
                             className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-destructive"
                             aria-label={category.isActive ?? true ? 'Desactivar categoría' : 'Activar categoría'}
-                            disabled={isAISuggesting || categoryQueue.length > 0}
+                            disabled={isUIBlocked}
                         />
                       </TableCell>
                       <TableCell className="text-right align-top py-4 space-x-0.5 sm:space-x-1">
@@ -569,7 +628,7 @@ const CategoryManagement: React.FC = () => {
                           onClick={() => setEditingCategory(category)}
                           className="text-blue-500 hover:text-blue-700 transition-colors"
                           aria-label={`Editar nombre de ${category.name}`}
-                          disabled={isAISuggesting || categoryQueue.length > 0}
+                          disabled={isUIBlocked}
                         >
                           <Edit3 className="h-4 w-4" />
                         </Button>
@@ -579,7 +638,7 @@ const CategoryManagement: React.FC = () => {
                           onClick={() => handleDeleteCategory(category.id)}
                           className="text-destructive hover:text-red-700 transition-colors"
                           aria-label={`Eliminar categoría ${category.name}`}
-                          disabled={isAISuggesting || categoryQueue.length > 0}
+                          disabled={isUIBlocked}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -594,7 +653,7 @@ const CategoryManagement: React.FC = () => {
         <CardFooter>
           <AlertDialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" className="transition-transform hover:scale-105" disabled={isAISuggesting || categoryQueue.length > 0}>
+                <Button variant="outline" className="transition-transform hover:scale-105" disabled={isUIBlocked}>
                     Restaurar Categorías y Palabras por Defecto
                 </Button>
               </AlertDialogTrigger>

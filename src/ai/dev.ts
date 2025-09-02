@@ -3,3 +3,4 @@
 import './flows/suggest-words-flow';
 import './flows/praise-winner-flow';
 import './flows/generate-image-flow';
+import './flows/suggest-bulk-categories-flow';
