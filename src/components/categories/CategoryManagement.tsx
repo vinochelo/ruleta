@@ -466,7 +466,7 @@ const CategoryManagement: React.FC = () => {
 
         if (newCategories.length > 0) {
             persistCategories([...categories, ...newCategories]);
-            const newCategoryNames = newCategories.map(c => c.name).join(', ');
+            const newCategoryNames = newCategories.map(c => `"${c.name}"`).join(', ');
             toast({
               title: "¡Categorías Añadidas!",
               description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNames}.`

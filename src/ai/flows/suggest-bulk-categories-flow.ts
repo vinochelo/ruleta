@@ -31,7 +31,7 @@ Tu misión es generar un paquete de **exactamente 5 categorías temáticas DIVER
 2.  **Exactamente 5 Categorías:** La respuesta debe contener un array con precisamente 5 objetos de categoría.
 3.  **Temas Creativos y Diversos:** Las 5 categorías deben ser diferentes entre sí y estimulantes. Ejemplos de buenas ideas: "Cosas que encuentras en la playa", "Superhéroes y Villanos", "Marcas Famosas", "Instrumentos Musicales", "Deportes Olímpicos". Evita temas demasiado genéricos o aburridos.
 4.  **Palabras de Calidad (15-20 por categoría):** Para cada categoría, genera una lista de entre 15 y 20 palabras o frases cortas.
-5.  **Facilidad de Dibujo:** Las palabras deben ser conceptos visuales, comunes y reconocibles que una persona promedio pueda dibujar y adivinar.
+5.  **FACILIDAD DE DIBUJO (¡MUY IMPORTANTE!):** Las palabras deben ser conceptos visuales, comunes y reconocibles que una persona promedio pueda dibujar y adivinar. Prioriza sustantivos concretos y acciones claras. Evita conceptos abstractos o difíciles de representar gráficamente.
 6.  **Audiencia General:** Todas las palabras deben ser aptas para todas las edades.
 
 Genera ahora el paquete de 5 categorías, asegurándote de seguir TODAS las reglas.`,
