@@ -466,7 +466,13 @@ const CategoryManagement: React.FC = () => {
 
         if (newCategories.length > 0) {
             persistCategories([...categories, ...newCategories]);
-            toast({ title: "¡Categorías Añadidas!", description: `Se han añadido ${newCategories.length} nuevas categorías temáticas al juego.` });
+            const newCategoryNames = newCategories.map(c => c.name).join(', ');
+            toast({
+              title: "¡Categorías Añadidas!",
+              description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNames}.`
+            });
+        } else {
+            toast({ title: "Sin Categorías Nuevas", description: "Las categorías sugeridas por la IA ya existían y no se añadieron duplicados.", variant: "default" });
         }
 
         if (duplicateCount > 0) {
