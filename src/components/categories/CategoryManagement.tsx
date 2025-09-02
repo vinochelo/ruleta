@@ -453,14 +453,18 @@ const CategoryManagement: React.FC = () => {
         }
 
         const existingCategoryNames = new Set(categories.map(c => c.name.toLowerCase()));
-        const newCategories = suggestedCats
-            .filter(sc => !existingCategoryNames.has(sc.name.toLowerCase()))
-            .map(sc => ({
-                id: crypto.randomUUID(),
-                name: sc.name,
-                words: [...new Set(sc.words)].sort(),
-                isActive: true,
-            }));
+        const newCategories: Category[] = [];
+        
+        suggestedCats.forEach(sc => {
+            if (!existingCategoryNames.has(sc.name.toLowerCase())) {
+                newCategories.push({
+                    id: crypto.randomUUID(),
+                    name: sc.name,
+                    words: [...new Set(sc.words)].sort(),
+                    isActive: true,
+                });
+            }
+        });
 
         const duplicateCount = suggestedCats.length - newCategories.length;
 
@@ -471,13 +475,16 @@ const CategoryManagement: React.FC = () => {
               title: "¡Categorías Añadidas!",
               description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNames}.`
             });
-        } else {
-            toast({ title: "Sin Categorías Nuevas", description: "Las categorías sugeridas por la IA ya existían y no se añadieron duplicados.", variant: "default" });
         }
 
         if (duplicateCount > 0) {
-            toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCount} categorías porque ya existían nombres similares.`, variant: "default" });
+             toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCount} categorías porque ya existían nombres similares.`, variant: "default" });
         }
+        
+        if (newCategories.length === 0 && duplicateCount > 0) {
+            toast({ title: "Sin Categorías Nuevas", description: "Todas las categorías sugeridas por la IA ya existían y no se añadieron duplicados.", variant: "default" });
+        }
+
     } catch (error) {
         toast({ title: "Error Crítico", description: "No se pudieron generar las categorías.", variant: "destructive" });
     } finally {
@@ -641,7 +648,7 @@ const CategoryManagement: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteCategory(category.id)}
+                          onClick={()={() => handleDeleteCategory(category.id)}
                           className="text-destructive hover:text-red-700 transition-colors"
                           aria-label={`Eliminar categoría ${category.name}`}
                           disabled={isUIBlocked}
@@ -709,3 +716,4 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
+ 
