@@ -243,21 +243,23 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
         );
     }
 
-    // Default view if no AI help or if it fails
+    // Default view if no AI help or if it fails, OR if AI is active but no image has been generated yet.
     return (
        <div className="w-full h-full lg:aspect-square flex flex-col items-center justify-center p-0 relative">
             <div className="w-full flex-grow bg-card rounded-2xl shadow-2xl flex items-center justify-center p-2 relative overflow-hidden border-4" style={{borderColor: selectedCategoryColor || 'hsl(var(--primary))'}}>
                  <div className="text-center flex flex-col items-center justify-center gap-6 p-4">
                     <ImageIcon className="h-24 w-24 text-muted-foreground/20" />
-                    <p className="text-lg text-muted-foreground">{useAIImages ? "No se pudo generar la imagen." : "La ayuda de IA está desactivada."}</p>
-                    <Button
-                    onClick={handleRequestSimpleHelp}
-                    size="lg"
-                    className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
-                    >
-                    <Sparkles className="mr-4 h-8 w-8" />
-                    {useAIImages ? "Reintentar" : "Obtener Inspiración"}
-                    </Button>
+                    <p className="text-lg text-muted-foreground">{useAIImages ? "Pulsa para obtener inspiración" : "La ayuda de IA está desactivada."}</p>
+                     {useAIImages && (
+                        <Button
+                            onClick={handleRequestSimpleHelp}
+                            size="lg"
+                            className="transition-transform hover:scale-105 py-8 px-16 text-3xl rounded-full shadow-lg"
+                        >
+                            <Sparkles className="mr-4 h-8 w-8" />
+                            Obtener Inspiración
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>
@@ -351,3 +353,5 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
+
+    
