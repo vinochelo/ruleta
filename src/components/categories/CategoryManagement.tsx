@@ -532,7 +532,7 @@ const CategoryManagement: React.FC = () => {
                 {isAISuggesting || categoryQueue.length > 0 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Brain className="mr-2 h-4 w-4" />}
                 Añadir con IA
               </Button>
-              <Button onClick={(e) => handleAddCategory(e as any)} variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isUIBlocked || newCategoryName.trim() === '' || newCategoryName.includes(',')}>
+              <Button onClick={handleAddCategory} variant="outline" className="transition-transform hover:scale-105 flex-1 sm:flex-none" disabled={isUIBlocked || newCategoryName.trim() === '' || newCategoryName.includes(',')}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Añadir Vacía
               </Button>
             </div>
