@@ -447,13 +447,16 @@ const CategoryManagement: React.FC = () => {
     try {
         const result = await suggestBulkCategories();
         const suggestedCats = result.categories || [];
+        
         if (suggestedCats.length === 0) {
             toast({ title: "Error de IA", description: "La IA no devolvió ninguna categoría. Inténtalo de nuevo.", variant: "destructive" });
+            setIsAIBulkSuggesting(false);
             return;
         }
 
         const existingCategoryNames = new Set(categories.map(c => c.name.toLowerCase()));
         const newCategories: Category[] = [];
+        const duplicateCategories: string[] = [];
         
         suggestedCats.forEach(sc => {
             if (!existingCategoryNames.has(sc.name.toLowerCase())) {
@@ -463,25 +466,25 @@ const CategoryManagement: React.FC = () => {
                     words: [...new Set(sc.words)].sort(),
                     isActive: true,
                 });
+            } else {
+                duplicateCategories.push(sc.name);
             }
         });
-
-        const duplicateCount = suggestedCats.length - newCategories.length;
-
+        
         if (newCategories.length > 0) {
             persistCategories([...categories, ...newCategories]);
-            const newCategoryNames = newCategories.map(c => `"${c.name}"`).join(', ');
+            const newCategoryNamesText = newCategories.map(c => `"${c.name}"`).join(', ');
             toast({
               title: "¡Categorías Añadidas!",
-              description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNames}.`
+              description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNamesText}.`
             });
         }
 
-        if (duplicateCount > 0) {
-             toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCount} categorías porque ya existían nombres similares.`, variant: "default" });
+        if (duplicateCategories.length > 0) {
+             toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCategories.length} categorías porque ya existían: ${duplicateCategories.join(', ')}.`, variant: "default" });
         }
         
-        if (newCategories.length === 0 && duplicateCount > 0) {
+        if (newCategories.length === 0 && duplicateCategories.length > 0) {
             toast({ title: "Sin Categorías Nuevas", description: "Todas las categorías sugeridas por la IA ya existían y no se añadieron duplicados.", variant: "default" });
         }
 
@@ -648,7 +651,7 @@ const CategoryManagement: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={()={() => handleDeleteCategory(category.id)}
+                          onClick={() => handleDeleteCategory(category.id)}
                           className="text-destructive hover:text-red-700 transition-colors"
                           aria-label={`Eliminar categoría ${category.name}`}
                           disabled={isUIBlocked}
@@ -716,4 +719,5 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
- 
+
+    
