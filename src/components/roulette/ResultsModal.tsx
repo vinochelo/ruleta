@@ -209,8 +209,8 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 w-full px-4">
                 <p className="text-sm font-semibold text-white bg-black/40 px-3 py-1 rounded-full">{title}</p>
                 {showAdvancedHintButton && (
-                  <Button onClick={handleRequestDetailedHelp} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg transition-transform hover:scale-105" disabled={isLoading}>
-                    {isLoading && viewState !== 'detailed_image' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                  <Button onClick={handleRequestDetailedHelp} size="lg" className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg transition-transform hover:scale-105 text-lg py-6 px-8 rounded-full" disabled={isLoading}>
+                    {isLoading && viewState !== 'detailed_image' ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Wand2 className="mr-3 h-6 w-6" />}
                     Pista Avanzada
                   </Button>
                 )}
@@ -350,3 +350,5 @@ const ResultsModal: React.FC<ResultsModalProps> = ({
 };
 
 export default ResultsModal;
+
+    
