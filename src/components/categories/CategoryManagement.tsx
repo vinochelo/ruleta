@@ -7,7 +7,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket, BookOpen, ToyBrick } from 'lucide-react';
+import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket, BookOpen, ToyBrick, RotateCcw } from 'lucide-react';
 import EditCategoryDialog from './EditCategoryDialog';
 import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -94,7 +94,7 @@ const CategoryManagement: React.FC = () => {
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
   const [categoryQueue, setCategoryQueue] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState<null | 'reset' | 'kids' | 'biblical'>(null);
-  const [isDefaultMode, setIsDefaultMode] = useState(true);
+  const [currentMode, setCurrentMode] = useState<'default' | 'kids' | 'biblical' | 'custom'>('custom');
 
   const areSetsEqual = (setA: Set<string>, setB: Set<string>) => {
     if (setA.size !== setB.size) return false;
@@ -115,15 +115,22 @@ const CategoryManagement: React.FC = () => {
     setCategories(uniqueCategoriesToPersist);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueCategoriesToPersist));
 
-    const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
     const currentIds = new Set(uniqueCategoriesToPersist.map(c => c.id));
-    setIsDefaultMode(areSetsEqual(defaultIds, currentIds));
+    if (areSetsEqual(currentIds, new Set(DEFAULT_CATEGORIES.map(c => c.id)))) {
+      setCurrentMode('default');
+    } else if (areSetsEqual(currentIds, new Set(KIDS_CATEGORIES.map(c => c.id)))) {
+      setCurrentMode('kids');
+    } else if (areSetsEqual(currentIds, new Set(BIBLICAL_CATEGORIES.map(c => c.id)))) {
+      setCurrentMode('biblical');
+    } else {
+      setCurrentMode('custom');
+    }
 
   }, []);
   
   const resetToDefaultCategories = useCallback(() => {
     persistCategories([...DEFAULT_CATEGORIES]);
-    toast({ title: "Categorías Restauradas", description: "Se han restaurado las categorías y palabras por defecto." });
+    toast({ title: "Modo Normal Restaurado", description: "Se han restaurado las categorías y palabras por defecto." });
   }, [persistCategories, toast]);
 
   const handleResetClick = () => {
@@ -162,11 +169,7 @@ const CategoryManagement: React.FC = () => {
                 }
             });
             const loadedCategories = Array.from(uniqueCategoriesMap.values());
-            setCategories(loadedCategories);
-            
-            const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
-            const currentIds = new Set(loadedCategories.map(c => c.id));
-            setIsDefaultMode(areSetsEqual(defaultIds, currentIds));
+            persistCategories(loadedCategories);
 
           } else { 
             resetToDefaultCategories();
@@ -180,7 +183,8 @@ const CategoryManagement: React.FC = () => {
     } else {
       resetToDefaultCategories();
     }
-  }, [resetToDefaultCategories]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const advanceQueue = useCallback(() => {
     setIsSuggestWordsDialogOpen(false);
@@ -597,10 +601,15 @@ const CategoryManagement: React.FC = () => {
           <CardDescription>¿No quieres configurar nada? Pulsa este botón y la IA generará 5 categorías temáticas y divertidas, con todas sus palabras, para que puedas empezar a jugar al instante.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked || !isDefaultMode}>
+          <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked || currentMode !== 'default'}>
             {isAIBulkSuggesting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Brain className="mr-2 h-5 w-5" />}
             {isAIBulkSuggesting ? 'Generando Magia...' : 'Generar 5 Categorías Temáticas con IA'}
           </Button>
+           {currentMode !== 'default' && (
+            <p className="text-sm text-center text-primary/80 mt-2">
+              Restaura el modo normal para poder añadir más categorías con IA.
+            </p>
+          )}
         </CardContent>
       </Card>
       
@@ -609,16 +618,20 @@ const CategoryManagement: React.FC = () => {
           <CardTitle className="title-text text-2xl flex items-center gap-2">
              Modos de Juego Predefinidos
           </CardTitle>
-          <CardDescription>Selecciona un modo para reemplazar todas las categorías actuales por un conjunto temático listo para jugar. ¡Cuidado, esta acción no se puede deshacer!</CardDescription>
+          <CardDescription>Selecciona un modo para reemplazar todas las categorías actuales por un conjunto temático. ¡Cuidado, esta acción es irreversible!</CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300" disabled={isUIBlocked}>
+        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300 disabled:bg-green-500 disabled:text-white disabled:opacity-100" disabled={isUIBlocked || currentMode === 'kids'}>
                 <ToyBrick className="mr-3 h-7 w-7" />
-                Activar Modo Infantil
+                Modo Infantil
             </Button>
-            <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300" disabled={isUIBlocked}>
+            <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300 disabled:bg-yellow-600 disabled:text-white disabled:opacity-100" disabled={isUIBlocked || currentMode === 'biblical'}>
                 <BookOpen className="mr-3 h-7 w-7" />
-                Activar Modo Bíblico
+                Modo Bíblico
+            </Button>
+             <Button onClick={() => setDialogOpen('reset')} variant="outline" className="text-lg py-8 border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 disabled:bg-blue-500 disabled:text-white disabled:opacity-100" disabled={isUIBlocked || currentMode === 'default'}>
+                <RotateCcw className="mr-3 h-7 w-7" />
+                Restaurar Normal
             </Button>
         </CardContent>
       </Card>
@@ -660,7 +673,7 @@ const CategoryManagement: React.FC = () => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDeleteWord(category.id, wordIndex)}
-                                className="ml-1 h-4 w-4 text-destructive hover:text-red-700 p-0"
+                                className="ml-1 h-4 w-4 text-destructive/70 hover:text-red-700 p-0"
                                 aria-label={`Eliminar palabra ${word}`}
                                 disabled={isUIBlocked}
                               >
@@ -734,11 +747,6 @@ const CategoryManagement: React.FC = () => {
             </div>
           )}
         </CardContent>
-        <CardFooter>
-            <Button variant="outline" onClick={() => setDialogOpen('reset')} className="transition-transform hover:scale-105" disabled={isUIBlocked}>
-                Restaurar Categorías y Palabras por Defecto
-            </Button>
-        </CardFooter>
       </Card>
       
       <AlertDialog open={dialogOpen !== null} onOpenChange={(open) => !open && setDialogOpen(null)}>
