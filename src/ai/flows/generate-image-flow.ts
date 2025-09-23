@@ -1,7 +1,7 @@
 
 'use server';
 
-import { ai, geminiImage } from '@/ai/genkit';
+import { ai, geminiNanoBanana } from '@/ai/genkit';
 import { z } from 'zod';
 
 function ensureApiKey() {
@@ -16,7 +16,7 @@ function ensureApiKey() {
 async function generateSingleImage(prompt: string): Promise<{ imageUrl: string | null; error: string | null }> {
   try {
     const result = await ai.generate({
-      model: geminiImage,
+      model: geminiNanoBanana,
       prompt,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
