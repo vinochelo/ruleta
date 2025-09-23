@@ -38,7 +38,7 @@ Tu misión es generar un paquete de **exactamente 5 categorías temáticas DIVER
 - **Instrucción Principal:** Todo el contenido debe ser **APTO PARA NIÑOS** de entre 6 y 12 años. Usa conceptos muy simples, reconocibles y fáciles de dibujar para ellos. Piensa en temas como animales de la granja, juguetes, formas y colores, etc.
 {{else if (eq themeContext 'biblical')}}
 - **Instrucción Principal:** Todo el contenido debe estar **ESTRICTAMENTE RELACIONADO CON LA BIBLIA**. Piensa en personajes, lugares, objetos, historias y parábolas tanto del Antiguo como del Nuevo Testamento.
-{{else if (eq themeContext 'default')}}
+{{else}}
 - **Instrucción Principal:** No deben ser las típicas categorías obvias como "Animales" u "Objetos". Busca temas más creativos y específicos. Ejemplos de buenas ideas: "Cosas que encuentras en la playa", "Superhéroes y Villanos", "Marcas Famosas", "Instrumentos Musicales", "Deportes Olímpicos".
 {{/if}}
 {{else}}
