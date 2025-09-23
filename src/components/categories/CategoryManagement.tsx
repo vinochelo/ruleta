@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
@@ -93,7 +94,15 @@ const CategoryManagement: React.FC = () => {
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
   const [categoryQueue, setCategoryQueue] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState<null | 'reset' | 'kids' | 'biblical'>(null);
+  const [isDefaultMode, setIsDefaultMode] = useState(true);
 
+  const areSetsEqual = (setA: Set<string>, setB: Set<string>) => {
+    if (setA.size !== setB.size) return false;
+    for (const item of setA) {
+      if (!setB.has(item)) return false;
+    }
+    return true;
+  };
 
   const persistCategories = useCallback((updatedCategories: Category[]) => {
     const uniqueCategoriesMap = new Map<string, Category>();
@@ -105,6 +114,11 @@ const CategoryManagement: React.FC = () => {
     const uniqueCategoriesToPersist = Array.from(uniqueCategoriesMap.values());
     setCategories(uniqueCategoriesToPersist);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueCategoriesToPersist));
+
+    const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
+    const currentIds = new Set(uniqueCategoriesToPersist.map(c => c.id));
+    setIsDefaultMode(areSetsEqual(defaultIds, currentIds));
+
   }, []);
   
   const resetToDefaultCategories = useCallback(() => {
@@ -147,9 +161,15 @@ const CategoryManagement: React.FC = () => {
                     uniqueCategoriesMap.set(cat.id, cat as Category);
                 }
             });
-            setCategories(Array.from(uniqueCategoriesMap.values()));
+            const loadedCategories = Array.from(uniqueCategoriesMap.values());
+            setCategories(loadedCategories);
+            
+            const defaultIds = new Set(DEFAULT_CATEGORIES.map(c => c.id));
+            const currentIds = new Set(loadedCategories.map(c => c.id));
+            setIsDefaultMode(areSetsEqual(defaultIds, currentIds));
+
           } else { 
-            setCategories([...DEFAULT_CATEGORIES]);
+            resetToDefaultCategories();
           }
         } else { 
           resetToDefaultCategories();
@@ -577,7 +597,7 @@ const CategoryManagement: React.FC = () => {
           <CardDescription>¿No quieres configurar nada? Pulsa este botón y la IA generará 5 categorías temáticas y divertidas, con todas sus palabras, para que puedas empezar a jugar al instante.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked}>
+          <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked || !isDefaultMode}>
             {isAIBulkSuggesting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Brain className="mr-2 h-5 w-5" />}
             {isAIBulkSuggesting ? 'Generando Magia...' : 'Generar 5 Categorías Temáticas con IA'}
           </Button>
@@ -592,11 +612,11 @@ const CategoryManagement: React.FC = () => {
           <CardDescription>Selecciona un modo para reemplazar todas las categorías actuales por un conjunto temático listo para jugar. ¡Cuidado, esta acción no se puede deshacer!</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300">
+            <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300" disabled={isUIBlocked}>
                 <ToyBrick className="mr-3 h-7 w-7" />
                 Activar Modo Infantil
             </Button>
-            <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300">
+            <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300" disabled={isUIBlocked}>
                 <BookOpen className="mr-3 h-7 w-7" />
                 Activar Modo Bíblico
             </Button>
@@ -773,6 +793,8 @@ const CategoryManagement: React.FC = () => {
 export default CategoryManagement;
 
     
+    
+
     
 
     
