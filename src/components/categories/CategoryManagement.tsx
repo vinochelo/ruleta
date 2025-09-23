@@ -6,7 +6,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket } from 'lucide-react';
+import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket, BookOpen, Toy } from 'lucide-react';
 import EditCategoryDialog from './EditCategoryDialog';
 import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +59,23 @@ const DEFAULT_CATEGORIES: Category[] = [
     { id: "default-meteorologia-uuid", name: "Fenómenos Meteorológicos", words: ["Lluvia", "Nieve", "Sol", "Tornado", "Relámpago", "Trueno", "Viento", "Niebla", "Granizo", "Arcoíris", "Huracán", "Sequía", "Inundación", "Ola de calor", "Aurora boreal", "Eclipse", "Monzón", "Ventisca", "Rocío", "Nube"], isActive: true }
 ];
 
+const KIDS_CATEGORIES: Category[] = [
+    { id: "kids-animales-uuid", name: "Animales Divertidos", words: ["Perro", "Gato", "Pez", "Pájaro", "Conejo", "León", "Elefante", "Jirafa", "Mono", "Vaca", "Cerdo", "Oveja", "Pollito", "Rana", "Mariposa"], isActive: true },
+    { id: "kids-juguetes-uuid", name: "Juguetes", words: ["Pelota", "Muñeca", "Coche", "Tren", "Avión", "Lego", "Oso de peluche", "Cometa", "Yoyó", "Cubo", "Pala", "Robot", "Dinosaurio", "Bicicleta", "Patines"], isActive: true },
+    { id: "kids-comida-uuid", name: "Comida Rica", words: ["Manzana", "Plátano", "Naranja", "Fresa", "Helado", "Pizza", "Tarta", "Galleta", "Huevo", "Leche", "Zumo", "Pan", "Queso", "Sopa", "Piruleta"], isActive: true },
+    { id: "kids-casa-uuid", name: "Cosas de Casa", words: ["Casa", "Puerta", "Ventana", "Cama", "Silla", "Mesa", "Lámpara", "Sofá", "Reloj", "Tele", "Baño", "Plato", "Vaso", "Cuchara", "Libro"], isActive:true },
+    { id: "kids-naturaleza-uuid", name: "Naturaleza", words: ["Sol", "Luna", "Estrella", "Nube", "Lluvia", "Arcoíris", "Árbol", "Flor", "Río", "Montaña", "Mar", "Playa", "Hierba", "Piedra", "Hoja"], isActive: true },
+    { id: "kids-formas-colores-uuid", name: "Formas y Colores", words: ["Círculo", "Cuadrado", "Triángulo", "Estrella", "Corazón", "Rojo", "Azul", "Amarillo", "Verde", "Blanco", "Negro", "Naranja", "Rosa", "Morado", "Marrón"], isActive: true }
+];
+
+const BIBLICAL_CATEGORIES: Category[] = [
+    { id: "bible-ot-personajes-uuid", name: "Personajes (Antiguo Test.)", words: ["Adán", "Eva", "Noé", "Abraham", "Moisés", "David", "Salomón", "Sansón", "Ester", "Rut", "Isaías", "Jeremías", "Daniel", "Jonás", "José"], isActive: true },
+    { id: "bible-nt-personajes-uuid", name: "Personajes (Nuevo Test.)", words: ["Jesús", "María", "José", "Pedro", "Pablo", "Juan Bautista", "Lázaro", "Marta", "Zaqueo", "Pilato", "Judas", "Magdalena", "Lucas", "Mateo", "Santiago"], isActive: true },
+    { id: "bible-historias-uuid", name: "Historias Bíblicas", words: ["Creación", "Arca de Noé", "Torre de Babel", "Mar Rojo", "Diez Mandamientos", "David y Goliat", "Multiplicación de panes", "El hijo pródigo", "Parábola del sembrador", "La crucifixión", "La resurrección", "Ascensión", "Pentecostés", "Caída de Jericó", "El buen samaritano"], isActive: true },
+    { id: "bible-objetos-uuid", name: "Objetos y Símbolos", words: ["Arca de la Alianza", "Tabla de la Ley", "Honda de David", "Maná", "Zarza ardiente", "Cordero", "Paloma", "Pez", "Cruz", "Copa", "Corona de espinas", "Túnica", "Sandalias", "Lámpara de aceite", "Red de pescar"], isActive: true },
+    { id: "bible-lugares-uuid", name: "Lugares Bíblicos", words: ["Jardín del Edén", "Monte Sinaí", "Jerusalén", "Belén", "Nazaret", "Mar de Galilea", "Río Jordán", "Templo", "Egipto", "Tierra Prometida", "Pozo de Jacob", "Monte de los Olivos", "Jericó", "Damasco", "Gólgota"], isActive: true }
+];
+
 
 const CategoryManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -75,7 +92,7 @@ const CategoryManagement: React.FC = () => {
   const [isAIBulkSuggesting, setIsAIBulkSuggesting] = useState(false);
   const [targetCategoryIdForAIWords, setTargetCategoryIdForAIWords] = useState<string | null>(null);
   const [categoryQueue, setCategoryQueue] = useState<string[]>([]);
-  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState<null | 'reset' | 'kids' | 'biblical'>(null);
 
 
   const persistCategories = useCallback((updatedCategories: Category[]) => {
@@ -97,7 +114,18 @@ const CategoryManagement: React.FC = () => {
 
   const handleResetClick = () => {
       resetToDefaultCategories();
-      setIsResetConfirmOpen(false);
+      setDialogOpen(null);
+  }
+  
+  const handleSetMode = (mode: 'kids' | 'biblical') => {
+    const newCategories = mode === 'kids' ? [...KIDS_CATEGORIES] : [...BIBLICAL_CATEGORIES];
+    const modeName = mode === 'kids' ? "Infantil" : "Bíblico";
+    persistCategories(newCategories);
+    toast({
+        title: `Modo ${modeName} Activado`,
+        description: `Se han cargado las categorías y palabras del modo ${modeName}.`
+    });
+    setDialogOpen(null);
   }
 
   useEffect(() => {
@@ -555,6 +583,26 @@ const CategoryManagement: React.FC = () => {
           </Button>
         </CardContent>
       </Card>
+      
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="title-text text-2xl flex items-center gap-2">
+             Modos de Juego Predefinidos
+          </CardTitle>
+          <CardDescription>Selecciona un modo para reemplazar todas las categorías actuales por un conjunto temático listo para jugar. ¡Cuidado, esta acción no se puede deshacer!</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300">
+                <Toy className="mr-3 h-7 w-7" />
+                Activar Modo Infantil
+            </Button>
+            <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300">
+                <BookOpen className="mr-3 h-7 w-7" />
+                Activar Modo Bíblico
+            </Button>
+        </CardContent>
+      </Card>
+
 
       <Card className="shadow-lg transform transition-all duration-300 hover:shadow-xl">
         <CardHeader>
@@ -667,34 +715,38 @@ const CategoryManagement: React.FC = () => {
           )}
         </CardContent>
         <CardFooter>
-          <AlertDialog open={isResetConfirmOpen} onOpenChange={setIsResetConfirmOpen}>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" className="transition-transform hover:scale-105" disabled={isUIBlocked}>
-                    Restaurar Categorías y Palabras por Defecto
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle className="flex items-center gap-2">
-                      <AlertTriangle className="h-6 w-6 text-destructive" />
-                      ¿Estás seguro?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción es irreversible. Se eliminarán todas tus categorías y palabras personalizadas, reemplazándolas por la lista original del juego.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleResetClick} className={cn(buttonVariants({ variant: "destructive" }))}>
-                      Sí, Restaurar
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <Button variant="outline" onClick={() => setDialogOpen('reset')} className="transition-transform hover:scale-105" disabled={isUIBlocked}>
+                Restaurar Categorías y Palabras por Defecto
+            </Button>
         </CardFooter>
       </Card>
       
-      
+      <AlertDialog open={dialogOpen !== null} onOpenChange={(open) => !open && setDialogOpen(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                  ¿Estás completamente seguro?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acción es irreversible. Se eliminarán **todas** tus categorías y palabras personalizadas para reemplazarlas por el modo de juego seleccionado.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDialogOpen(null)}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={() => {
+                    if (dialogOpen === 'reset') handleResetClick();
+                    if (dialogOpen === 'kids') handleSetMode('kids');
+                    if (dialogOpen === 'biblical') handleSetMode('biblical');
+                  }} 
+                  className={cn(buttonVariants({ variant: "destructive" }))}
+                >
+                  Sí, reemplazar todo
+                </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+      </AlertDialog>
 
       {editingCategory && (
         <EditCategoryDialog
@@ -719,3 +771,5 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
+
+    
