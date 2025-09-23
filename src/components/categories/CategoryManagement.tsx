@@ -6,7 +6,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket, BookOpen, Toy } from 'lucide-react';
+import { Trash2, Edit3, PlusCircle, ListChecks, X, Plus, Brain, Loader2, AlertTriangle, Rocket, BookOpen, ToyBrick } from 'lucide-react';
 import EditCategoryDialog from './EditCategoryDialog';
 import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
@@ -593,7 +593,7 @@ const CategoryManagement: React.FC = () => {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300">
-                <Toy className="mr-3 h-7 w-7" />
+                <ToyBrick className="mr-3 h-7 w-7" />
                 Activar Modo Infantil
             </Button>
             <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300">
@@ -773,4 +773,6 @@ const CategoryManagement: React.FC = () => {
 export default CategoryManagement;
 
     
+    
+
     
