@@ -13,7 +13,7 @@ import SuggestWordsDialog from './SuggestWordsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { suggestWordsForCategory, type SuggestWordsInput, type SuggestWordsOutput } from '@/ai/flows/suggest-words-flow';
-import { suggestBulkCategories } from '@/ai/flows/suggest-bulk-categories-flow';
+import { suggestBulkCategories, type SuggestBulkCategoriesInput } from '@/ai/flows/suggest-bulk-categories-flow';
 import { Switch } from '../ui/switch';
 import { cn } from '@/lib/utils';
 import {
@@ -497,8 +497,8 @@ const CategoryManagement: React.FC = () => {
     toast({ title: "Generando categorías...", description: "La IA está creando un nuevo set de categorías y palabras. Esto puede tardar un momento." });
 
     try {
-        const themeContext = currentMode === 'custom' ? 'default' : currentMode;
-        const result = await suggestBulkCategories({ themeContext });
+        const theme: SuggestBulkCategoriesInput['themeContext'] = currentMode === 'custom' || currentMode === 'default' ? 'default' : currentMode;
+        const result = await suggestBulkCategories({ themeContext: theme });
         const suggestedCats = result.categories || [];
         
         if (suggestedCats.length === 0) {
@@ -525,19 +525,15 @@ const CategoryManagement: React.FC = () => {
         });
 
         if (newCategories.length > 0) {
-            setTimeout(() => {
-                const newCategoryNamesText = newCategories.map(c => `"${c.name}"`).join(', ');
-                toast({
-                    title: "¡Categorías Añadidas!",
-                    description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNamesText}.`
-                });
-            }, 100);
+            const newCategoryNamesText = newCategories.map(c => `"${c.name}"`).join(', ');
+            toast({
+                title: "¡Categorías Añadidas!",
+                description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNamesText}.`
+            });
         }
 
         if (duplicateCategories.length > 0) {
-            setTimeout(() => {
-                toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCategories.length} categorías porque ya existían: ${duplicateCategories.join(', ')}.`, variant: "default" });
-            }, 200);
+            toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCategories.length} categorías porque ya existían: ${duplicateCategories.join(', ')}.`, variant: "default" });
         }
         
         if (newCategories.length > 0) {
@@ -570,6 +566,16 @@ const CategoryManagement: React.FC = () => {
             return 'Generar 5 Categorías Temáticas con IA';
     }
   };
+
+  const getCurrentModeDisplayName = () => {
+    switch (currentMode) {
+      case 'kids': return 'Infantil';
+      case 'biblical': return 'Bíblico';
+      case 'default': return 'Normal';
+      case 'custom': return 'Personalizado';
+      default: return 'Desconocido';
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -631,18 +637,48 @@ const CategoryManagement: React.FC = () => {
           <CardTitle className="title-text text-2xl flex items-center gap-2">
              Modos de Juego Predefinidos
           </CardTitle>
-          <CardDescription>Selecciona un modo para reemplazar todas las categorías actuales por un conjunto temático. ¡Cuidado, esta acción es irreversible!</CardDescription>
+          <CardDescription>
+            Selecciona un modo para reemplazar todas las categorías actuales por un conjunto temático. ¡Cuidado, esta acción es irreversible!
+          </CardDescription>
+          <p className="text-sm text-foreground pt-2">Modo Actual: <span className="font-bold text-primary">{getCurrentModeDisplayName()}</span></p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button onClick={() => setDialogOpen('kids')} variant="outline" className="text-lg py-8 border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white transition-all duration-300 disabled:bg-green-500 disabled:text-white disabled:opacity-100" disabled={isUIBlocked || currentMode === 'kids'}>
+            <Button 
+                onClick={() => setDialogOpen('kids')} 
+                variant={currentMode === 'kids' ? 'default' : 'outline'} 
+                className={cn(
+                    "text-lg py-8 border-2 transition-all duration-300",
+                    currentMode === 'kids' 
+                    ? "bg-green-500 hover:bg-green-600 text-white border-green-600"
+                    : "border-green-500 text-green-600 hover:bg-green-500 hover:text-white"
+                )}
+                disabled={isUIBlocked || currentMode === 'kids'}>
                 <ToyBrick className="mr-3 h-7 w-7" />
                 Modo Infantil
             </Button>
-            <Button onClick={() => setDialogOpen('biblical')} variant="outline" className="text-lg py-8 border-2 border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white transition-all duration-300 disabled:bg-yellow-600 disabled:text-white disabled:opacity-100" disabled={isUIBlocked || currentMode === 'biblical'}>
+            <Button 
+                onClick={() => setDialogOpen('biblical')} 
+                variant={currentMode === 'biblical' ? 'default' : 'outline'}
+                className={cn(
+                    "text-lg py-8 border-2 transition-all duration-300",
+                    currentMode === 'biblical'
+                    ? "bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-700"
+                    : "border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white"
+                )} 
+                disabled={isUIBlocked || currentMode === 'biblical'}>
                 <BookOpen className="mr-3 h-7 w-7" />
                 Modo Bíblico
             </Button>
-             <Button onClick={() => setDialogOpen('reset')} variant="outline" className="text-lg py-8 border-2 border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300 disabled:bg-blue-500 disabled:text-white disabled:opacity-100" disabled={isUIBlocked || currentMode === 'default'}>
+             <Button 
+                onClick={() => setDialogOpen('reset')} 
+                variant={currentMode === 'default' ? 'default' : 'outline'}
+                className={cn(
+                    "text-lg py-8 border-2 transition-all duration-300",
+                    currentMode === 'default'
+                    ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600"
+                    : "border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
+                )}
+                disabled={isUIBlocked || currentMode === 'default'}>
                 <RotateCcw className="mr-3 h-7 w-7" />
                 Restaurar Normal
             </Button>
@@ -812,3 +848,5 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
+
+    
