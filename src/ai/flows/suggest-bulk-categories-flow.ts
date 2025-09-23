@@ -28,34 +28,22 @@ const prompt = ai.definePrompt({
   model: geminiFlash,
   input: { schema: SuggestBulkCategoriesInputSchema },
   output: { schema: SuggestBulkCategoriesOutputSchema },
-  prompt: `Eres un asistente experto en juegos de Pictionary, especializado en crear paquetes de categorías temáticas listas para jugar.
+  prompt: `Eres un asistente experto en juegos de Pictionary. Tu misión es generar un paquete de **exactamente 5 categorías temáticas DIVERSAS, DIVERTIDAS y de alta calidad**.
 
-Tu misión es generar un paquete de **exactamente 5 categorías temáticas DIVERSAS y DIVERTIDAS**.
-
-{{#if themeContext}}
-**CONTEXTO TEMÁTICO IMPORTANTE: {{themeContext}}**
-{{#if (eq themeContext 'kids')}}
-- **Instrucción Principal:** Todo el contenido debe ser **APTO PARA NIÑOS** de entre 6 y 12 años. Usa conceptos muy simples, reconocibles y fáciles de dibujar para ellos. Piensa en temas como animales de la granja, juguetes, formas y colores, etc.
-{{else if (eq themeContext 'biblical')}}
-- **Instrucción Principal:** Todo el contenido debe estar **ESTRICTAMENTE RELACIONADO CON LA BIBLIA**. Piensa en personajes, lugares, objetos, historias y parábolas tanto del Antiguo como del Nuevo Testamento.
-{{else}}
-- **Instrucción Principal:** No deben ser las típicas categorías obvias como "Animales" u "Objetos". Busca temas más creativos y específicos. Ejemplos de buenas ideas: "Cosas que encuentras en la playa", "Superhéroes y Villanos", "Marcas Famosas", "Instrumentos Musicales", "Deportes Olímpicos".
-{{/if}}
-{{else}}
-- **Instrucción Principal:** No deben ser las típicas categorías obvias como "Animales" u "Objetos". Busca temas más creativos y específicos. Ejemplos de buenas ideas: "Cosas que encuentras en la playa", "Superhéroes y Villanos", "Marcas Famosas", "Instrumentos Musicales", "Deportes Olímpicos".
-{{/if}}
+**CONTEXTO TEMÁTICO IMPORTANTE:** Si se proporciona un contexto a continuación, TODAS las categorías y palabras deben adherirse estrictamente a él. Si dice 'default', genera temas generales y creativos. Si dice 'kids', todo debe ser simple y para niños. Si dice 'biblical', todo debe ser estrictamente sobre la Biblia.
+**Contexto:** {{{themeContext}}}
 
 **Reglas Críticas Universales:**
 1.  **Idioma Español Exclusivamente:** Todas las categorías y palabras DEBEN estar en español.
 2.  **Exactamente 5 Categorías:** La respuesta debe contener un array con precisamente 5 objetos de categoría.
-3.  **Temas Diversos dentro del Contexto:** Las 5 categorías deben ser diferentes entre sí y estimulantes, respetando siempre el contexto temático si fue proporcionado.
+3.  **Temas Diversos y Creativos:** Dentro del contexto dado, las 5 categorías deben ser diferentes entre sí. Para el modo 'default', evita temas obvios como 'Animales' u 'Objetos'; busca ideas como 'Cosas de la playa', 'Superhéroes y Villanos', etc.
 4.  **Palabras de Calidad (15-20 por categoría):** Para cada categoría, genera una lista de entre 15 y 20 palabras o frases cortas.
-5.  **FACILIDAD DE DIBUJO (¡MUY IMPORTANTE!):** Las palabras deben ser conceptos visuales, comunes y reconocibles que una persona promedio pueda dibujar y adivinar. Prioriza sustantivos concretos y acciones claras. Evita conceptos abstractos o difíciles de representar gráficamente.
-6.  **Audiencia Adecuada:** Todas las palabras deben ser aptas para el público definido por el contexto (general, infantil o familiar/religioso).
+5.  **FACILIDAD DE DIBUJO (¡MUY IMPORTANTE!):** Las palabras deben ser conceptos visuales y reconocibles que una persona promedio pueda dibujar. Prioriza sustantivos concretos.
+6.  **Audiencia Adecuada:** Todas las palabras deben ser apropiadas para el público definido por el contexto.
 
 Genera ahora el paquete de 5 categorías, asegurándote de seguir TODAS las reglas.`,
   config: {
-    temperature: 0.8, // Aumenta la temperatura para obtener categorías más creativas.
+    temperature: 0.8,
   }
 });
 
