@@ -9,7 +9,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { X, Lightbulb, Play, Users, Paintbrush, Clock, Brain, CheckCircle, RotateCcw } from "lucide-react";
+import { X, Lightbulb, Play, Users, Paintbrush, Clock, Brain, CheckCircle, RotateCcw, Rocket, Trophy } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -58,15 +58,25 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
               <ul className="list-disc list-inside space-y-2">
                 <li>
                   <Users className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Jugadores:** Decide si jugar de forma individual o en equipos. Si es en equipos, ¡escojan nombres creativos y divertidos!
+                  **Añade Jugadores o Equipos:** Usa la sección "Configuración de la Partida" para añadir los nombres de los participantes.
                 </li>
                 <li>
                   <Paintbrush className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Materiales:** Necesitarán una pizarra grande o un papelógrafo, y marcadores o tiza que sean claramente visibles para todos los participantes. Este será su lienzo para sus obras maestras.
+                  **Prepara tus Materiales:** Necesitarás una pizarra, papel, o cualquier aplicación de dibujo para dar vida a tus creaciones.
+                </li>
+                 <li>
+                  <Rocket className="inline h-4 w-4 mr-1 text-secondary" />
+                  **Elige tu Modo de Juego:** En la página "Gestionar Categorías", puedes elegir entre varios modos:
+                    <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                      <li>**Modo Normal:** Contiene una gran variedad de categorías generales.</li>
+                      <li>**Modo Infantil:** Categorías y palabras sencillas para los más pequeños.</li>
+                      <li>**Modo Bíblico:** Contenido centrado exclusivamente en la Biblia.</li>
+                      <li>**¡Crea el Tuyo!** Añade tus propias categorías y palabras para un juego 100% personalizado.</li>
+                    </ul>
                 </li>
                 <li>
-                  <Lightbulb className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Configuración Inicial:** Antes de empezar, asegúrense de haber gestionado y creado categorías de palabras en la sección correspondiente. Cuantas más categorías y palabras tengas, ¡más larga y variada será la diversión!
+                  <Brain className="inline h-4 w-4 mr-1 text-secondary" />
+                  **Modo Novato (¡Carga Rápida!):** Si no quieres crear categorías, ve a "Gestionar Categorías" y usa el botón "Generar Categorías con IA". La inteligencia artificial creará 5 categorías temáticas listas para jugar en segundos. ¡Funciona para cualquier modo de juego!
                 </li>
               </ul>
             </AccordionContent>
@@ -80,23 +90,27 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
               <ul className="list-disc list-inside space-y-2">
                 <li>
                   <Play className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Girar la Ruleta:** ¡Es hora de la acción! Pulsa el botón para que la ruleta gire y te revele una palabra secreta.
+                  **Girar la Ruleta:** ¡Pulsa el botón central para que la ruleta elija una categoría y una palabra secreta!
                 </li>
                 <li>
                   <Users className="inline h-4 w-4 mr-1 text-secondary" />
-                  **El Artista Secreto:** Solo la persona designada para dibujar (el "Artista" de ese turno) debe ver la palabra que salió. ¡El silencio es oro para los demás!
+                  **El Artista Secreto:** Solo la persona designada para dibujar (el "Artista" de ese turno) debe ver la palabra.
+                </li>
+                 <li>
+                  <Brain className="inline h-4 w-4 mr-1 text-secondary" />
+                  **Asistencia con IA (Opcional):** Si el Artista se queda en blanco, puede usar los botones de ayuda de la IA:
+                    <ul className="list-[circle] list-inside ml-6 mt-1 space-y-1">
+                        <li>**Obtener Inspiración:** Genera un icono simple y minimalista que sirva como punto de partida.</li>
+                        <li>**Pista Avanzada:** Crea una imagen más detallada y fotorrealista si la inspiración inicial no es suficiente.</li>
+                    </ul>
                 </li>
                 <li>
                   <Clock className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Tiempo de Creación:** El juego sugiere un tiempo de 1 minuto para que el Artista complete su obra maestra. ¡La presión del reloj añade un toque emocionante! (Puedes acordar ajustar este tiempo si lo deseas).
-                </li>
-                <li>
-                  <Brain className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Asistencia IA (Opcional):** Si el Artista necesita un poco de inspiración para empezar, Ruleta Pictionary puede generar una imagen de referencia usando Inteligencia Artificial. ¡Recuerda, es solo una guía, no para copiar directamente!
+                  **¡Tiempo de Crear!:** Selecciona un tiempo (30, 60, 90 o 120 segundos) y que el artista empiece a dibujar.
                 </li>
                 <li>
                   <Lightbulb className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Adivinar sin Piedad:** Mientras el Artista dibuja frenéticamente, los demás jugadores o equipos deben intentar adivinar la palabra. ¡Griten sus respuestas con entusiasmo!
+                  **Adivinar sin Piedad:** Mientras el Artista dibuja, su equipo (o los demás jugadores) deben intentar adivinar la palabra.
                 </li>
               </ul>
             </AccordionContent>
@@ -110,11 +124,15 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
               <ul className="list-disc list-inside space-y-2">
                 <li>
                   <CheckCircle className="inline h-4 w-4 mr-1 text-secondary" />
-                  **¡Victoria!:** Si un jugador o equipo adivina la palabra correctamente antes de que termine el tiempo, ¡se añaden puntos a su marcador! ¡Es momento de celebrar su perspicacia!
+                  **¡Punto Ganado!:** Si un equipo adivina la palabra antes de que termine el tiempo, pulsa el botón "+" para sumarles un punto.
                 </li>
                 <li>
                   <RotateCcw className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Turno Siguiente:** Si el tiempo se agota y nadie logra adivinar la palabra, ¡no hay problema! El turno simplemente pasa al siguiente jugador o equipo. ¡Siempre habrá otra oportunidad para brillar!
+                  **Turno Siguiente:** Si nadie adivina, ¡no pasa nada! Simplemente cierra la ventana y el turno pasa al siguiente equipo.
+                </li>
+                 <li>
+                  <Trophy className="inline h-4 w-4 mr-1 text-secondary" />
+                  **Fin de la Partida:** El primer equipo en alcanzar la puntuación para ganar (definida en la configuración) será el campeón.
                 </li>
               </ul>
             </AccordionContent>
@@ -128,15 +146,15 @@ export function GameInstructions({ isOpen, onClose }: GameInstructionsProps) {
               <ul className="list-disc list-inside space-y-2">
                 <li>
                   <Users className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Comunicación No Verbal:** ¡Recuerda que está estrictamente prohibido hablar, hacer sonidos o gestos que den pistas directas sobre la palabra! Solo se permite dibujar.
+                  **Comunicación No Verbal:** ¡Recuerda que está estrictamente prohibido hablar, hacer sonidos o gestos! Solo se permite dibujar.
                 </li>
                 <li>
                   <Paintbrush className="inline h-4 w-4 mr-1 text-secondary" />
-                  **Claridad en el Caos:** Aunque estés contra el reloj, intenta que tus dibujos sean lo más claros posible. La simplicidad y el impacto visual son clave.
+                  **Claridad en el Caos:** Aunque estés contra el reloj, la simplicidad suele ser más efectiva que un dibujo demasiado complejo.
                 </li>
                 <li>
                   <Play className="inline h-4 w-4 mr-1 text-secondary" />
-                  **¡Lo más importante, Diviértete!:** La esencia de Ruleta Pictionary es reír, interactuar y pasar un momento inolvidable con amigos o familia. ¡Que la creatividad fluya!
+                  **¡Lo más importante, Diviértete!:** La esencia de Ruleta Pictionary es reír, interactuar y pasar un momento inolvidable.
                 </li>
               </ul>
             </AccordionContent>
