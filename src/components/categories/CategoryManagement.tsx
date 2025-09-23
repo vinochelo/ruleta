@@ -497,7 +497,8 @@ const CategoryManagement: React.FC = () => {
     toast({ title: "Generando categorías...", description: "La IA está creando un nuevo set de categorías y palabras. Esto puede tardar un momento." });
 
     try {
-        const result = await suggestBulkCategories();
+        const themeContext = currentMode === 'custom' ? 'default' : currentMode;
+        const result = await suggestBulkCategories({ themeContext });
         const suggestedCats = result.categories || [];
         
         if (suggestedCats.length === 0) {
@@ -522,21 +523,26 @@ const CategoryManagement: React.FC = () => {
                 duplicateCategories.push(sc.name);
             }
         });
-        
+
         if (newCategories.length > 0) {
-            persistCategories([...categories, ...newCategories]);
-            const newCategoryNamesText = newCategories.map(c => `"${c.name}"`).join(', ');
-            toast({
-              title: "¡Categorías Añadidas!",
-              description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNamesText}.`
-            });
+            setTimeout(() => {
+                const newCategoryNamesText = newCategories.map(c => `"${c.name}"`).join(', ');
+                toast({
+                    title: "¡Categorías Añadidas!",
+                    description: `Se han añadido ${newCategories.length} nuevas categorías: ${newCategoryNamesText}.`
+                });
+            }, 100);
         }
 
         if (duplicateCategories.length > 0) {
-             toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCategories.length} categorías porque ya existían: ${duplicateCategories.join(', ')}.`, variant: "default" });
+            setTimeout(() => {
+                toast({ title: "Categorías Omitidas", description: `Se omitieron ${duplicateCategories.length} categorías porque ya existían: ${duplicateCategories.join(', ')}.`, variant: "default" });
+            }, 200);
         }
         
-        if (newCategories.length === 0 && duplicateCategories.length > 0) {
+        if (newCategories.length > 0) {
+             persistCategories([...categories, ...newCategories]);
+        } else if (duplicateCategories.length > 0) {
             toast({ title: "Sin Categorías Nuevas", description: "Todas las categorías sugeridas por la IA ya existían y no se añadieron duplicados.", variant: "default" });
         }
 
@@ -552,6 +558,18 @@ const CategoryManagement: React.FC = () => {
   const sortedCategories = [...categories].sort((a, b) => 
     a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
   );
+
+  const getBulkButtonText = () => {
+    if (isAIBulkSuggesting) return 'Generando Magia...';
+    switch (currentMode) {
+        case 'kids':
+            return 'Generar más Categorías Infantiles con IA';
+        case 'biblical':
+            return 'Generar más Categorías Bíblicas con IA';
+        default:
+            return 'Generar 5 Categorías Temáticas con IA';
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -598,18 +616,13 @@ const CategoryManagement: React.FC = () => {
             <Rocket className="h-6 w-6" />
             Modo Novato: ¡Carga Rápida!
           </CardTitle>
-          <CardDescription>¿No quieres configurar nada? Pulsa este botón y la IA generará 5 categorías temáticas y divertidas, con todas sus palabras, para que puedas empezar a jugar al instante.</CardDescription>
+          <CardDescription>Pulsa este botón y la IA generará 5 categorías temáticas y divertidas, con todas sus palabras, para que puedas empezar a jugar al instante.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked || currentMode !== 'default'}>
+           <Button onClick={handleBulkAdd} className="w-full text-lg py-6" disabled={isUIBlocked}>
             {isAIBulkSuggesting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Brain className="mr-2 h-5 w-5" />}
-            {isAIBulkSuggesting ? 'Generando Magia...' : 'Generar 5 Categorías Temáticas con IA'}
+            {getBulkButtonText()}
           </Button>
-           {currentMode !== 'default' && (
-            <p className="text-sm text-center text-primary/80 mt-2">
-              Restaura el modo normal para poder añadir más categorías con IA.
-            </p>
-          )}
         </CardContent>
       </Card>
       
@@ -799,10 +812,3 @@ const CategoryManagement: React.FC = () => {
 };
 
 export default CategoryManagement;
-
-    
-    
-
-    
-
-    
